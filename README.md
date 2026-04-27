@@ -1,4 +1,5 @@
-[README.ru](README.ru.md)
+# Hello!
+Russian [README.ru](README.ru.md)
 <p align="center">
   <img src="bannerl.png">
 </p>
