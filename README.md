@@ -1,2 +1,2 @@
 # LemonLang
-Lemon - C++ interpreter for newbies coders
+Lemon - interpreter on C++ for newbies coders
