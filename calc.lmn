@@ -1,6 +1,6 @@
-printl первое число
+printl first number
 textinp x
-printl второе число
+printl two number
 textinp y
 printl знак
 textinp z
