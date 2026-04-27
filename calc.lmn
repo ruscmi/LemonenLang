@@ -24,5 +24,3 @@ wenn z == *
     math res x * y
     printl res
 ende
-
-printl good
