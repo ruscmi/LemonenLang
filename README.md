@@ -3,7 +3,7 @@
 </p>
 
 # LemonLang
-Lemon - interpreter on C++ for newbies coders
+Greetings. LemonLang is my C++ interpreter with the simplest string parsing logic. At the moment, it is quite simple in logic and works quite quickly. If you like my project, if you want, give me a star, I will be very happy about it.
 # Logo
 <p align="left">
   <img src="lmn.png" width="200">
