@@ -5,13 +5,13 @@
 #include <vector>
 #include <map>
 #include <sstream>
-#include <fstream>
+#include <fstream> //import libs
 #include <thread>
 #include <chrono>
 int main() {
     std::map<std::string, std::string> m;
     bool isRunning = true;
-    bool active = true;
+    bool active = true; //here I create flags
     bool met = true;
     while(isRunning) {
         std::vector<std::string> v;
@@ -20,7 +20,7 @@ int main() {
         std::getline(std::cin, inpline);
         std::stringstream ss(inpline);
         v.clear();
-        std::string w;
+        std::string w;  //here is all the basic logic, creating a vector, memory, parsing strings
         while(ss>>w) {
             v.push_back(w);
         }
@@ -29,14 +29,14 @@ int main() {
 			continue;
 		}
         if(v[0] == "quit") {
-            isRunning = false;
+            isRunning = false; //quit command
             break;
         }
         else if(v[0] =="wenn") {
 			if(v.size() ==4) {
 			    std::string v1;
 			    std::string v3;
-				if(m.count(v[1]) > 0) {	
+				if(m.count(v[1]) > 0) {	//wenn(If) command
 				    v1 = m[v[1]];
 				}else{
 					v1 = v[1];
@@ -52,7 +52,7 @@ int main() {
 					double rw = std::stod(v3);
 					if(v2 == "==") {
 						if(lw == rw) {
-							active = true;
+							active = true; //this is used to compare numbers or variables
 							met = true;
 						}else{
 							active = false;
@@ -108,9 +108,9 @@ int main() {
         else if(v[0] == "printl") {
             for(size_t i = 1; i < v.size(); i++) {
                 if(m.count(v[i]) > 0) {
-                    std::cout<<m[v[i]]<<" ";
+                    std::cout<<m[v[i]]<<" "; 
                 } else {
-                    std::cout<<v[i]<<" ";
+                    std::cout<<v[i]<<" "; //output of variables or output of made-up sentences by you
                 }
             }
             std::cout<<std::endl;
@@ -121,11 +121,11 @@ printl - Variable output or input string(print hello world)
 set - create a variable (set x 10)
 math - Easy math (math res 5 + 5)
 quit  - Quit in ezcmi
-run - Opening files with .cmi extension(run abc)
+run - Opening files with .cmi extension(run abc) 
 textinp - Input to string
 wenn - value if
 ansonsten - value else
-ende - meaning of the end of logic  )";
+ende - meaning of the end of logic  )"; //i added this to make the language easier, I'm trying to make it easier for children
             std::cout<<help<<std::endl;
         }
         else if(v[0]=="wait") {
@@ -139,7 +139,7 @@ ende - meaning of the end of logic  )";
 				std::string nm = v[1];
 				std::string vm;
 				std::cout<<"inp "<<nm<<": ";
-				std::getline(std::cin >>std::ws,vm);
+				std::getline(std::cin >>std::ws,vm); //input text
 				m[v[1]] = vm;
 		    }
 		}
@@ -151,7 +151,7 @@ ende - meaning of the end of logic  )";
 				    char op = v[3][0];
                     double res = 0;
                     switch(op) {
-						case '+': res = n1 + n2; break;
+						case '+': res = n1 + n2; break; //basic math working on a switch to simplify the code
 						case '-': res = n1 - n2; break;
 						case '*': res = n1 * n2; break;
 						case '/': if(n2 != 0) res = n1 / n2; break;
@@ -164,7 +164,7 @@ ende - meaning of the end of logic  )";
 				}
             }
         }
-       else if(v[0] == "run") {
+       else if(v[0] == "run") { //the same logic here, only for files that are opened
             if(v.size() == 2) {
                 std::ifstream file(v[1]);
                 if(file.is_open()) {
@@ -298,13 +298,17 @@ ende - meaning of the end of logic  )";
                         }
                     }
                     file.close();
+					active = true;
+					met = true;
+					std::cin.clear();
                 } else {
                     std::cout << "Not found" << std::endl;
                 }
             }
         }
         else {
-            std::cout<<"E: Command '"<<v[0]<<"' not found"<<std::endl;
+            std::cout<<"E: Command '"<<v[0]<<"' not found"<<std::endl; 
         }
     }
 }
+//to be continued...
