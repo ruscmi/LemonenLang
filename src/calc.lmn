@@ -1,0 +1,26 @@
+printl first number
+textinp x
+printl two number
+textinp y
+printl знак
+textinp z
+
+wenn z == +
+    math res x + y
+    printl res
+ende
+
+wenn z == -
+    math res x - y
+    printl res
+ende
+
+wenn z == /
+    math res x / y
+    printl res
+ende
+
+wenn z == *
+    math res x * y
+    printl res
+ende
