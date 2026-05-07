@@ -99,11 +99,11 @@ void executeCommands(std::vector<std::string>& v,std::map<std::string,std::strin
         }
         else if(v[0] == "--help") {
             std::string help = R"(Commands:
-printl - Variable output or input string(print hello world)
+printl - Variable output or input string(printl hello world)
 set - create a variable (set x 10)
 math - Easy math (math res 5 + 5)
-quit  - Quit in ezcmi
-run - Opening files with .cmi extension(run abc)
+quit  - Quit in lmnlang
+run - Opening files with .lmn extension(run abc)
 textinp - Input to string
 wenn - value if
 ansonsten - value else
