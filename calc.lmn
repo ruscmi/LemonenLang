@@ -2,7 +2,7 @@ printl first number
 textinp x
 printl two number
 textinp y
-printl знак
+printl op
 textinp z
 
 wenn z == +
