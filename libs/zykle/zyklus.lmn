@@ -1,0 +1,3 @@
+set counter 0
+run libs_lmn/a.lmn
+run libs_lmn/b.lmn
