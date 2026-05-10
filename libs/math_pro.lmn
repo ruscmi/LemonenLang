@@ -1,0 +1,28 @@
+# --- Продвинутая математическая библиотека для LemonenLang ---
+
+# 1. Возведение в квадрат (требует переменную 'num')
+# Результат будет в 'res_sq'
+wenn num > 0
+    math res_sq num * num
+ende
+wenn num < 0
+    math res_sq num * num
+ende
+wenn num == 0
+    set res_sq 0
+ende
+
+# 2. Модуль числа (Abs)
+# Требует 'num', результат в 'res_abs'
+wenn num < 0
+    math res_abs num * -1
+ende
+ansonsten
+    set res_abs num
+ende
+
+# 3. Константы (просто для доступа)
+set PI 3.141592
+set E 2.718281
+
+printl [math_pro] Библиотека загружена и расчеты окончены
