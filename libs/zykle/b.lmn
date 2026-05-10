@@ -1,0 +1,9 @@
+printl [Цикл] Работает блок Б...
+math counter counter + 1
+printl Итерация:
+printl counter
+
+wait 300
+
+# Возвращаемся в первый файл
+run libs_lmn/a.lmn
