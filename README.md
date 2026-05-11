@@ -27,3 +27,6 @@ thank you if you follow these instructions,
 since the code is completely open,
 you can make your own changes to it,
 thank you for using it.
+
+Under Windows, there is a separate compiled file [lemon.exe](lemon.exe) you just run it and everything works for you, but there is only one warning: 
+you may have an antivirus yelling that this is some kind of virus, this is normal for files without any reputation for pleasant use... (probably)
