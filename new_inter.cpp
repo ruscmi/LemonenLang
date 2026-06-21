@@ -6,7 +6,7 @@
 bool ActiveRequest = true;
 using namespace std;
 #pragma region
-enum TTYPE { KEYWORD, OPERATOR, SEPARATOR, NUMBER, STRING, UNKNOWN };
+enum TTYPE { KEYWORD, OPERATOR, SEPARATOR, NUMBER, STRING, UNKNOWN,END};
 struct Token {
   TTYPE KEY;
   string VAL;
@@ -73,6 +73,14 @@ public:
         i++;
         continue;
       }
+      else {
+      	string val(1,current);
+      	T.KEY = TTYPE::UNKNOWN;
+      	T.VAL = val;
+      	tokens.push_back(T);
+      	cout<<"E: Unknown symbols\n";
+      	i++; continue;
+      }
     }
     return tokens;
   }
@@ -93,7 +101,7 @@ public:
 	}
 	Token peer() {
 		if(position >= tokenize.size()) {
-			return Token{TTYPE::UNKNOWN,""};
+			return Token{TTYPE::END,""};
 		}
 		return tokenize[position];
 	}
