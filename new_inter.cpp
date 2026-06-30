@@ -1,3 +1,8 @@
+/* 
+im love Richard Stollman this code
+released under the GPL 2.0 license
+FUCK MICROSLOP   🤡  🤡  🤡  🤡  🤡  🤡  🤡   🤡   🤡
+*/
 #include <cctype>
 #include <iostream>
 #include <string>
@@ -11,12 +16,14 @@ struct Token {
   TTYPE KEY;
   string VAL;
 };
+enum ASTTAB { ST_ASSIGNMNET, ST_NUMBER , ST_OPERATOR, ST_VARIABLE, ST_SEPARATOR };
 struct Node {
-  TTYPE KEY;
+  ASTTAB KEY;
   string VAL;
-  int left_index;
-  int right_index;
+  Node* left_index;
+  Node* right_index;
 };
+/* == LEXING == */
 class LEX {
 private:
   vector<Token> tokens;
@@ -84,19 +91,27 @@ public:
     }
     return tokens;
   }
-  void vector_parsing() {
+/*  void vector_parsing() {
     for (const auto &token : tokens) {
       cout << token.KEY << " : " << token.VAL << " ";
     }
     cout << endl;
-  }
+  } */
+  // this for debugs
 };
-class parser {
+
+/*
+  == PARSER ==
+ im using AST-tree
+ for parsing 
+*/
+class Parser {
 private:
     unsigned int position = 0;
     vector<Token> tokenize;
+    unordered_map<string,double> vars;
 public:
-	parser(vector<Token> tokenize){
+	Parser(vector<Token> tokenize){
 		this->tokenize=tokenize;
 	}
 	Token peer() {
@@ -111,19 +126,112 @@ public:
 		}
 		return tokenize[position -1];
 	}
+	Node* parse_program() {
+		return parse_expression();
+	}
+	Node* parse_factor() {
+		Token current = peer();
+		if(current.KEY == TTYPE::NUMBER) {
+			Node* node = new Node();
+			node->KEY = ST_NUMBER;
+			node->VAL = current.VAL;
+			advanced();
+			return node;
+		}
+		if(current.KEY == TTYPE::STRING) {
+			Node* node = new Node();
+			node->KEY = ST_VARIABLE;
+			node->VAL = current.VAL;
+			advanced();
+			return node;
+		}
+		else {
+			cout<<"ERROR PARSING: UNKNOWN AST INDEX"<<endl;	
+			advanced();
+			return nullptr;
+		}
+		return nullptr;
+	}
+	Node* parse_term() {
+		Node* left = parse_factor();
+		if(left == nullptr) {
+			return nullptr;
+		}
+		Token current = peer();
+		while(current.KEY == TTYPE::OPERATOR && (current.VAL == "*" || current.VAL == "/")) {
+			string current_op = current.VAL;
+			advanced();
+			Node* right = parse_factor();
+			if(right == nullptr) {
+				return nullptr;
+			}
+			Node* node = new Node();
+			node->KEY = ST_OPERATOR;
+			node->left_index = left;
+			node->right_index = right;
+			node->VAL = current_op;
+			left = node;
+			current = peer();
+		}
+		return left;
+	}
+	Node* parse_expression() {
+		Node* left = parse_term();
+		if(left == nullptr) {
+			return nullptr;
+		}
+		Token current = peer();
+		while(current.KEY == TTYPE::OPERATOR && (current.VAL == "+" || current.VAL == "-")) {
+			string current_op = current.VAL;
+			advanced();
+			Node* right = parse_term();
+			if(right == nullptr) {
+				return nullptr;
+			}
+			Node* node = new Node();
+			node->KEY = ST_OPERATOR;
+			node->left_index = left;
+			node->right_index = right;
+			node->VAL = current_op;
+			left = node;
+			current = peer();
+		}
+		return left;		
+	}
 };
+void print_tree(Node* node,int level = 0) {
+	if(node == nullptr) { return; }
+	for(int i = 0; i < level; i++ ) { cout<<"   "; }
+	cout<<node->VAL;
+	if(node->KEY == ST_NUMBER ) { cout<<" [NUMBER]\n"; }
+	else if(node->KEY == ST_OPERATOR) { cout<<" [OPERATOR]\n"; }
+	else if(node->KEY == ST_VARIABLE) { cout<<" [VARIABLE]\n"; }
+	else { cout<<" [UNKNOWN]"; }
+	print_tree(node->left_index, level + 1);
+	print_tree(node->right_index, level + 1);
+}
 int main() {
   LEX lexing;
   string code;
   while (ActiveRequest) {
     cout << "#> ";
     getline(cin, code);
-    lexing.tokenize(code);
-    lexing.vector_parsing();
+    vector<Token>tokenize = lexing.tokenize(code);
+    Parser p(tokenize);
+    Node* tree = p.parse_program();
+    cout<<"==AST-TREE=="<<endl;
+    if(tree != nullptr) {
+    	print_tree(tree, 0);
+    } else {
+    	cout<<"E: nullptr TRUE";
+    }
+    cout<<endl;
+    cout<<"TOKENS: "<<tokenize.size()<<endl;
     if (code == "exit") {
       ActiveRequest = false;
       break;
     }
   }
 }
-#pragma endregion
+#pragma endregion 
+/*      FUCK    VSCODE    FUCK    FUCK    FUCK    👆     👆     👆  */
