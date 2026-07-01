@@ -17,4 +17,4 @@ struct Node {
   Node* left_index;
   Node* right_index;
 };
-void print_tree(Node* node,int level = 0);
+void print_tree(Node* node,unsigned int level = 0);

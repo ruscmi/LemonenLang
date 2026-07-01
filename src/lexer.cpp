@@ -1,7 +1,7 @@
 /*
 	lmnlang - GPL v2.0 - see LICENSE or main.cpp file for details
 */
-#include "/home/smirnow/lmnlang_v2/include/lexer.hpp"
+#include "../include/lexer.hpp"
 #include <cctype>
 #include <iostream>
 std::vector<Token>& LEX::tokenize(const string &code) {
