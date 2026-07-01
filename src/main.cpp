@@ -33,9 +33,9 @@
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 	FUCK PROPRIETARY SOFT
 */
-#include "/home/smirnow/lmnlang_v2/include/lexer.hpp"
-#include "/home/smirnow/lmnlang_v2/include/parser.hpp"
-#include "/home/smirnow/lmnlang_v2/include/ast.hpp"
+#include "../include/lexer.hpp"
+#include "../include/parser.hpp"
+#include "../include/ast.hpp"
 #include <iostream>
 bool ActiveRequest = true;
 int main() {
@@ -44,6 +44,7 @@ int main() {
   while (ActiveRequest) {
     cout << "#> ";
     getline(cin, code);
+    if(code.empty()) { continue; }
     vector<Token>tokenize = lexing.tokenize(code);
     Parser p(tokenize);
     Node* tree = p.parse_program();

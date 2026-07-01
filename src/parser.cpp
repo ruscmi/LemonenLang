@@ -1,7 +1,7 @@
 /*
 	lmnlang - GPL v2.0 - see LICENSE or main.cpp file for details
 */
-#include "/home/smirnow/lmnlang_v2/include/parser.hpp"
+#include "../include/parser.hpp"
 #include <iostream>
 Parser::Parser(std::vector<Token>tokenize) {
 	this->tokenize = tokenize;
