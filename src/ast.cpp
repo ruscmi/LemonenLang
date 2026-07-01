@@ -1,3 +1,6 @@
+/*
+	lmnlang - GPL v2.0 - see LICENSE or main.cpp file for details
+*/
 #include <iostream>
 #include "/home/smirnow/lmnlang_v2/include/ast.hpp"
 void print_tree(Node* node,int level) {
