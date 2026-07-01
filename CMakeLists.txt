@@ -1,5 +1,7 @@
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -flto")
+add_compile_options(-O3 -march=native -flto)
 cmake_minimum_required(VERSION 3.15)
 project(lmnlang VERSION 2.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-add_executable(lmnlang new_inter.cpp)
+add_executable(lmnlang src/parser.cpp src/lexer.cpp src/main.cpp src/ast.cpp)

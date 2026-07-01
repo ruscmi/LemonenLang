@@ -125,12 +125,12 @@ public:
     }
     return tokens;
   }
-/*  void vector_parsing() {
-    for (const auto &token : tokens) {
-      cout << token.KEY << " : " << token.VAL << " ";
-    }
-    cout << endl;
-  } */
+/*	void vector_parsing() {
+    	for (const auto &token : tokens) {
+	      cout << token.KEY << " : " << token.VAL << " ";
+   		}
+    	cout << endl;
+	} */
   // this for debugs
 };
 
@@ -193,7 +193,7 @@ public:
 		}
 		Token current = peer();
 		while(current.KEY == TTYPE::OPERATOR && (current.VAL == "*" || current.VAL == "/")) {
-			string current_op = current.VAL;
+			const string current_op = current.VAL;
 			advanced();
 			Node* right = parse_factor();
 			if(right == nullptr) {
@@ -216,7 +216,7 @@ public:
 		}
 		Token current = peer();
 		while(current.KEY == TTYPE::OPERATOR && (current.VAL == "+" || current.VAL == "-")) {
-			string current_op = current.VAL;
+			const string current_op = current.VAL;
 			advanced();
 			Node* right = parse_term();
 			if(right == nullptr) {

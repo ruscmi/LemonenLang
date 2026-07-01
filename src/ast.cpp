@@ -1,0 +1,13 @@
+#include <iostream>
+#include "/home/smirnow/lmnlang_v2/include/ast.hpp"
+void print_tree(Node* node,int level) {
+	if(node == nullptr) { return; }
+	for(int i = 0; i < level; i++ ) { cout<<"   "; }
+	cout<<node->VAL;
+	if(node->KEY == ST_NUMBER ) { cout<<" [NUMBER]\n"; }
+	else if(node->KEY == ST_OPERATOR) { cout<<" [OPERATOR]\n"; }
+	else if(node->KEY == ST_VARIABLE) { cout<<" [VARIABLE]\n"; }
+	else { cout<<" [UNKNOWN]"; }
+	print_tree(node->left_index, level + 1);
+	print_tree(node->right_index, level + 1);
+}
