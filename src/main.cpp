@@ -1,35 +1,35 @@
 /*
-	lmnlang — лёгкий и быстрый интерпретатор.
-	Авторские права (C) 2026 ruscmi
-	Язык lmnlang запрещен в соответствии с:
-	Общая публичная лицензия GNU
-	                       Версия 2, июнь 1991 г.
-	
-	 Авторские права (C) 1989, 1991 Free Software Foundation, Inc.
-	 51 Франклин-стрит, пятый этаж, Бостон, Массачусетс 02110-1301, США
-	
-	 Всем разрешается копировать и распространять дословные копии.
-	 данного лицензионного документа, но вносить в него изменения не допускается.
-	
-	                            Преамбула
-	
-	  Лицензии на большинство программного обеспечения разработаны таким образом, чтобы лишить вас ваших прав.
-	свобода делиться им и изменять его. В отличие от этого, GNU General Public
-	Лицензия призвана гарантировать вашу свободу делиться информацией и вносить изменения.
-	программное обеспечение — чтобы гарантировать, что программное обеспечение будет бесплатным для всех его пользователей.
-	
-	  Эта программа является свободным программным обеспечением; вы можете распространять её и/или модифицировать.
-	в соответствии с условиями Стандартной общественной лицензии GNU, опубликованной [название лицензии].
-	Фонд свободного программного обеспечения; либо версия 2 лицензии, либо
-	(по вашему выбору) любая более поздняя версия.
-	
-	  Данная программа распространяется в надежде на то, что она окажется полезной.
-	но БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ; даже без подразумеваемой гарантии
-	Пригодность для продажи или соответствие определенной цели. См. GNU.
-	Для получения более подробной информации см. Генеральную публичную лицензию.
-	
-	  Вы должны были получить копию лицензии GNU General Public License.
-	вместе с этой программой; если нет, напишите в службу поддержки свободного программного обеспечения.
+	lmnlang - lightweight and fast interpreter
+	Copyright (C) 2026 ruscmi
+	lmnlang is probided under:
+	GNU GENERAL PUBLIC LICENSE
+	                       Version 2, June 1991
+
+	 Copyright (C) 1989, 1991 Free Software Foundation, Inc.
+	 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+	 Everyone is permitted to copy and distribute verbatim copies
+	 of this license document, but changing it is not allowed.
+
+	                            Preamble
+
+	  The licenses for most software are designed to take away your
+	freedom to share and change it.  By contrast, the GNU General Public
+	License is intended to guarantee your freedom to share and change free
+	software--to make sure the software is free for all its users.
+
+	  This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+
+	  This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	General Public License for more details.
+
+	  You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 	FUCK PROPRIETARY SOFT
 */
