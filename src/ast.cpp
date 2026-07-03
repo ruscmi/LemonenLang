@@ -10,6 +10,7 @@ void print_tree(Node* node, unsigned int level) {
 	if(node->KEY == ST_NUMBER ) { cout<<" [NUMBER]\n"; }
 	else if(node->KEY == ST_OPERATOR) { cout<<" [OPERATOR]\n"; }
 	else if(node->KEY == ST_VARIABLE) { cout<<" [VARIABLE]\n"; }
+	else if(node->KEY == ST_ASSIGNMENT) { cout<<"[ASSIGNMENT]\n"; }
 	else { cout<<" [UNKNOWN]"; }
 	print_tree(node->left_index, level + 1);
 	print_tree(node->right_index, level + 1);
