@@ -20,7 +20,43 @@ Token Parser::advanced() {
 	return tokenize[position -1];
 }
 Node* Parser::parse_program() {
+	return parse_assignment();
+}
+Node* Parser::parse_statement() {
+	Token current = peer();
+	if(current.KEY == TTYPE::STRING) {
+		if(tokenize[position+1].KEY == TTYPE::OPERATOR && tokenize[position + 1].VAL == "=") {	
+			return parse_assignment();
+		}	
+		else {
+			Node* node = new Node();
+			node->KEY = ST_VARIABLE;
+			node->VAL = current.VAL;
+			advanced();
+			return node;
+   		}
+	}
 	return parse_expression();
+}
+Node* Parser::parse_assignment() {
+	Token current = peer();
+	string var_name = current.VAL;
+	advanced(); 
+	if(peer().KEY == TTYPE::OPERATOR && peer().VAL == "=") {
+		advanced();
+		Node* right_expr = parse_expression();
+		Node* node = new Node();
+		node->KEY = ST_VARIABLE;
+		node->VAL = var_name;
+
+		Node* assign = new Node();
+		assign->KEY = ST_ASSIGNMENT;
+		assign->VAL = "=";
+		assign->left_index = node;
+		assign->right_index = right_expr;
+		return assign;
+	}
+	return nullptr;
 }
 Node* Parser::parse_factor() {
 	Token current = peer();
