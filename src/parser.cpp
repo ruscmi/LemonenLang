@@ -20,7 +20,12 @@ Token Parser::advanced() {
 	return tokenize[position -1];
 }
 Node* Parser::parse_program() {
-	return parse_assignment();
+	if(peer().KEY == TTYPE::STRING && tokenize[position + 1].KEY == TTYPE::OPERATOR && tokenize[position + 1].VAL == "=" ) {
+		return parse_assignment();
+	}
+	else {
+		return parse_expression();
+	}
 }
 Node* Parser::parse_statement() {
 	Token current = peer();
@@ -60,6 +65,7 @@ Node* Parser::parse_assignment() {
 }
 Node* Parser::parse_factor() {
 	Token current = peer();
+	// cout << "DEBUG: TOKEN " << current.VAL << ", KEY = " << current.KEY << endl;
 	if(current.KEY == TTYPE::NUMBER) {
 		Node* node = new Node();
 		node->KEY = ST_NUMBER;
@@ -74,12 +80,23 @@ Node* Parser::parse_factor() {
 		advanced();
 		return node;
 	}
-	else {
-		cout<<"ERROR PARSING: UNKNOWN AST INDEX"<<endl;	
+	if(current.KEY == TTYPE::SEPARATOR && current.VAL == "(" ) {
 		advanced();
+		Node* inner = parse_expression();
+		// cout << "DEBUG: TOKEN: " << peer().VAL << endl;
+		if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")" ) {
+			advanced();
+			return inner;
+			cout << "DEBUG: Внутри скобок, текущий токен: " << peer().VAL << endl;
+		}
+		else {
+			cout<<"E: small tits on the brackets, excepted ')' "<<endl;
+			return nullptr;
+		}
+	}
+	else {
 		return nullptr;
 	}
-	return nullptr;
 }
 Node* Parser::parse_term() {
 	Node* left = parse_factor();
@@ -110,7 +127,7 @@ Node* Parser::parse_expression() {
 		return nullptr;
 	}
 	Token current = peer();
-	while(current.KEY == TTYPE::OPERATOR && (current.VAL == "+" || current.VAL == "-")) {
+	while(current.KEY == TTYPE::OPERATOR &&  (current.VAL == "+" || current.VAL == "-")) {
 		const string current_op = current.VAL;
 		advanced();
 		Node* right = parse_term();

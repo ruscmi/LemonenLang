@@ -48,7 +48,7 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	  }
 	  if (current == '.' || current == '{' || current == '}' ||
 	      current == '(' || current == ')') {
-	    string val(2, current);
+	    string val(1, current);
 	    T.KEY = TTYPE::SEPARATOR;
 	    T.VAL = val;
 	    tokens.push_back(T);
