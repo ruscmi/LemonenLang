@@ -20,8 +20,24 @@ Token Parser::advanced() {
 	return tokenize[position -1];
 }
 Node* Parser::parse_program() {
-	if(peer().KEY == TTYPE::STRING && tokenize[position + 1].KEY == TTYPE::OPERATOR && tokenize[position + 1].VAL == "=" ) {
+	for(const auto& token : tokenize ) {
+		if(token.KEY == TTYPE::UNKNOWN ) {
+			cout<<"E: Deer,my parser doesn't understand this shit "<<endl;
+			return nullptr;
+		}
+	}
+	if(peer().KEY == TTYPE::STRING && tokenize.size() > position + 1 && 
+	tokenize[position + 1].KEY == TTYPE::OPERATOR && tokenize[position + 1].VAL == "=" ) {
 		return parse_assignment();
+	}
+	else if(peer().KEY == TTYPE::NUMBER && tokenize.size() > position + 1 && 
+	tokenize[position + 1].KEY == TTYPE::OPERATOR && tokenize[position + 1].VAL == "=" ) {
+		cout<<"E: You, asshole, can't assign TTYPE::NUMBER to TTYPE::STRING or TTYPE::UNKNOWN(void) "<<endl;
+		return nullptr;
+	}
+	else if(peer().KEY == TTYPE::OPERATOR && peer().VAL == "=" ) {
+		cout<<"E: You fucker, you can't just write 'equals' "<<endl;
+		return nullptr;
 	}
 	else {
 		return parse_expression();
@@ -45,7 +61,7 @@ Node* Parser::parse_statement() {
 }
 Node* Parser::parse_assignment() {
 	Token current = peer();
-	string var_name = current.VAL;
+	const string var_name = current.VAL;
 	advanced(); 
 	if(peer().KEY == TTYPE::OPERATOR && peer().VAL == "=") {
 		advanced();
@@ -87,7 +103,7 @@ Node* Parser::parse_factor() {
 		if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")" ) {
 			advanced();
 			return inner;
-			cout << "DEBUG: Внутри скобок, текущий токен: " << peer().VAL << endl;
+			//cout << "DEBUG: Внутри скобок, текущий токен: " << peer().VAL << endl;
 		}
 		else {
 			cout<<"E: small tits on the brackets, excepted ')' "<<endl;
