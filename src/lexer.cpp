@@ -60,7 +60,6 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	  	T.KEY = TTYPE::UNKNOWN;
 	  	T.VAL = val;
 	  	tokens.push_back(T);
-	  	cout<<"E: Unknown symbols\n";
 	  	i++; continue;
 	  }
   }
