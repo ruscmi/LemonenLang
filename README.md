@@ -6,7 +6,8 @@
 	<img src="media/lmnlang_v2b.jpg" width="100%" alt="lmnlang banner">
 </p>
 
-Hello everyone! Lmnlang(Lemonenlang) is a fast scripting language. 
+Hello everyone! 
+Lmnlang(Lemonenlang) is a fast scripting language. 
 
 What has been done in it?
 
@@ -19,7 +20,7 @@ Im using unordered_map to memory for variables,it works very fast and builds an 
 
 The language is updated daily and I try to work on it alone.
 
-Installation and compilation.
+**Installation and compilation.**
 
 == **FOR LINUX** ==
 
