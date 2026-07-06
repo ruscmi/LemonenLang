@@ -1,6 +1,6 @@
-# 🍋 LemonenLang
+== **Russian [README.ru](README.ru.md)** ==
 
-Russian [README.ru](README.ru.md)
+# 🍋 LemonenLang
 
 <p align="center">
 	<img src="media/lmnlang_v2b.jpg" width="100%" alt="lmnlang banner">
