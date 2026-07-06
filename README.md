@@ -1,5 +1,7 @@
 # 🍋 LemonenLang
 
+Russian [README.ru](README.ru.md)
+
 <p align="center">
 	<img src="media/lmnlang_v2b.jpg" width="100%" alt="lmnlang banner">
 </p>
