@@ -50,7 +50,9 @@ int main() {
     Node* tree = p.parse_program();
     cout<<"==AST-TREE=="<<endl;
     if(tree != nullptr) {
+    	const double res = p.evaluate(tree);
     	print_tree(tree, 0);
+    	cout<<"Result: "<<res<<endl;
     } else {
     	cout<<"E: nullptr TRUE";
     }

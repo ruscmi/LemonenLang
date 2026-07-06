@@ -19,6 +19,46 @@ Token Parser::advanced() {
 	}
 	return tokenize[position -1];
 }
+double Parser::evaluate(Node* node) {
+	if(!node) { return 0; }
+	if(node->KEY == ST_NUMBER) {
+		return stod(node->VAL);
+	}
+	else if(node->KEY == ST_VARIABLE) {
+		string name = node->VAL;
+		auto it = vars.find(name);
+		if (it != vars.end()) {
+			return it->second;
+		}
+	}
+	else if(node->KEY == ST_OPERATOR) {
+		const double left = evaluate(node->left_index);
+		const double right = evaluate(node->right_index);
+		string op = node->VAL;
+		if(op == "+") { return left + right; }
+		else if(op == "-") { return left - right; }
+		else if(op == "/") {
+			if(right != 0) {
+				return left / right; 
+			}
+			else {
+				cout<<"E: cannot be divided by zero"<<endl;
+			}
+		}				
+		else if(op == "*") { return left * right; }
+	}
+	else if(node->KEY == ST_ASSIGNMENT) {
+		string name = node->left_index->VAL;
+		double value = evaluate(node->right_index);
+		vars[name] = value;
+		return value;
+	}
+	else {
+		cout<<"E: unknown operator in ST_OPERATOR"<<endl;
+		return 0;
+	}
+	return 0;
+}
 Node* Parser::parse_program() {
 	for(const auto& token : tokenize ) {
 		if(token.KEY == TTYPE::UNKNOWN ) {

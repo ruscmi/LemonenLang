@@ -16,6 +16,7 @@ public:
 	Parser(vector<Token> tokenize);
 	Token peer();
 	Token advanced();
+	double evaluate(Node* node);
 	Node* parse_program();
 	Node* parse_statement();
 	Node* parse_assignment();
