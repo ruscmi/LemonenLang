@@ -9,5 +9,5 @@ lmnlang is a fast and lightweight interpreter that works in C++ At the moment, t
 # Logo
 
 <p align="center">
-	<img src="media/lmnlang_v2.jpg" width="100%" alt="lmnlang logo">
+	<img src="media/lmnlang_v2.jpg" width="50%" alt="lmnlang logo">
 </p>
