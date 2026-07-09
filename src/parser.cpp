@@ -2,6 +2,7 @@
 	lmnlang - GPL v2.0 - see LICENSE or main.cpp file for details
 */
 #include "../include/parser.hpp"
+#include "../include/utf8_win.hpp"
 #include <iostream>
 void Parser::setTokens(const vector<Token>& tokenize) {
 	this->tokenize = tokenize;
@@ -20,6 +21,7 @@ Token Parser::advanced() {
 	return tokenize[position -1];
 }
 double Parser::evaluate(Node* node) {
+	setup_utf8();
 	if(!node) { return 0; }
 	if(node->KEY == ST_NUMBER) {
 		return stod(node->VAL);
@@ -110,6 +112,7 @@ double Parser::evaluate(Node* node) {
 	return 0;
 }
 Node* Parser::parse_program() {
+	setup_utf8();
 	for(const auto& token : tokenize ) {
 		if(token.KEY == TTYPE::UNKNOWN ) {
 			cout<<"\033[1;31mE: Deer,my parser doesn't understand this shit\033[0m"<<endl;
@@ -122,6 +125,9 @@ Node* Parser::parse_program() {
 	}
 	else if(peer().KEY == TTYPE::STRING && peer().VAL == "lmuck") {
 		return parse_statement();
+	}
+	else if(peer().KEY == TTYPE::STRING && peer().VAL == "man") {
+		return parse_manual();
 	}
 	else if(peer().KEY == TTYPE::NUMBER && tokenize.size() > position + 1 && 
 	tokenize[position + 1].KEY == TTYPE::OPERATOR && tokenize[position + 1].VAL == "=" ) {
@@ -136,7 +142,93 @@ Node* Parser::parse_program() {
 		return parse_expression();
 	}
 }
+Node* Parser::parse_manual() {
+	setup_utf8();
+	Token current = peer();
+	const char* bluec = "\033[34m";
+	const char* resbc = "\033[0m";
+	if(current.KEY == TTYPE::STRING && current.VAL == "man") {
+		advanced();
+		if(peer().KEY == TTYPE::STRING && peer().VAL == "list") {
+			cout<<bluec<<R"(   Hello buddy!
+		Args for man
+ math - see algebraic examples
+ assignment - see examples assignments
+ print - see examples prints vars or strings)"<<resbc<<endl;
+		}
+		else if (peer().KEY == TTYPE::STRING && peer().VAL == "math") {
+		cout<<bluec<<R"(	What can lmnlang do in math?
+ Operations: addition, subtraction, multiplication and division
+ Examples: 
+ 	5 + 5 (will output the result)
+ 	5 * 5
+ 	5 / 5
+ 	5 - 5
+ Actions with multiple numbers and operations,examples:
+ 	5 + 5 * 5 / 5 (will output the result)
+ Actions with parentheses (priorities),examples:
+ 	5 * ( 5 + 5 ) / 5 + 5
+ At this time, it's all thanks for viewing this part of the manual.)"<<resbc<<endl;
+		}
+		else if(peer().KEY == TTYPE::STRING && peer().VAL == "assignment") {
+			cout<<bluec<<R"(	How to use assignment?
+ You can create variables as follows:
+ 	x = 5 
+     but no 
+      5 = x
+ cannot assign strings to numbers
+ You can assign whole lines if you put them in quotation marks
+  examples: 
+  	x = \"hello,world\" 
+  	  x = \"500\" (it will be like a string, not a number)
+  You can assign a variable to a different variable
+   examples:
+  	 y = 5
+  	  x = y
+  when displayed, it will output the values of the previous variable(y)
+
+  You can also store entire algebraic calculations in variables
+    examples:
+     x = 5 + 5 - 5
+      y = 5 * ( 5 + 5 )
+  when the variable is displayed, it will output a calculation
+  Thank you for reading this part of the manual!)"<<resbc<<endl;
+		}
+		else if(peer().KEY == TTYPE::STRING && peer().VAL == "print") {
+			cout<<bluec<<R"(	I want to say right away! 
+ In this language, the 'lmuck' + <args> command (short for lmn druck) is used to output strings
+ 	How do I output variables?
+ Let's say you created a variable y with a value of 5
+  example:
+  	y = 5
+  You can withdraw it by simply writing lmuck y
+   example:
+   	lmuck y
+  How do I output numbers?
+   example:
+   	lmuck 5 
+   	 lmuck 50
+   	  lmuck 500
+   will give you the numbers.
+   How do I print strings?
+   	use a quotes for print strings
+   	 example:
+   	  lmuck \"hello,world\"
+   	will bring you 'hello,world'
+   It is also possible to output the results of algebraic calculations.
+    example:
+     lmuck 5 + 5 * 5 / 5
+   will bring you answer
+   That's all, thank you for viewing this part of the manual.)"<<resbc<<endl;
+		}
+		else {
+			cout<<"\033[1;33mW: use man <arg> and <list> to see args\033[0m"<<endl;
+		}
+	}
+	return nullptr;
+}
 Node* Parser::parse_print() {
+	setup_utf8();
 	advanced();
 	Node* expr = parse_expression();
 	if(expr == nullptr) {
@@ -192,6 +284,7 @@ Node* Parser::parse_assignment() {
 	return nullptr;
 }
 Node* Parser::parse_factor() {
+	setup_utf8();
 	Token current = peer();
 	// cout << "DEBUG: TOKEN " << current.VAL << ", KEY = " << current.KEY << endl;
 	if(current.KEY == TTYPE::NUMBER) {

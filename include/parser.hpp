@@ -19,6 +19,7 @@ public:
 	Token advanced();
 	double evaluate(Node* node);
 	Node* parse_program();
+	Node* parse_manual();
 	Node* parse_print();
 	Node* parse_statement();
 	Node* parse_assignment();

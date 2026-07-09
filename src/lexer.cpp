@@ -2,9 +2,11 @@
 	lmnlang - GPL v2.0 - see LICENSE or main.cpp file for details
 */
 #include "../include/lexer.hpp"
+#include "../include/utf8_win.hpp"
 #include <cctype>
 #include <iostream>
 std::vector<Token>& LEX::tokenize(const string &code) {
+	setup_utf8();
 	tokens.clear();
 	unsigned int i = 0;
 	unsigned int len = code.length();
@@ -69,7 +71,7 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 		  	tokens.push_back(T);
 		}
 		else {
-			cout<<"E: small dick on the quotes, excepted '\"'"<<endl;
+			cout<<"\033[1mE: small dick on the quotes, excepted '\"'\033[0m"<<endl;
 			tokens.clear();
 			return tokens;
 		}
