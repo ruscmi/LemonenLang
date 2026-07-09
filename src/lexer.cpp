@@ -55,6 +55,26 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	    i++;
 	    continue;
 	  }
+	  if(current == '"' ) {
+	  	i++;
+	  	string val = "";
+	  	while(i < len && code[i] != '"') {
+	  		val += code[i];
+	  		i++;
+	  	}
+	  	if(i < len && code[i] == '"' ) {
+		  	i++;
+		  	T.KEY = TTYPE::STRING_LIT;
+		  	T.VAL = val;
+		  	tokens.push_back(T);
+		}
+		else {
+			cout<<"E: small dick on the quotes, excepted '\"'"<<endl;
+			tokens.clear();
+			return tokens;
+		}
+	  continue;
+	  }
 	  else {
 	  	string val(1,current);
 	  	T.KEY = TTYPE::UNKNOWN;

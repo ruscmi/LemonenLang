@@ -38,6 +38,7 @@
 #include "../include/ast.hpp"
 #include <iostream>
 bool ActiveRequest = true;
+Parser p;
 int main() {
   LEX lexing;
   string code;
@@ -46,21 +47,20 @@ int main() {
     getline(cin, code);
     if(code.empty()) { continue; }
     vector<Token>tokenize = lexing.tokenize(code);
-    Parser p(tokenize);
+    p.setTokens(tokenize);
     Node* tree = p.parse_program();
-    cout<<"==AST-TREE=="<<endl;
-    if(tree != nullptr) {
-    	const double res = p.evaluate(tree);
-    	print_tree(tree, 0);
-    	cout<<"Result: "<<res<<endl;
-    } else {
-    	cout<<"E: nullptr TRUE";
-    }
-    cout<<endl;
-    cout<<"TOKENS: "<<tokenize.size()<<endl;
-    if (code == "exit") {
-      ActiveRequest = false;
-      break;
-    }
+    //cout<<"==AST-TREE=="<<endl;
+	double res = p.evaluate(tree);
+	if(tree != nullptr && tree->KEY != ST_ASSIGNMENT && tree->KEY == ST_OPERATOR && tree->VAL != "=") {
+		cout<<res<<endl;
+	}
+    //cout<<"TOKENS: "<<tokenize.size()<<endl;
+    vector<string>exits = {"exit","Exit","EXit","EXIt","EXIT","eXIT","exIT","exiT","eXit","exIt","EXiT","ExIT","ExiT","ExIt"};
+	for(const string& exit : exits) {
+	    if (code == exit ) {
+	      ActiveRequest = false;
+	      break;
+	    }
+	}
   }
 }
