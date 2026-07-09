@@ -3,7 +3,9 @@
 */
 #include <iostream>
 #include "../include/ast.hpp"
+#include "../include/utf8_win.hpp"
 void print_tree(Node* node, unsigned int level) {
+	setup_utf8();
 	if(node == nullptr) { return; }
 	for(unsigned int i = 0; i < level; i++ ) { cout<<"   "; }
 	cout<<node->VAL;

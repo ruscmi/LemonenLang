@@ -36,12 +36,21 @@
 #include "../include/lexer.hpp"
 #include "../include/parser.hpp"
 #include "../include/ast.hpp"
+#include "../include/utf8_win.hpp"
 #include <iostream>
 bool ActiveRequest = true;
 Parser p;
 int main() {
+  setup_utf8();
   LEX lexing;
   string code;
+  const char* big_txt = "\033[1;34m";
+  const char* end = "\033[0m";
+  cout<<big_txt<<R"(    lmnlang REPL mode 
+ Read Eval Print Loop mode
+   by ruscmi V 0.1
+ type 'man list' for manual
+  )"<<end<<endl;
   while (ActiveRequest) {
     cout << "#> ";
     getline(cin, code);
