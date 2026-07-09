@@ -3,7 +3,7 @@
 */
 #include "../include/parser.hpp"
 #include <iostream>
-Parser::Parser(std::vector<Token>tokenize) {
+void Parser::setTokens(const vector<Token>& tokenize) {
 	this->tokenize = tokenize;
 	this->position = 0;
 }
@@ -25,36 +25,86 @@ double Parser::evaluate(Node* node) {
 		return stod(node->VAL);
 	}
 	else if(node->KEY == ST_VARIABLE) {
-		string name = node->VAL;
-		auto it = vars.find(name);
+		const string name = node->VAL;
+		const auto it = vars.find(name);
 		if (it != vars.end()) {
-			return it->second;
+			if(holds_alternative<double>(it->second)) {
+				return get<double>(it->second);
+			}
+			else if(holds_alternative<string>(it->second)) {
+				cout<<"\033[33;44mE: var is not str,fucked asshole\033[0m\n"<<endl;				
+				return 0;
+			}
 		}
+		return 0;
 	}
 	else if(node->KEY == ST_OPERATOR) {
 		const double left = evaluate(node->left_index);
 		const double right = evaluate(node->right_index);
 		string op = node->VAL;
-		if(op == "+") { return left + right; }
-		else if(op == "-") { return left - right; }
+		if(op == "+") { int mo = left + right; return mo; }
+		else if(op == "-") { int mo = left - right; return mo; }
 		else if(op == "/") {
 			if(right != 0) {
-				return left / right; 
+				int mo = left / right;  return mo; 
 			}
 			else {
-				cout<<"E: cannot be divided by zero"<<endl;
+				cout<<"\033[1;31mE: cannot be divided by fucked zero\033[0m"<<endl;
 			}
 		}				
-		else if(op == "*") { return left * right; }
+		else if(op == "*") { int mo = left * right;  return mo;  }
 	}
 	else if(node->KEY == ST_ASSIGNMENT) {
 		string name = node->left_index->VAL;
-		double value = evaluate(node->right_index);
-		vars[name] = value;
-		return value;
+		if(node->right_index->KEY == ST_NUMBER) {
+			vars[name] = stod(node->right_index->VAL);
+			//cout<<"сохранил"<<endl;
+		}
+		else if(node->right_index->KEY == ST_STRING) {
+			vars[name] = node->right_index->VAL;
+			//cout<<"сохранил"<<endl;
+		}
+		else if(node->right_index->KEY == ST_VARIABLE) {
+			if(vars.find(node->right_index->VAL) != vars.end() ) {
+				vars[name] = vars[node->right_index->VAL];
+			}else {
+				cout<<"\033[1;33mE: variable not found, fuck moron\033[0m"<<endl;
+			}
+		}else {
+			double result = evaluate(node->right_index);
+			vars[name] = result;
+		}
+		return 0;
+	}
+	else if(node->KEY == ST_PRINT) {
+		Node* expr = node->right_index;
+		if(expr->KEY == ST_NUMBER) {
+			cout<<stod(expr->VAL)<<endl;
+		}
+		else if(expr->KEY == ST_VARIABLE) {
+			string name = expr->VAL;
+			const auto it = vars.find(name);
+			if(it != vars.end() ) {
+				if(holds_alternative<double>(it->second)) {
+					cout<<get<double>(it->second)<<endl;
+				}else if(holds_alternative<string>(it->second)) {
+					cout<<get<string>(it->second)<<endl;
+				}
+			}else {
+				cout<<"\033[1;33mE: var not found: \033[0m"<<name<<endl;
+			}
+		}
+		else if(expr->KEY == ST_STRING) {
+			cout<<expr->VAL<<endl;
+		}
+		else {
+			double result = evaluate(expr);
+			cout<<result<<endl;
+		}
+		return 0;
 	}
 	else {
-		cout<<"E: unknown operator in ST_OPERATOR"<<endl;
+		cout<<"\033[1;31mE: unknown operator in ST_OPERATOR\033[0m"<<endl;
 		return 0;
 	}
 	return 0;
@@ -62,7 +112,7 @@ double Parser::evaluate(Node* node) {
 Node* Parser::parse_program() {
 	for(const auto& token : tokenize ) {
 		if(token.KEY == TTYPE::UNKNOWN ) {
-			cout<<"E: Deer,my parser doesn't understand this shit "<<endl;
+			cout<<"\033[1;31mE: Deer,my parser doesn't understand this shit\033[0m"<<endl;
 			return nullptr;
 		}
 	}
@@ -70,21 +120,43 @@ Node* Parser::parse_program() {
 	tokenize[position + 1].KEY == TTYPE::OPERATOR && tokenize[position + 1].VAL == "=" ) {
 		return parse_assignment();
 	}
+	else if(peer().KEY == TTYPE::STRING && peer().VAL == "lmuck") {
+		return parse_statement();
+	}
 	else if(peer().KEY == TTYPE::NUMBER && tokenize.size() > position + 1 && 
 	tokenize[position + 1].KEY == TTYPE::OPERATOR && tokenize[position + 1].VAL == "=" ) {
-		cout<<"E: You, asshole, can't assign TTYPE::NUMBER to TTYPE::STRING or TTYPE::UNKNOWN(void) "<<endl;
+		cout<<"\033[1;31mE: You, asshole, can't assign TTYPE::NUMBER to TTYPE::STRING or TTYPE::UNKNOWN(void)\033[0m"<<endl;
 		return nullptr;
 	}
 	else if(peer().KEY == TTYPE::OPERATOR && peer().VAL == "=" ) {
-		cout<<"E: You fucker, you can't just write 'equals' "<<endl;
+		cout<<"\033[1;31mE: You fucker, you can't just write 'equals'\033[0m"<<endl;
 		return nullptr;
 	}
 	else {
 		return parse_expression();
 	}
 }
+Node* Parser::parse_print() {
+	advanced();
+	Node* expr = parse_expression();
+	if(expr == nullptr) {
+		cout<<"\033[1;33mE: you didn't add the arguments fucked mudda\033[0m"<<endl;
+		return nullptr;
+	}
+	Token current = peer();
+	Node* node = new Node();
+	node->KEY = ST_PRINT;
+	node->VAL = "lmuck";
+	node->left_index =  nullptr;
+	node->right_index = expr;
+	advanced();
+	return node;
+}
 Node* Parser::parse_statement() {
 	Token current = peer();
+	if (current.KEY == TTYPE::STRING && current.VAL == "lmuck") {
+	    return parse_print();
+	}
 	if(current.KEY == TTYPE::STRING) {
 		if(tokenize[position+1].KEY == TTYPE::OPERATOR && tokenize[position + 1].VAL == "=") {	
 			return parse_assignment();
@@ -136,6 +208,25 @@ Node* Parser::parse_factor() {
 		advanced();
 		return node;
 	}
+	if(current.KEY == TTYPE::STRING_LIT) {
+		Node* node = new Node();
+		node->KEY = ST_STRING;
+		node->VAL = current.VAL;
+		advanced();
+		return node;
+	}
+	if(current.KEY == TTYPE::SEPARATOR && current.VAL == "\"") {
+		advanced();
+		Node* inner = parse_expression();
+		if(peer().KEY == TTYPE::SEPARATOR && current.VAL == "\"") {
+			advanced();
+			return inner;
+		}
+		else {
+			cout<<"\033[1;33mE: small dick on the quotes, excepted '\"'\033[0m"<<endl;
+			return nullptr;
+		}
+	}
 	if(current.KEY == TTYPE::SEPARATOR && current.VAL == "(" ) {
 		advanced();
 		Node* inner = parse_expression();
@@ -146,7 +237,7 @@ Node* Parser::parse_factor() {
 			//cout << "DEBUG: Внутри скобок, текущий токен: " << peer().VAL << endl;
 		}
 		else {
-			cout<<"E: small tits on the brackets, excepted ')' "<<endl;
+			cout<<"\033[1;33mE: small tits on the brackets, excepted ')'\033[0m"<<endl;
 			return nullptr;
 		}
 	}
