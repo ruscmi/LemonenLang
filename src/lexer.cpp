@@ -21,6 +21,10 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	    while (i < len && isdigit(code[i])) {
 	      val += code[i];
 	      i++;
+	      if(code[i] == '.') {
+	      	val += code[i];
+	      	i++;
+	      }
 	    }
 	    T.KEY = TTYPE::NUMBER;
 	    T.VAL = val;
@@ -48,7 +52,15 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	    i++;
 	    continue;
 	  }
-	  if (current == '.' || current == '{' || current == '}' ||
+	  if(current == ';' ) {
+	  	string val(1,current);
+	  	T.KEY = TTYPE::END_EX;
+	  	T.VAL = val;
+	  	tokens.push_back(T);
+	  	i++;
+	  	continue;
+	  }
+	  if (current == '{' || current == '}' ||
 	      current == '(' || current == ')') {
 	    string val(1, current);
 	    T.KEY = TTYPE::SEPARATOR;

@@ -26,6 +26,9 @@ double Parser::evaluate(Node* node) {
 	if(node->KEY == ST_NUMBER) {
 		return stod(node->VAL);
 	}
+	else if(node->KEY == ST_NOP) {
+		return 0;
+	}
 	else if(node->KEY == ST_VARIABLE) {
 		const string name = node->VAL;
 		const auto it = vars.find(name);
@@ -44,17 +47,17 @@ double Parser::evaluate(Node* node) {
 		const double left = evaluate(node->left_index);
 		const double right = evaluate(node->right_index);
 		string op = node->VAL;
-		if(op == "+") { int mo = left + right; return mo; }
-		else if(op == "-") { int mo = left - right; return mo; }
+		if(op == "+") { double mo = left + right; return mo; }
+		else if(op == "-") { double mo = left - right; return mo; }
 		else if(op == "/") {
 			if(right != 0) {
-				int mo = left / right;  return mo; 
+				double mo = left / right;  return mo; 
 			}
 			else {
 				cout<<"\033[1;31mE: cannot be divided by fucked zero\033[0m"<<endl;
 			}
 		}				
-		else if(op == "*") { int mo = left * right;  return mo;  }
+		else if(op == "*") { double mo = left * right;  return mo;  }
 	}
 	else if(node->KEY == ST_ASSIGNMENT) {
 		string name = node->left_index->VAL;
@@ -119,37 +122,48 @@ Node* Parser::parse_program() {
 			return nullptr;
 		}
 	}
-	if(peer().KEY == TTYPE::STRING && tokenize.size() > position + 1 && 
-	tokenize[position + 1].KEY == TTYPE::OPERATOR && tokenize[position + 1].VAL == "=" ) {
-		return parse_assignment();
+	while(true) {
+		Node* expr = parse_statement();
+		if(!expr) {
+			if(peer().KEY == TTYPE::END) {
+				break;
+			}
+			cout<<"\033[1;33mE: excepted expression\033[0m"<<endl;
+			return nullptr;
+		}
+		if(expr) {
+			double res = evaluate(expr);
+			if(expr->KEY != ST_ASSIGNMENT && expr->KEY != ST_PRINT && expr->KEY != ST_NOP ) {
+				cout<<res<<endl;
+			}
+		}
+		if(peer().KEY == TTYPE::END_EX) {
+			//cout<<"в блоке end_ex\n";
+			advanced();
+			continue;
+		}
+		else if(peer().KEY == TTYPE::END) {
+			//cout<<"в блоке end\n";
+			break;
+		}else {
+			cout<<"\033[1;33mE: excepted ';' or end of input\033[0m"<<endl;
+			return nullptr;
+		}
 	}
-	else if(peer().KEY == TTYPE::STRING && peer().VAL == "lmuck") {
-		return parse_statement();
-	}
-	else if(peer().KEY == TTYPE::STRING && peer().VAL == "man") {
-		return parse_manual();
-	}
-	else if(peer().KEY == TTYPE::NUMBER && tokenize.size() > position + 1 && 
-	tokenize[position + 1].KEY == TTYPE::OPERATOR && tokenize[position + 1].VAL == "=" ) {
-		cout<<"\033[1;31mE: You, asshole, can't assign TTYPE::NUMBER to TTYPE::STRING or TTYPE::UNKNOWN(void)\033[0m"<<endl;
-		return nullptr;
-	}
-	else if(peer().KEY == TTYPE::OPERATOR && peer().VAL == "=" ) {
-		cout<<"\033[1;31mE: You fucker, you can't just write 'equals'\033[0m"<<endl;
-		return nullptr;
-	}
-	else {
-		return parse_expression();
-	}
+	return nullptr;
 }
 Node* Parser::parse_manual() {
 	setup_utf8();
 	Token current = peer();
 	const char* bluec = "\033[34m";
 	const char* resbc = "\033[0m";
+	Node* node = new Node();
+	node->KEY = ST_NOP;
+	node->VAL = "nop";
 	if(current.KEY == TTYPE::STRING && current.VAL == "man") {
 		advanced();
 		if(peer().KEY == TTYPE::STRING && peer().VAL == "list") {
+			advanced();
 			cout<<bluec<<R"(   Hello buddy!
 		Args for man
  math - see algebraic examples
@@ -171,6 +185,7 @@ Node* Parser::parse_manual() {
  At this time, it's all thanks for viewing this part of the manual.)"<<resbc<<endl;
 		}
 		else if(peer().KEY == TTYPE::STRING && peer().VAL == "assignment") {
+			advanced();
 			cout<<bluec<<R"(	How to use assignment?
  You can create variables as follows:
  	x = 5 
@@ -195,6 +210,7 @@ Node* Parser::parse_manual() {
   Thank you for reading this part of the manual!)"<<resbc<<endl;
 		}
 		else if(peer().KEY == TTYPE::STRING && peer().VAL == "print") {
+			advanced();
 			cout<<bluec<<R"(	I want to say right away! 
  In this language, the 'lmuck' + <args> command (short for lmn druck) is used to output strings
  	How do I output variables?
@@ -223,9 +239,10 @@ Node* Parser::parse_manual() {
 		}
 		else {
 			cout<<"\033[1;33mW: use man <arg> and <list> to see args\033[0m"<<endl;
+			advanced();
 		}
 	}
-	return nullptr;
+	return node;
 }
 Node* Parser::parse_print() {
 	setup_utf8();
@@ -241,7 +258,6 @@ Node* Parser::parse_print() {
 	node->VAL = "lmuck";
 	node->left_index =  nullptr;
 	node->right_index = expr;
-	advanced();
 	return node;
 }
 Node* Parser::parse_statement() {
@@ -249,7 +265,10 @@ Node* Parser::parse_statement() {
 	if (current.KEY == TTYPE::STRING && current.VAL == "lmuck") {
 	    return parse_print();
 	}
-	if(current.KEY == TTYPE::STRING) {
+	else if (current.KEY == TTYPE::STRING && current.VAL == "man") {
+		return parse_manual();
+	}
+	else if(current.KEY == TTYPE::STRING) {
 		if(tokenize[position+1].KEY == TTYPE::OPERATOR && tokenize[position + 1].VAL == "=") {	
 			return parse_assignment();
 		}	
@@ -260,8 +279,9 @@ Node* Parser::parse_statement() {
 			advanced();
 			return node;
    		}
+	}else {
+		return parse_expression();
 	}
-	return parse_expression();
 }
 Node* Parser::parse_assignment() {
 	Token current = peer();
@@ -307,6 +327,10 @@ Node* Parser::parse_factor() {
 		node->VAL = current.VAL;
 		advanced();
 		return node;
+	}
+	if(current.KEY == TTYPE::END_EX) {
+		advanced();
+		return nullptr;
 	}
 	if(current.KEY == TTYPE::SEPARATOR && current.VAL == "\"") {
 		advanced();
