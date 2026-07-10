@@ -1,5 +1,4 @@
 == **Russian [README.ru](README.ru.md)** ==
-== **Examples code [examples_code][examples]** ==
 
 # 🍋 LemonenLang
 
