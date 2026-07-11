@@ -29,6 +29,9 @@ double Parser::evaluate(Node* node) {
 	else if(node->KEY == ST_NOP) {
 		return 0;
 	}
+	else if(node->KEY ==ST_OPERATOR && node->VAL == "u-") {
+		return -evaluate(node->right_index);
+	}
 	else if(node->KEY == ST_VARIABLE) {
 		const string name = node->VAL;
 		const auto it = vars.find(name);
@@ -168,9 +171,11 @@ Node* Parser::parse_manual() {
 		Args for man
  math - see algebraic examples
  assignment - see examples assignments
- print - see examples prints vars or strings)"<<resbc<<endl;
+ print - see examples prints vars or strings
+ runner - see instructions and examples of run files code)"<<resbc<<endl;
 		}
 		else if (peer().KEY == TTYPE::STRING && peer().VAL == "math") {
+		advanced();
 		cout<<bluec<<R"(	What can lmnlang do in math?
  Operations: addition, subtraction, multiplication and division
  Examples: 
@@ -237,6 +242,29 @@ Node* Parser::parse_manual() {
    will bring you answer
    That's all, thank you for viewing this part of the manual.)"<<resbc<<endl;
 		}
+		else if(peer().KEY == TTYPE::STRING && peer().VAL == "runner") {
+			advanced();
+			cout<<bluec<<R"(	How do I run files in lmnlang?
+ NOTE: There is also a brief manual available by running './lmnlang --man'
+  For the REPL mode, you simply run the built executable ('./lmnlang').
+  To launch files, you will need to enter \"--file\"	 
+	  example:
+	  	./lmnlang --file <file_name.lmn>
+	  NOTE: Only files with the \".lmn\" extension can be launched.
+	  Additionally, you must either create your source
+	   code file within the directory containing the 
+	    built binary (`./lmnlang`) or run it from a common directory 
+	  as follows:
+	  	./build/lmnlang --file <file_name.lmn>
+	  	or by specifying an explicit directory
+	  	./build/lmnlang --file <directory_name/file_name.lmn>
+ What is the difference between the runner and the REPL mode?
+   Instead of entering code line by line, 
+    you can enter it into a separate source file; 
+     this is much more convenient and is considered standard practice.
+ Thank you for viewing this part of the manual.
+     )"<<resbc<<endl;
+		}
 		else {
 			cout<<"\033[1;33mW: use man <arg> and <list> to see args\033[0m"<<endl;
 			advanced();
@@ -261,6 +289,7 @@ Node* Parser::parse_print() {
 	return node;
 }
 Node* Parser::parse_statement() {
+	cout << "DEBUG: parse_statement, peer = " << peer().VAL << endl;
 	Token current = peer();
 	if (current.KEY == TTYPE::STRING && current.VAL == "lmuck") {
 	    return parse_print();
@@ -268,7 +297,7 @@ Node* Parser::parse_statement() {
 	else if (current.KEY == TTYPE::STRING && current.VAL == "man") {
 		return parse_manual();
 	}
-	else if(current.KEY == TTYPE::STRING) {
+	/*else if(current.KEY == TTYPE::STRING) {
 		if(tokenize[position+1].KEY == TTYPE::OPERATOR && tokenize[position + 1].VAL == "=") {	
 			return parse_assignment();
 		}	
@@ -278,8 +307,12 @@ Node* Parser::parse_statement() {
 			node->VAL = current.VAL;
 			advanced();
 			return node;
-   		}
-	}else {
+   		}*/
+   	else if(current.KEY == TTYPE::STRING && tokenize.size() > position + 1 && 
+   	tokenize[position+1].KEY == TTYPE::OPERATOR && tokenize[position+1].VAL == "=" ) {
+   		return parse_assignment();
+   	}
+	else {
 		return parse_expression();
 	}
 }
@@ -331,6 +364,16 @@ Node* Parser::parse_factor() {
 	if(current.KEY == TTYPE::END_EX) {
 		advanced();
 		return nullptr;
+	}
+	if(current.KEY == TTYPE::OPERATOR && current.VAL == "-") {
+		advanced();
+		Node* right = parse_factor();
+		Node* node = new Node();
+		node->KEY = ST_OPERATOR;
+		node->VAL = "u-";
+		node->left_index = nullptr;
+		node->right_index = right;
+		return node;
 	}
 	if(current.KEY == TTYPE::SEPARATOR && current.VAL == "\"") {
 		advanced();
@@ -386,6 +429,7 @@ Node* Parser::parse_term() {
 	return left;
 }
 Node* Parser::parse_expression() {
+	cout << "DEBUG: parse_expression, peer = " << peer().VAL << endl;
 	Node* left = parse_term();
 	if(left == nullptr) {
 		return nullptr;
