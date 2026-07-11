@@ -3,6 +3,7 @@
 */
 #include "../include/parser.hpp"
 #include "../include/utf8_win.hpp"
+bool is_runner = false;
 #include <iostream>
 void Parser::setTokens(const vector<Token>& tokenize) {
 	this->tokenize = tokenize;
@@ -40,7 +41,7 @@ double Parser::evaluate(Node* node) {
 				return get<double>(it->second);
 			}
 			else if(holds_alternative<string>(it->second)) {
-				cout<<"\033[33;44mE: var is not str,fucked asshole\033[0m\n"<<endl;				
+				cout<<"\033[1;31mE: var is not str,fucked asshole\033[0m"<<endl;				
 				return 0;
 			}
 		}
@@ -163,6 +164,10 @@ Node* Parser::parse_manual() {
 	Node* node = new Node();
 	node->KEY = ST_NOP;
 	node->VAL = "nop";
+	if(is_runner) {
+		cout<<"\033[1;33mE: Cannot call manual in file run mode\033[0m"<<endl;
+		return node;
+	}
 	if(current.KEY == TTYPE::STRING && current.VAL == "man") {
 		advanced();
 		if(peer().KEY == TTYPE::STRING && peer().VAL == "list") {
@@ -289,7 +294,7 @@ Node* Parser::parse_print() {
 	return node;
 }
 Node* Parser::parse_statement() {
-	cout << "DEBUG: parse_statement, peer = " << peer().VAL << endl;
+	//cout << "DEBUG: parse_statement, peer = " << peer().VAL << endl;
 	Token current = peer();
 	if (current.KEY == TTYPE::STRING && current.VAL == "lmuck") {
 	    return parse_print();
@@ -429,7 +434,7 @@ Node* Parser::parse_term() {
 	return left;
 }
 Node* Parser::parse_expression() {
-	cout << "DEBUG: parse_expression, peer = " << peer().VAL << endl;
+	//cout << "DEBUG: parse_expression, peer = " << peer().VAL << endl;
 	Node* left = parse_term();
 	if(left == nullptr) {
 		return nullptr;
