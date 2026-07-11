@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 using namespace std;
+extern bool is_runner;
 enum TTYPE { KEYWORD, OPERATOR, SEPARATOR, NUMBER, STRING, UNKNOWN,END,STRING_LIT,END_EX };
 struct Token {
   TTYPE KEY;

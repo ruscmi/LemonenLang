@@ -39,11 +39,13 @@
 #include "../include/utf8_win.hpp"
 #include <fstream>
 #include <iostream>
+extern bool is_runner;
 int main(int argc, char *argv[]) {
   setup_utf8();
   const char *big_txt = "\033[1;34m";
   const char *end = "\033[0m";
   if (argc >= 3 && string(argv[1]) == "--file") {
+  	is_runner = true;
     Parser pa;
     string filename = argv[2];
     ifstream file(filename);
@@ -56,10 +58,10 @@ int main(int argc, char *argv[]) {
                     istreambuf_iterator<char>());
         vector<Token> tokenize = lexing.tokenize(code);
         pa.setTokens(tokenize);
-        Node *tree = pa.parse_program();
-        if (tree) {
-          pa.evaluate(tree);
-        }
+        Node* tree = pa.parse_program();
+		if (tree != nullptr && is_runner == true) {
+			pa.evaluate(tree);
+		}
         file.close();
       } else {
         cout << "\033[1;34mExcepted \'.lmn\' on name file\033[0m" << endl;
@@ -102,7 +104,8 @@ int main(int argc, char *argv[]) {
       // cout<<"TOKENS: "<<tokenize.size()<<endl;
       vector<string> exits = {"exit", "Exit", "EXit", "EXIt", "EXIT",
                               "eXIT", "exIT", "exiT", "eXit", "exIt",
-                              "EXiT", "ExIT", "ExiT", "ExIt"};
+                              "EXiT", "ExIT", "ExiT", "ExIt", "quit","Quit","QUIT","QUit","QUIt","QuiT","quiT","quIT","qUIT","qUIt",
+                              "qUit","quIt"};
       for (const string &exit : exits) {
         if (code == exit) {
           ActiveRequest = false;
