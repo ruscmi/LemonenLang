@@ -5,19 +5,18 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
-#include <variant>
 #include "ast.hpp"
 using namespace std;
 class Parser {
 private:
     unsigned int position = 0;
     vector<Token> tokenize;
-    unordered_map<string,variant<double,string>> vars;
+    unordered_map<string,Value> vars;
 public:
 	void setTokens(const vector<Token>& tokenize);
 	Token peer();
 	Token advanced();
-	double evaluate(Node* node);
+	Value evaluate(Node* node);
 	Node* parse_program();
 	Node* parse_manual();
 	Node* parse_print();
