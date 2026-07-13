@@ -15,6 +15,7 @@ What has been done in it?
 - **Parser**
 - **AST-tree**
 - **Interpreter**
+- **Runner**
 
 Im using unordered_map to memory for variables,it works very fast and builds an AST tree almost instantly.
 
