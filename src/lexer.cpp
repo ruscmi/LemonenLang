@@ -42,6 +42,19 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	    tokens.push_back(T);
 	    continue;
 	  }
+	  if (current == '/' && 1 < len && code[i + 1] == '/') {
+	    while(i < len && code[i] != '\n' ) { i++; }
+	    continue;
+	  }
+	  if(current == '/' && i + 1 < len && code[i + 1] == '-') {
+	    while(i + 1 < len && !(code [i] == '-' && code [i + 1] == '/')) { i++; }
+	    if(i + 1 < len) {
+	        i += 2;
+	    }else {
+	        cout<<"\033[1;31mE: unclosed note\033[0m"<<endl;
+	    }
+        continue;
+	  }
 	  if (current == '+' || current == '-' || current == '*' ||
 	      current == '/' || current == '=' || current == '<' ||
 	      current == '>') {
@@ -60,8 +73,9 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	  	i++;
 	  	continue;
 	  }
-	  if (current == '{' || current == '}' ||
-	      current == '(' || current == ')') {
+	  if (current == '[' || current == ']' ||
+	      current == '(' || current == ')' || 
+	      current == ',') {
 	    string val(1, current);
 	    T.KEY = TTYPE::SEPARATOR;
 	    T.VAL = val;
