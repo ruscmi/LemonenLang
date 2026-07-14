@@ -1,7 +1,7 @@
 # 🍋 LemonenLang 
 
 <p align="center">
-	<img src="media/lmnlang_v2b.jpg" width="100%" alt="lmnlang banner">
+	<img src="media/lmnlang_v2b.png" width="100%" alt="lmnlang banner">
 </p>
 
 Всем привет! 
@@ -13,6 +13,7 @@ Lmnlang (Lemonenlang) — это быстрый скриптовый язык.
 - **Парсер** 
 - **AST-дерево** 
 - **Интерпретатор** 
+- **Раннер**
 
 Я использую unordered_map в памяти для переменных, 
 он работает очень быстро и почти мгновенно строит AST-дерево. 
@@ -43,7 +44,9 @@ chmod +x builder.sh
 # Logo
 
 <p align="center">
-	<img src="media/lmnlang_v2.jpg" width="50%" alt="lmnlang logo">
+	<img src="media/lmnlang_v2.png" width="50%" alt="lmnlang logo">
 </p>
 
-Спасибо, что прочитали учебник.
+сделано в ibispaint (на телефоне)
+
+🍋 Пока, лимоны!
