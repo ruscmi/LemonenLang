@@ -3,7 +3,7 @@
 # 🍋 LemonenLang
 
 <p align="center">
-	<img src="media/lmnlang_v2b.jpg" width="100%" alt="lmnlang banner">
+	<img src="media/lmnlang_v2b.png" width="100%" alt="lmnlang banner">
 </p>
 
 Hello everyone! 
@@ -49,7 +49,9 @@ Thank you for reading the tutorial.
 
 # Logo
 <p align="center">
-	<img src="media/lmnlang_v2.jpg" width="50%" alt="lmnlang logo">
+	<img src="media/lmnlang_v2.png" width="50%" alt="lmnlang logo">
 </p>
+
+made in ibispaint (mobile)
 
 🍋 Goodbye,lemons! 
