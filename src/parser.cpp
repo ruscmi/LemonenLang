@@ -231,7 +231,7 @@ Node* Parser::parse_manual() {
  assignment - see examples assignments
  print - see examples prints vars or strings
  runner - see instructions and examples of run files code
- arrays - see examples of working with arrays)"<<resbc<<endl;
+ arrays - see examples of working with arrays)"<<resbc<<endl; // ебучий в рот гит ты хули новый лого не грузишь
 		}
 		else if (peer().KEY == TTYPE::STRING && peer().VAL == "math") {
 		advanced();
