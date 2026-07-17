@@ -113,34 +113,15 @@ int main(int argc, char *argv[]) {
       // cout<<"==AST-TREE=="<<endl;
       if(tree != nullptr) {
         Value res = p.evaluate(tree);
-          if (tree != nullptr && tree->KEY != ST_ASSIGNMENT &&
-              tree->KEY != ST_NOP && tree->VAL != "=") {
-              if(holds_alternative<double>(res)) {
-                  cout << get<double>(res) << endl;
-              }
-              else if(holds_alternative<string>(res)) {
-                  cout << get<string>(res) << endl;
-              }
-              else if(holds_alternative<shared_ptr<ArrayValue>>(res)) {
-                  auto& arr = get<shared_ptr<ArrayValue>>(res);
-                  for(unsigned int i = 0; i < arr->elements.size(); ++i) {
-                      if(holds_alternative<double>(arr->elements[i])) {
-                          cout<<get<double>(arr->elements[i]);
-                      }
-                      else if(holds_alternative<string>(arr->elements[i])) {
-                          cout<<get<string>(arr->elements[i]);
-                      }
-                      else {
-                          cout<<"\033[1;31mE: TTYPE::UNKNOWN in array\033[0m"<<endl;
-                      }
-                      if(i != arr->elements.size() -1) { cout<<", "; }
-                  }
-              }else {
-                 cout<<"\033[1;31mE: return TTYPE::UNKNOWN && cannot display this res\033[0m"<<endl;
-                 return 0;
-              }
+          if (tree->KEY != ST_ASSIGNMENT &&
+          tree->KEY != ST_NOP && tree->VAL != "=") {
+              print_array(res);
+              cout<<endl;
+          }else if(tree->KEY != ST_ASSIGNMENT && tree->KEY != ST_PRINT && tree->KEY != ST_NOP && tree->VAL != "=") {
+              cout<<"\033[1;31mE: return TTYPE::UNKNOWN && cannot display this res\033[0m"<<endl;
+              return 0;
           }
-          delete tree;
+        delete tree;
       }
       // cout<<"TOKENS: "<<tokenize.size()<<endl;
     }

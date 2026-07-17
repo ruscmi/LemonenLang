@@ -21,6 +21,7 @@ struct Node {
   Node* left_index;
   Node* right_index;
   vector<Node*> children;
+  ~Node();
 };
 struct ArrayValue;
 using Value = variant<double,string,shared_ptr<ArrayValue>>; 
