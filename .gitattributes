@@ -1,2 +1,2 @@
 media/* linguist-vendored
-*.lmn linguist-language=LemonenLang
+*.lmn linguist-detectable=true
