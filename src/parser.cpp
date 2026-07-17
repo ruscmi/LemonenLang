@@ -102,61 +102,27 @@ Value Parser::evaluate(Node* node) {
 		else if(op == "*") { double mo = left * right;  return mo;  }
 	}
 	else if(node->KEY == ST_ASSIGNMENT) {
-		string name = node->left_index->VAL;
-		if(node->right_index->KEY == ST_NUMBER) {
-		    //cout << "DEBUG: saving " << name << " = " << node->right_index->VAL << endl;
-			vars[name] = stod(node->right_index->VAL);
-			//cout<<"сохранил"<<endl;
-		}
-		else if(node->left_index->KEY == ST_INDEX) {
-		    //Value val_arr = evaluate(node->left_index->left_index);
-		    string name_ref = node->left_index->left_index->VAL;
-		    Value val_indx = evaluate(node->left_index->right_index);
-		    Value new_val = evaluate(node->right_index);
-		    if(!holds_alternative<double>(val_indx)) {
-		        cout<<"\033[1;33mE: this is not ST_INDEX\033[0m"<<endl;
-                return 0.0;
-		    }
-		    auto& var_ref = vars[name_ref];
-		    auto& arr = get<shared_ptr<ArrayValue>>(var_ref);
-		    int index = (int)get<double>(val_indx);
-		    if(index < 0 || (size_t)index >= arr->elements.size()) {
-                cout<<"\033[1;33mE: ST_INDEX < 0 || ST_INDEX > ST_ARRAY.size(your_brain)\033[0m"<<endl;
-		        return 0.0;
-		    }
-		    if(holds_alternative<double>(new_val)) {
-		        arr->elements[index] = get<double>(new_val);
-		    }
-		    else if(holds_alternative<string>(new_val)) {
-		        arr->elements[index] = get<string>(new_val);
-		    }else {
-		        cout<<"\033[1;33mE: stupid TTYPE::UNKNOWN in node->right_index\033[0m"<<endl;
-		    }
-		    string name = node->left_index->left_index->VAL;
-		}
-		else if(node->right_index->KEY == ST_STRING) {
-		    //cout << "DEBUG: saving " << name << " = " << node->right_index->VAL << endl;
-			vars[name] = node->right_index->VAL;
-			//cout<<"сохранил"<<endl;
-		}
-		else if(node->right_index->KEY == ST_VARIABLE) {
-			if(vars.find(node->right_index->VAL) != vars.end() ) {
-			    //cout << "DEBUG: saving " << name << " = " << node->right_index->VAL << endl;
-				vars[name] = vars[node->right_index->VAL];
-			}else {
-				cout<<"\033[1;33mE: variable not found, fuck moron\033[0m"<<endl;
-			}
-		}else {
-			Value result = evaluate(node->right_index);
-			vars[name] = result;
-		}
-		return 0.0;
-	}
+        Value result = evaluate(node->right_index);
+        if(!node->children.empty()) {
+            for(const auto& node : node->children) {
+                vars[node->VAL] = result;
+            }
+        }else {
+            cout<<"E: че"<<endl;
+        }
+        return 0.0;
+    }
 	else if(node->KEY == ST_PRINT) {
-	    Value val = evaluate(node->right_index);
-	    print_array(val);
-	    cout<<endl;
-	    return 0.0;
+	    //cout << "DEBUG EVALUATE PRINT: children size = " << node->children.size() << endl;
+	    for(size_t i = 0 ; i < node->children.size(); ++i) {
+    	    Value val = evaluate(node->children[i]);
+    	    print_array(val);
+    	    if(i + 1 < node->children.size()) {
+    	        cout << " ";
+    	    }
+        }
+        cout<<endl;
+        return 0.0;
 	}
 	else {
 		cout<<"\033[1;31mE: unknown Value Parser::evaluate() type\033[0m"<<endl;
@@ -366,19 +332,29 @@ Node* Parser::parse_manual() {
 Node* Parser::parse_print() {
 	setup_utf8();
 	advanced();
+	Node* print_node = new Node();
+	print_node->KEY = ST_PRINT;
+	print_node->VAL = "lmuck";
+	print_node->left_index = nullptr;
+	print_node->right_index = nullptr;
 	Node* expr = parse_expression();
 	if(expr == nullptr) {
 		cout<<"\033[1;33mE: you didn't add the arguments fucked mudda\033[0m"<<endl;
+        delete print_node;
 		return nullptr;
 	}
-	Token current = peer();
-	Node* node = new Node();
-	node->KEY = ST_PRINT;
-	node->VAL = "lmuck";
-	node->left_index =  nullptr;
-	node->right_index = expr;
+	print_node->children.push_back(expr);
+	while(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
+        advanced();
+        Node* t_expr = parse_expression();
+        if(!t_expr) {
+            cout<<"\033[1;33mE: you didn't add the arguments fucked mudda\033[0m"<<endl;
+            return nullptr;
+        }
+        print_node->children.push_back(t_expr);
+    }
 	//cout << "DEBUG: exit parse_принт" << endl;
-	return node;
+	return print_node;
 }
 Node* Parser::parse_statement() {
 	//cout << "DEBUG: parse_statement, peer = " << peer().VAL << endl;
@@ -389,41 +365,22 @@ Node* Parser::parse_statement() {
 	else if (current.KEY == TTYPE::STRING && current.VAL == "man") {
 		return parse_manual();
 	}
-	else if(current.KEY == TTYPE::STRING && tokenize.size() > position + 1 &&
-	tokenize[position+1].VAL == "[" ) {
-	    string name = current.VAL;
-	    advanced();
-	    if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "[") {
-	        advanced();
-	        Node* expr = parse_expression();
-	        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
-	            advanced();
-	            Node* var = new Node();
-	            var->KEY = ST_VARIABLE;
-	            var->VAL = name;
-	            
-	            Node* node = new Node();
-	            node->KEY = ST_INDEX;
-	            node->left_index = var;
-	            node->right_index = expr;
-	            if(peer().KEY == TTYPE::OPERATOR && peer().VAL == "=") {
-	                advanced();
-	                Node* r_expr = parse_expression();
-	                Node* node_as = new Node();
-	                node_as->KEY = ST_ASSIGNMENT;
-	                node_as->left_index = node;
-	                node_as->right_index = r_expr;
-	                return node_as;
-	            }
-	            return node;
+	else if(current.KEY == TTYPE::STRING) {
+	    bool is_assignment = false;
+	    size_t pos_expr = position;
+	    while(pos_expr < tokenize.size() && tokenize[pos_expr].KEY != TTYPE::END_EX) {
+	        if(tokenize[pos_expr].KEY == TTYPE::OPERATOR && tokenize[pos_expr].VAL == "=") {
+	            is_assignment = true;
+	            break;
 	        }
+	        pos_expr++;
 	    }
-	    return nullptr;
+	    if(is_assignment) {
+	        return parse_assignment();
+	    }else {
+	        return parse_expression();
+	    }
 	}
-	else if(current.KEY == TTYPE::STRING && tokenize.size() > position + 1 && 
-   	tokenize[position+1].KEY == TTYPE::OPERATOR && tokenize[position+1].VAL == "=" ) {
-   		return parse_assignment();
-   	}
 	else {
 		return parse_expression();
 	}
@@ -431,30 +388,45 @@ Node* Parser::parse_statement() {
 	//cout << "DEBUG: parse_statement, peer = " << peer().VAL << ", KEY = " << peer().KEY << endl;
 }
 Node* Parser::parse_assignment() {
-	Token current = peer();
-	const string var_name = current.VAL;
-	advanced(); 
-	if(peer().KEY == TTYPE::OPERATOR && peer().VAL == "=") {
-		advanced();
-		Node* right_expr = parse_expression();
-		if(right_expr == nullptr) {
-            cout<<"\033[1;33mE: excepted expression after sucked \"=\" \033[0m"<<endl;
-		    return nullptr;
-		}
-		Node* node = new Node();
-		node->KEY = ST_VARIABLE;
-		node->VAL = var_name;
-        //cout << "DEBUG: right type = " << right_expr->KEY << endl;
-        
-		Node* assign = new Node();
-		assign->KEY = ST_ASSIGNMENT;
-		assign->VAL = "=";
-		assign->left_index = node;
-		assign->right_index = right_expr;
-		return assign;
-	}
-	//cout << "DEBUG: after '=', peer = " << peer().VAL << endl;
-	return nullptr;
+    vector<Node*>elements;
+    while(true) {
+        if(peer().KEY != TTYPE::STRING) {
+            cout<<"\033[1;33mE: . . .\033[0m"<<endl;
+            return nullptr;
+        }
+        Node* var_node = new Node();
+        var_node->KEY = ST_VARIABLE;
+        var_node->VAL = peer().VAL;
+        advanced();
+        elements.push_back(var_node);
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
+            advanced();
+            continue;
+        }
+        else if(peer().KEY == TTYPE::OPERATOR && peer().VAL == "=") {
+            break;
+        }
+        else {
+            cout<<"\033[1;33mE: UNKNOWN::TTYPE in assignmentation  \033[0m"<<endl;
+            return nullptr; // пиздец ебаный в рот че
+        }
+    }
+    advanced();
+    Node* right_expr = parse_expression();
+    if(!right_expr) {
+        cout<<"\033[1;33mE: excepted TTYPE::OPERATOR \"=\" \033[0m"<<endl;
+        for(Node* node : elements) {
+            delete node;
+        }
+        return nullptr;
+    }
+    Node* assign = new Node();
+    assign->KEY = ST_ASSIGNMENT;
+    assign->VAL = "=";
+    assign->left_index = nullptr;
+    assign->right_index = right_expr;
+    assign->children = elements;
+    return assign;
 }
 Node* Parser::parse_factor() {
 	setup_utf8();
@@ -475,38 +447,49 @@ Node* Parser::parse_factor() {
 		advanced();
 		left = node;
 	}
-	else if(current.KEY == TTYPE::SEPARATOR && current.VAL == "[") {
-		    advanced();
-		    vector<Node*>elements;
-		    while(true) {
-		        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") { 
-		        cout <<"\033[1;33mE: excepted your brain or ',' in massive\033[0m"<<endl; return nullptr; 
-		        }
-		        if (peer().KEY != TTYPE::SEPARATOR && peer().VAL != "]") {
-	    	        Node* element = parse_expression();
-	    	        elements.push_back(element);
-	    	        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
-	    	            advanced();
-	    	            continue;
-	    	        }else {
-	    	            break;
-	    	        }
-	            }
-	            else if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
-	                break;
-	            }
-		    }
-	    if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
-	        advanced();
-	    }else {
-	        cout<<"\033[1;33mE: excepted your brain or ']' in massive\033[0m"<<endl;
-	    }
-	    Node* node = new Node();
-	    node->KEY = ST_ARRAY;
-	    node->children = elements;
-	    //advanced();
-	    left = node;
-	}
+    else if(current.KEY == TTYPE::SEPARATOR && current.VAL == "[") {
+        advanced();
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
+            advanced();
+            Node* node = new Node();
+            node->KEY = ST_ARRAY;
+            node->children = {};
+            left = node;
+            return left;
+        }
+        if(peer().KEY == TTYPE::END) {
+            return nullptr;
+        }
+        vector<Node*>elements;
+        while(true) {
+            Node* element = parse_expression();
+            if(!element) {
+                cout<<"\033[1;33mE: cant parsing array,detection TTYPE::UNKNOWN in array\033[0m"<<endl;
+                return nullptr;
+            }
+            elements.push_back(element);
+            
+            if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
+                advanced();
+                continue;
+                if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
+                    cout<<"\033[1;33mE: you shit it, the next comma in the array is forbidden\033[0m"<<endl;
+                    return nullptr;
+                }
+            }
+            else if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
+                break;
+            }else {
+                cout<<"\033[1;33mE: excepted stupid parenthesis in fucked ST_ARRAY\033[0m"<<endl;
+                return nullptr;
+            }
+        }
+        Node* node = new Node();
+        node->KEY = ST_ARRAY;
+        node->children = elements;
+        advanced();
+        left = node;
+    }
 	else if(current.KEY == TTYPE::STRING_LIT) {
 		Node* node = new Node();
 		node->KEY = ST_STRING;
@@ -589,6 +572,10 @@ Node* Parser::parse_term() {
 		advanced();
 		Node* right = parse_factor();
 		if(right == nullptr) {
+		    cout <<"\033[1;33mE: missing right operand for operator '" << current_op << "'\033[0m" << endl;
+		    if(left != nullptr) {
+		        delete left;
+		    }
 			return nullptr;
 		}
 		Node* node = new Node();
@@ -614,6 +601,10 @@ Node* Parser::parse_expression() {
 		advanced();
 		Node* right = parse_term();
 		if(right == nullptr) {
+		    cout <<"\033[1;33mE: missing right operand for operator '" << current_op << "'\033[0m" << endl;
+		    if(left != nullptr) {
+		        delete left;
+		    }
 			return nullptr;
 		}
 		Node* node = new Node();
