@@ -23,8 +23,12 @@ struct Node {
   vector<Node*> children;
   ~Node();
 };
+struct ErrorValue {
+    string message;
+};
+struct AcceptValue {};
 struct ArrayValue;
-using Value = variant<double,string,shared_ptr<ArrayValue>>; 
+using Value = variant<double,string,shared_ptr<ArrayValue>,ErrorValue,AcceptValue>; 
 struct ArrayValue {
     vector<Value>elements;
 };
