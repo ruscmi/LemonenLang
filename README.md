@@ -65,6 +65,7 @@ ON LINUX
 cd path/to/directory
 ```
 Next, when you are inside LemonenLang, simply write:
+
 ON WINDOWS(powershell,fuck cmd)
 ```bash
 .\build\lmnlang.exe
