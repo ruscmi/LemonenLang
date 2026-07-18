@@ -30,13 +30,15 @@
 
           You should have received a copy of the GNU General Public License
         along with this program; if not, write to the Free Software
-        Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301
-   USA. FUCK PROPRIETARY SOFT
+        Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA. 
 */
+//fuck proprietary
 #include "../include/ast.hpp"
 #include "../include/lexer.hpp"
 #include "../include/parser.hpp"
 #include "../include/utf8_win.hpp"
+#include <readline/readline.h>
+#include <readline/history.h>
 #include <fstream>
 #include <iostream>
 extern bool is_runner;
@@ -79,7 +81,6 @@ int main(int argc, char *argv[]) {
     bool ActiveRequest = true;
     Parser p;
     LEX lexing;
-    string code;
     cout << big_txt << R"(    lmnlang REPL mode 
   Read Eval Print Loop mode
 	 by ruscmi V 0.1
@@ -87,27 +88,27 @@ int main(int argc, char *argv[]) {
 	  )"
          << end << endl;
     while (ActiveRequest) {
-      cout << "#> ";
-      getline(cin, code);
+      char* prompt = readline("#> ");
       bool is_exit = false;
-      vector<string> exits = {"exit", "Exit", "EXit", "EXIt", "EXIT",
-                               "eXIT", "exIT", "exiT", "eXit", "exIt",
-                               "EXiT", "ExIT", "ExiT", "ExIt", "quit","Quit","QUIT","QUit","QUIt","QuiT","quiT","quIT","qUIT","qUIt",
-                               "qUit","quIt"};
-       for (const string &exit : exits) {
-         if (code == exit) {
-           is_exit = true;
-           break;
-         }
-       }
+      if(!prompt) {
+        cout<<"\033[1;34mGoodbye lemon!\033[0m"<<endl;
+        break;
+      }
+      string inpline(prompt);
+      free(prompt);
+      if (inpline.empty()) {
+        continue;
+      }
+      add_history(inpline.c_str());
+      if (inpline == "exit" || inpline == "quit" ) {
+        is_exit = true;
+        break;
+      }
       if(is_exit) {
          ActiveRequest = false;
          break;
       }
-      if (code.empty()) {
-        continue;
-      }
-      vector<Token> tokenize = lexing.tokenize(code);
+      vector<Token> tokenize = lexing.tokenize(inpline);
       p.setTokens(tokenize);
       Node *tree = p.parse_program();
       // cout<<"==AST-TREE=="<<endl;
@@ -123,8 +124,8 @@ int main(int argc, char *argv[]) {
           }
         delete tree;
       }
-      // cout<<"TOKENS: "<<tokenize.size()<<endl;
     }
+    clear_history();
   }else {
     cout << "\033[1;34mE: just not open file\033[0m" << endl;
     return 1;

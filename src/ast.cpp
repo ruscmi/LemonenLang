@@ -41,7 +41,9 @@ void print_array(const Value& val) {
             if (i != arr->elements.size() - 1) cout << ", ";
         }
         cout << "]";
-    } else {
+    } 
+    else if(holds_alternative<ErrorValue>(val) || holds_alternative<AcceptValue>(val)) { }
+    else {
         cout << "?";
     }
 }
