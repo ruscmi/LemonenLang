@@ -7,10 +7,10 @@
 /*
 //ru//
 перенес мануал сюда потому что он разрастается и мешает в парсере,
-а так его можно будет просто инклудить и вызывать в рекурсии
+а так его можно будет просто инклудить и вызывать в рекурсионном спуске внутри парсера
 //en//
 moved the manual here because it grows and interferes in the parser, 
-otherwise it can simply be inserted and called in recursion
+otherwise it can simply be inserted and called in recursion descent inside the parser
 */
 Node* Parser::parse_manual() {
 	setup_utf8();
