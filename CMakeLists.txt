@@ -1,5 +1,5 @@
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -flto")
-add_compile_options(-O3 -march=native -flto)
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -flto=auto")
+add_compile_options(-O3 -march=native -flto=auto)
 cmake_minimum_required(VERSION 3.15)
 project(lmnlang VERSION 2.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)

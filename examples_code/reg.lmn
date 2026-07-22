@@ -1,0 +1,10 @@
+/-Well, purely for the fun-/
+name = lmout("Your name: ");
+pass = lmout("Password: ");
+secret_name = "ruscmi";
+secret_pass = "666";
+if(name == secret_name && pass == secret_pass) {
+    lmuck("Hello,owner!")
+}else {
+    lmuck("Hello,dude!")
+}

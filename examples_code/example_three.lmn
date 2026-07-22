@@ -2,12 +2,12 @@ x = [
     50, /- x[0] in array -/
     60,
     70 //  x[2] in array
-]; lmuck x[1]; /- print '60' -/ lmuck x; //print '[50,60,70]' 
+]; lmuck(x[1]); /- print '60' -/ lmuck(x); //print '[50,60,70]' 
 x = "
 l
 m  
 n
-"; lmuck x; // print l\n m\n nn\
+"; lmuck(x); // print l\n m\n nn\
 5 + 5 * ( // third in logic
     5 - 5 + ( // second in logic
         5 - 5 // first in logic
@@ -15,8 +15,7 @@ n
 ); //back
 
 /- recursion arrays with shared_ptr and struct containing vector -/
-x = [5,10]; x = [x,x]; x = [x,x]; lmuck x; // will output the recursion of array x
-z = ["string"]; y = [5,10,"Hello,world",z]; lmuck y;
-z = []; lmuck z; x = []; y = [];
-m = [5+5*(-5),-5-5*(5)]; m = [m,m]; m = [m,m]; m = [m,m] ; m = [m,m] ; m = [m,m]; lmuck m;
-/- бля не внатуре прикольно рекурсия массивов типо внатуре прикольно ну. -/
+x = [5,10]; x = [x,x]; x = [x,x]; lmuck(x); // will output the recursion of array x
+z = ["string"]; y = [5,10,"Hello,world",z]; lmuck(y);
+z = []; lmuck(z); x = []; y = [];
+m = [5+5*(-5),-5-5*(5)]; m = [m,m]; m = [m,m]; m = [m,m] ; m = [m,m] ; m = [m,m]; lmuck(m);

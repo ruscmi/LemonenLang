@@ -1,0 +1,7 @@
+x = lmout("введите число че: ") ; lmuck(x) ;
+x = "ввод: "; y = lmout(x) ; lmuck(y);
+x = lmout("пиши число: ");
+if(lmtod(x) == 5) { lmuck("ура сука работает") } else { lmuck("не пять") };
+y = 6;
+op = "+";
+if(op == "+") { lmuck(x+y) }
