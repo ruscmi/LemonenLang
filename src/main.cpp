@@ -85,8 +85,7 @@ int main(int argc, char *argv[]) {
   Read Eval Print Loop mode
 	 by ruscmi V 0.1
   type 'man list' for manual
-	  )"
-         << end << endl;
+	  )"<< end << endl;
     while (ActiveRequest) {
       char* prompt = readline("#> ");
       bool is_exit = false;

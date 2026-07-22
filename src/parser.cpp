@@ -4,8 +4,11 @@
 #include "../include/parser.hpp"
 #include "../include/utf8_win.hpp"
 #include "../include/ast.hpp"
-bool is_runner = false;
+#include "../src/manual.cpp"
+#include <readline/readline.h>
+#include <format>
 #include <iostream>
+bool is_runner = false;
 void Parser::setTokens(const vector<Token>& tokenize) {
 	this->tokenize = tokenize;
 	this->position = 0;
@@ -39,6 +42,13 @@ Value Parser::evaluate(Node* node) {
             cout<<"\033[1;31mE: unary minus requires a number\033[0m"<<endl;
             return ErrorValue{"E: unary minus requires a number"};
         }
+	}
+	else if(node->KEY == ST_BLOCK) {
+	    for(Node* child : node->children) {
+	        Value val = evaluate(child);
+	        if(holds_alternative<ErrorValue>(val)) { return val; }
+	    }
+	    return AcceptValue{};
 	}
 	else if(node->KEY == ST_ARRAY) {
         auto arr = make_shared<ArrayValue>();
@@ -85,6 +95,82 @@ Value Parser::evaluate(Node* node) {
 		cout<<"\033[1;31mE: Variable not found\033[0m"<<endl;
 		return ErrorValue {"E: Variable not found"};
 	}
+	else if(node->KEY == ST_BOOLEA_OPERATOR) { 
+        Value left_val = evaluate(node->left_index);
+        if(holds_alternative<ErrorValue>(left_val)) {return left_val;}
+        double num = get<double>(left_val);
+        bool l_bool = (num!=0.0);
+        if(node->VAL =="&&") {
+            if(!l_bool) {return 0.0;}
+            Value right_val = evaluate(node->right_index);
+            if(holds_alternative<ErrorValue>(right_val)) {return right_val; }
+            double num1 = get<double>(right_val);
+            bool r_bool = (num1 != 0.0);
+            return r_bool ? 1.0 : 0.0;
+        }
+        else if(node->VAL =="||") {
+            if(l_bool) { return 1.0; }
+            Value right_val = evaluate(node->right_index); 
+            if(holds_alternative<ErrorValue>(right_val)) {return right_val; }
+            double num1 = get<double>(right_val);
+            bool r_bool = (num1 != 0.0);
+            return r_bool ? 1.0 : 0.0;
+        }
+	}
+	else if(node->KEY == ST_LOGIC_OPERATOR) {
+        const Value left_val = evaluate(node->left_index);
+     	const Value right_val = evaluate(node->right_index);
+     	if(holds_alternative<ErrorValue>(left_val)) { return left_val; }
+     	if(holds_alternative<ErrorValue>(right_val)) { return right_val; }
+     	if(holds_alternative<string>(left_val) && holds_alternative<string>(right_val)) {
+     	    string left = get<string>(left_val);
+     	    string right = get<string>(right_val);
+     	    string log_op = node->VAL;
+     	    if(log_op == "!=") {  return (left != right) ? 1.0 : 0.0; } 
+     	    else if(log_op == "==") { return (left == right) ? 1.0 : 0.0; }
+     	    return ErrorValue {"E: unknown logic operator"};   
+     	}
+     	if(holds_alternative<shared_ptr<ArrayValue>>(left_val) && 
+     	holds_alternative<shared_ptr<ArrayValue>>(right_val) ) {
+     	auto left = get<shared_ptr<ArrayValue>>(left_val);
+     	auto right = get<shared_ptr<ArrayValue>>(right_val);
+     	string log_op = node->VAL;
+     	    if(log_op != "!=" && log_op != "==") {
+     	        return ErrorValue{"E: unknown logic operator"};
+     	    }
+         	if(left->elements.size() != right->elements.size()) {
+                return(log_op == "!=") ? 1.0 : 0.0;
+         	}
+         	bool equals = true;
+     	    for(size_t i = 0; i < left->elements.size(); ++i) {
+     	       if(left->elements.at(i) != right->elements.at(i)) {
+     	            equals = false;
+     	            break;
+                }
+            }
+            if(log_op == "==") {
+                return equals ? 1.0 : 0.0;
+            }else {
+                return equals ? 0.0 : 1.0;
+            }
+     	}
+     	if(holds_alternative<double>(left_val) && holds_alternative<double>(right_val)) {
+             double left = get<double>(left_val);
+             double right = get<double>(right_val);
+             string log_op = node->VAL;
+             if(log_op == ">") { double mo = left > right; return mo; }
+             else if(log_op == "<") { double mo = left < right; return mo; } 
+             else if(log_op == ">=") { double mo = left >= right; return mo; } 
+             else if(log_op == "<=") { double mo = left <= right; return mo; } 
+             else if(log_op == "!=") { double mo = left != right; return mo; } 
+             else if(log_op == "==") { double mo = left == right; return mo; }           
+             return ErrorValue {"E: unknown logic operator"};
+        }
+	    if(!holds_alternative<double>(left_val) || !holds_alternative<double>(right_val)) {
+	        cout<<"\033[1;31mE: logic operator return unknown TTYPE or comparison\033[0m"<<endl;
+	        return ErrorValue {"E: logic operator return unknown TTYPE or comparison"};
+	    }
+	}
 	else if(node->KEY == ST_OPERATOR) {
 		const Value left_val = evaluate(node->left_index);
 		const Value right_val = evaluate(node->right_index);
@@ -123,6 +209,62 @@ Value Parser::evaluate(Node* node) {
         }
         return AcceptValue{};
     }
+    else if(node->KEY == ST_IF) {
+        Value cond_val = evaluate(node->left_index);
+        if(holds_alternative<ErrorValue>(cond_val)) { return cond_val; }
+        if(!holds_alternative<double>(cond_val)) { 
+            cout<<"\033[1;31mE: TTYPE return value does not is equal to TTYPE::NUMBER\033[0m"<<endl;
+            return ErrorValue{"E: TTYPE return value does not is equal to TTYPE::NUMBER"};
+        }
+        double ev_num = get<double>(cond_val);
+        if(ev_num != 0.0) {
+            if(node->if_index) {
+                return evaluate(node->if_index);
+            }
+        }else {
+            if(node->else_index) {
+                return evaluate(node->else_index);
+            }
+        }
+        return AcceptValue{};
+    }
+    else if(node->KEY == ST_STOD) {
+        Value expr = evaluate(node->right_index);
+        if(holds_alternative<string>(expr)) {
+            try{
+                string prompt = get<string>(expr);
+                double convert = stod(prompt);
+                return convert;
+            }catch(...) {
+                cout<<"\033[1;31mE: do not convert this node->right_index\033[0m"<<endl;
+                return ErrorValue{"E: do not convert this node->right_index"};
+            }
+        }
+        if(holds_alternative<double>(expr)) {return expr;} 
+    }
+    else if(node->KEY == ST_INPUT) {
+        string prompt = "";
+        if(node->right_index != nullptr) {
+            Value prompt_val = evaluate(node->right_index);
+            if(holds_alternative<ErrorValue>(prompt_val)) { return prompt_val; }
+            if(holds_alternative<string>(prompt_val)) {
+                prompt = get<string>(prompt_val);
+            }
+            else if(holds_alternative<double>(prompt_val)) {
+                prompt = format("{:g}", get<double>(prompt_val));
+            }
+        }
+        cout << flush;
+        fflush(stdout);
+        char* input_ptr = readline(prompt.c_str());
+        if(input_ptr == nullptr) {
+            cout<<"\033[1;31mW: input interrupted\033[0m"<<endl;
+            return ErrorValue{"W: input interrupted"};
+        }
+        string input = input_ptr;
+        free(input_ptr);
+        return input; 
+    }
 	else if(node->KEY == ST_PRINT) {
 	    for(size_t i = 0 ; i < node->children.size(); ++i) {
     	    Value val = evaluate(node->children[i]);
@@ -152,7 +294,7 @@ Node* Parser::parse_program() {
 			if(peer().KEY == TTYPE::END) {
 				break;
 			}
-			cout<<"\033[1;33mE: excepted expression\033[0m"<<endl;
+			cout<<"\033[1;33mE: expected expression\033[0m"<<endl;
 			return nullptr;
 		}
 		bool s_ok = false;
@@ -164,7 +306,7 @@ Node* Parser::parse_program() {
 		    s_ok = true;
 		}
 		else {
-		    cout<<"\033[1;33mE: excepted ';' or end of input\033[0m"<<endl;
+		    cout<<"\033[1;33mE: expected ';' or end of input\033[0m"<<endl;
             delete expr;
 		    return nullptr;
 		}
@@ -172,13 +314,15 @@ Node* Parser::parse_program() {
 		    Value res = evaluate(expr);
 		    if(holds_alternative<ErrorValue>(res)) {
 		        if(peer().KEY == TTYPE::END) {
-		            break; continue;
+		            break; 
 		        }
+		        continue;
 		    }
 		    if(holds_alternative<AcceptValue>(res)) {
 		        if(peer().KEY == TTYPE::END) {
-		            break; continue;
+		            break; 
 		        }
+		        continue;
 		    }
 		    print_array(res);
 		    cout<<endl;
@@ -186,169 +330,100 @@ Node* Parser::parse_program() {
 	}
 	return nullptr;
 }
-Node* Parser::parse_manual() {
-	setup_utf8();
-	Token current = peer();
-	const char* bluec = "\033[34m";
-	const char* resbc = "\033[0m";
-	Node* node = new Node();
-	node->KEY = ST_NOP;
-	node->VAL = "nop";
-	if(is_runner) {
-		cout<<"\033[1;33mE: Cannot call manual in file run mode\033[0m"<<endl;
-		return node;
-	}
-	if(current.KEY == TTYPE::STRING && current.VAL == "man") {
-		advanced();
-		if(peer().KEY == TTYPE::STRING && peer().VAL == "list") {
-			advanced();
-			cout<<bluec<<R"(   Hello buddy!
-		Args for man
- math - see algebraic examples
- assignment - see examples assignments
- print - see examples prints vars or strings
- runner - see instructions and examples of run files code
- arrays - see examples of working with arrays)"<<resbc<<endl;
-		}
-		else if (peer().KEY == TTYPE::STRING && peer().VAL == "math") {
-		advanced();
-		cout<<bluec<<R"(	What can lmnlang do in math?
- Operations: addition, subtraction, multiplication and division
- Examples: 
- 	5 + 5 (will output the result)
- 	5 * 5
- 	5 / 5
- 	5 - 5
- Actions with multiple numbers and operations,example:
- 	5 + 5 * 5 / 5 (will output the result)
- Actions with parentheses (priorities),example:
- 	5 * ( 5 + 5 ) / 5 + 5
- There is also support for floating-point numbers,example:
-    5.5 - ( 1.5 / 1 ) / 5.7
- There is support for the unary minus
-    5 - -5 * ( 2 - 1 ) + 8.3
- And, of course, variable support
-    5 - x * x + 8
- (will work if any value is set for 'x')
- At this time, it's all thanks for viewing this part of the manual.)"<<resbc<<endl;
-		}
-		else if(peer().KEY == TTYPE::STRING && peer().VAL == "assignment") {
-			advanced();
-			cout<<bluec<<R"(	How to use assignment?
- You can create variables as follows:
- 	x = 5 
-     but no 
-      5 = x
- cannot assign strings to numbers
- You can assign whole lines if you put them in quotation marks
-  examples: 
-  	x = "hello,world" 
-  	  x = "500" (it will be like a string, not a number)
-  You can assign a variable to a different variable
-   examples:
-  	 y = 5
-  	  x = y
-  when displayed, it will output the values of the previous variable(y)
-
-  You can also store entire algebraic calculations in variables
-    examples:
-     x = 5 + 5 - 5
-      y = 5 * ( 5 + 5 )
-  when the variable is displayed, it will output a calculation
-
-  you can also create several variables with the same value at once
-    x,y = 5; lmuck x,y
-        nano,micro = "lmnlang";
-        lmuck nano        
-  Thank you for reading this part of the manual!)"<<resbc<<endl;
-		}
-		else if(peer().KEY == TTYPE::STRING && peer().VAL == "print") {
-			advanced();
-			cout<<bluec<<R"(	I want to say right away! 
- In this language, the 'lmuck' + <args> command (short for lmn druck) is used to output strings
- 	How do i output variables?
- Let's say you created a variable y with a value of 5
-  example:
-  	y = 5
-  You can withdraw it by simply writing lmuck y
-   example:
-   	lmuck y
-  How do I output numbers?
-   	lmuck 5 
-   	 lmuck 50
-   example:
-   	  lmuck 500
-   will give you the numbers.
-   How do I print strings?
-   	use a quotes for print strings
-   	 example:
-   	  lmuck "hello,world"
-   	will bring you 'hello,world'
-   It is also possible to output the results of algebraic calculations.
-    example:
-     lmuck 5 + 5 * 5 / 5
-   will bring you answer
-   you can output multiple expressions, variables, or strings
-    example:
-        x,y = 5; lmuck "my dick"," ",x," ","sm"," ","my anus"," ",y," ","sm";
-   That's all, thank you for viewing this part of the manual.)"<<resbc<<endl;
-		}
-		else if(peer().KEY == TTYPE::STRING && peer().VAL == "runner") {
-			advanced();
-			cout<<bluec<<R"(	How do I run files in lmnlang?
- NOTE: There is also a brief manual available by running './lmnlang --man'
-  For the REPL mode, you simply run the built executable ('./lmnlang').
-  To launch files, you will need to enter "--file"	 
-	  example:
-	  	./lmnlang --file <file_name.lmn>
-	  NOTE: Only files with the ".lmn" extension can be launched.
-	  Additionally, you must either create your source
-	   code file within the directory containing the 
-	    built binary (`./lmnlang`) or run it from a common directory 
-	  as follows:
-	  	./build/lmnlang --file <file_name.lmn>
-	  	or by specifying an explicit directory
-	  	./build/lmnlang --file <directory_name/file_name.lmn>
- What is the difference between the runner and the REPL mode?
-   Instead of entering code line by line, 
-    you can enter it into a separate source file; 
-     this is much more convenient and is considered standard practice.
- Thank you for viewing this part of the manual.
-     )"<<resbc<<endl;
-		}
-        else if(peer().KEY == TTYPE::STRING && peer().VAL == "arrays") {
+Node* Parser::parse_if() {
+    setup_utf8();
+    advanced();
+    Token current = peer();
+    Node* then_node = nullptr;
+    Node* cond = nullptr;
+    if(current.KEY == TTYPE::SEPARATOR && current.VAL == "(") {
+        advanced();
+        cond = parse_boolea_expression();
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")" ) {
             advanced();
-            cout<<bluec<<R"(    You use square brackets to work with arrays.
-  create an array examples:
-    x = [5,10]
-    x = ["Hello","world"]
- or you can use numbers and strings
-    y = [15,"Hello,world"]
-    y = ["lmnlang", 20]
- you can store variables in an array.
-    example:
-        y = 5; x = [y,"lemon"];
-        z = "hello"; m = 543; x = [z,m];
-  outputting array elements
-    example:
-        y = [5,2,1,6,0]; lmuck y[1];
-    it will output the number for you '2'
-  Nested arrays can be used.
-    example:
-        y = [5,10]; z = ["Hello,world","Lemon"];
-        m = [y,z]
-  You can create nested arrays in a single row
-    example:
-        x = [5,[5,5],5,[555,555,[555,555],555],555];  
-  that’s all—thanks for reading.
-    )"<<resbc<<endl;
+            if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "{") {
+                advanced();
+                then_node = new Node();
+                then_node->KEY = ST_BLOCK;
+                while(peer().KEY != TTYPE::SEPARATOR && peer().VAL != "}") {
+                    Node* expr = parse_statement();
+                    if(expr) {
+                        then_node->children.push_back(expr);
+                    }else {
+                        cout<<"\033[1;31mE: expected statement logic in ST_BLOCK\033[0m"<<endl;
+                        delete then_node;
+                        delete cond;
+                        return nullptr;
+                    }
+                    if(peer().KEY == TTYPE::END) {
+                        cout<<"\033[1;31mE: expected '}' in ST_BLOCK\033[0m"<<endl;
+                        delete then_node;
+                        delete cond;
+                        return nullptr;
+                    }
+                }
+                advanced();
+            }else {
+                then_node = parse_statement();
+                if(!then_node) {
+                    cout<<"\033[1;31mE: expected TTYPE::UNKNOWN in term\033[0m"<<endl;
+                    delete cond;
+                    return nullptr;
+                }
+            }
+        }else {
+            cout<<"\033[1;31mE: expected sucked ')' or detected extra neurons\033[0m"<<endl;
+            delete cond;
+            return nullptr;
         }
-		else {
-			cout<<"\033[1;33mW: use man <arg> and <list> to see args\033[0m"<<endl;
-			advanced();
-		}
-	}
-	return node;
+    }else {
+        cout<<"\033[1;31mE: expected sucked '(' or detected extra chromosomes\033[0m"<<endl;
+        return nullptr;
+    }
+    Node* else_node = nullptr;
+    if(peer().KEY == TTYPE::STRING && peer().VAL == "else") {
+        advanced();
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "{") {
+            advanced();
+            else_node = new Node();
+            else_node->KEY = ST_BLOCK;
+            while(peer().KEY != TTYPE::SEPARATOR && peer().VAL != "}") {
+                Node* expr = parse_statement();
+                if(expr) {
+                    else_node->children.push_back(expr);
+                }else {
+                    cout<<"\033[1;31mE: expected statement logic in ST_BLOCK\033[0m"<<endl;
+                    delete else_node;
+                    delete then_node;
+                    delete cond;
+                    return nullptr;
+                }
+                if(peer().KEY == TTYPE::END) {
+                    cout<<"\033[1;31mE: expected '}' in ST_BLOCK\033[0m"<<endl;
+                    delete else_node;
+                    delete then_node;
+                    delete cond;
+                    return nullptr;
+                }
+            }
+            advanced();
+        }else {
+            else_node = parse_statement();
+            if(!else_node) {
+                cout<<"\033[1;31mE: expected TTYPE::UNKNOWN in term\033[0m"<<endl;
+                delete then_node;
+                delete cond;
+                return nullptr;
+            }
+        }
+    }
+    Node* if_node = new Node();
+    if_node->KEY = ST_IF;
+    if_node->VAL = "if";
+    if_node->left_index = cond;
+    if_node->if_index = then_node;
+    if_node->else_index = else_node;
+    return if_node;
 }
 Node* Parser::parse_print() {
 	setup_utf8();
@@ -358,23 +433,97 @@ Node* Parser::parse_print() {
 	print_node->VAL = "lmuck";
 	print_node->left_index = nullptr;
 	print_node->right_index = nullptr;
-	Node* expr = parse_expression();
-	if(expr == nullptr) {
-		cout<<"\033[1;33mE: you didn't add the arguments fucked mudda\033[0m"<<endl;
-        delete print_node;
-		return nullptr;
-	}
-	print_node->children.push_back(expr);
-	while(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
-        advanced();
-        Node* t_expr = parse_expression();
-        if(!t_expr) {
-            cout<<"\033[1;33mE: you didn't add the arguments fucked mudda\033[0m"<<endl;
+	if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
+	    advanced();
+	    if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+	        advanced();
+	        return print_node;
+	    }
+    	Node* expr = parse_expression();
+    	if(expr == nullptr) {
+    		cout<<"\033[1;33mE: you didn't add the arguments fucked mudda\033[0m"<<endl;
+            delete print_node;
+    		return nullptr;
+    	}
+    	print_node->children.push_back(expr);
+    	while(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
+            advanced();
+            Node* t_expr = parse_expression();
+            if(!t_expr) {
+                cout<<"\033[1;33mE: you didn't add the arguments fucked mudda\033[0m"<<endl;
+                return nullptr;
+            }
+            print_node->children.push_back(t_expr);
+        }
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+            advanced();
+            return print_node;
+        }else {
+            cout<<"\033[1;33mE: expected ')' in lmuck()\033[0m"<<endl;
+            delete print_node;
             return nullptr;
         }
-        print_node->children.push_back(t_expr);
+    }else {
+        cout<<"\033[1;33mE: expected '(' after lmuck\033[0m"<<endl;
+        delete print_node;
+        return nullptr;
     }
-	return print_node;
+}
+Node* Parser::parse_stod() {
+    Node* input_node = new Node();
+    input_node->KEY = ST_STOD;
+    input_node->VAL = "lmtod";
+    input_node->left_index = nullptr;
+    input_node->right_index = nullptr;
+    if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
+        advanced();
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+            advanced();   
+        }else {
+            Node* expr = parse_expression();
+            input_node->right_index = expr;
+            if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+                advanced();
+            }else {
+                cout<<"\033[1;33mE: expected ')' in lmout \033[0m"<<endl;
+                delete input_node;
+                return nullptr;
+            }    
+        }
+        return input_node; 
+    }else {
+        cout<<"\033[1;33mE: expected '(' in lmout \033[0m"<<endl;
+        return nullptr;
+    }
+    return nullptr;
+}
+Node* Parser::parse_input() {
+    Node* input_node = new Node();
+    input_node->KEY = ST_INPUT;
+    input_node->VAL = "lmout";
+    input_node->left_index = nullptr;
+    input_node->right_index = nullptr;
+    if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
+        advanced();
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+            advanced();   
+        }else {
+            Node* expr = parse_expression();
+            input_node->right_index = expr;
+            if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+                advanced();
+            }else {
+                cout<<"\033[1;33mE: expected ')' in lmout \033[0m"<<endl;
+                delete input_node;
+                return nullptr;
+            }    
+        }
+        return input_node; 
+    }else {
+        cout<<"\033[1;33mE: expected '(' in lmout \033[0m"<<endl;
+        return nullptr;
+    }
+    return nullptr;
 }
 Node* Parser::parse_statement() {
 	Token current = peer();
@@ -383,6 +532,9 @@ Node* Parser::parse_statement() {
 	}
 	else if (current.KEY == TTYPE::STRING && current.VAL == "man") {
 		return parse_manual();
+	}
+	else if (current.KEY == TTYPE::STRING && current.VAL == "if") {
+	    return parse_if();
 	}
 	else if(current.KEY == TTYPE::STRING) {
 	    bool is_assignment = false;
@@ -425,13 +577,13 @@ Node* Parser::parse_assignment() {
         }
         else {
             cout<<"\033[1;33mE: UNKNOWN::TTYPE in assignmentation  \033[0m"<<endl;
-            return nullptr; // пиздец ебаный в рот че
+            return nullptr; 
         }
     }
     advanced();
     Node* right_expr = parse_expression();
     if(!right_expr) {
-        cout<<"\033[1;33mE: excepted TTYPE::OPERATOR \"=\" \033[0m"<<endl;
+        cout<<"\033[1;33mE: expected TTYPE::OPERATOR \"=\" \033[0m"<<endl;
         for(Node* node : elements) {
             delete node;
         }
@@ -449,7 +601,7 @@ Node* Parser::parse_factor() {
 	setup_utf8();
 	Token current = peer();
 	Node* left = nullptr;
-	if(current.KEY == TTYPE::NUMBER) {
+    if(current.KEY == TTYPE::NUMBER) {
 		Node* node = new Node();
 		node->KEY = ST_NUMBER;
 		node->VAL = current.VAL;
@@ -457,11 +609,24 @@ Node* Parser::parse_factor() {
 		left = node;
 	}
 	else if(current.KEY == TTYPE::STRING) {
-		Node* node = new Node();
-		node->KEY = ST_VARIABLE;
-		node->VAL = current.VAL;
-		advanced();
-		left = node;
+	    if(current.VAL == "lmout") {
+	        advanced();
+            left = parse_input();
+	    }
+	    else if(current.VAL == "lmtod") {
+	        advanced();
+	        left = parse_stod();
+	    }
+        else if(current.VAL == "lmuck") {
+            left = parse_print();
+        }
+	    else {
+    		Node* node = new Node();
+    		node->KEY = ST_VARIABLE;
+    		node->VAL = current.VAL;
+    		advanced();
+    		left = node;
+        }
 	}
     else if(current.KEY == TTYPE::SEPARATOR && current.VAL == "[") {
         advanced();
@@ -496,7 +661,7 @@ Node* Parser::parse_factor() {
             else if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
                 break;
             }else {
-                cout<<"\033[1;33mE: excepted stupid parenthesis in fucked ST_ARRAY\033[0m"<<endl;
+                cout<<"\033[1;33mE: expected stupid parenthesis in fucked ST_ARRAY\033[0m"<<endl;
                 return nullptr;
             }
         }
@@ -535,7 +700,7 @@ Node* Parser::parse_factor() {
 			return inner;
 		}
 		else {
-			cout<<"\033[1;33mE: small dick on the quotes, excepted '\"'\033[0m"<<endl;
+			cout<<"\033[1;33mE: small dick on the quotes, expected '\"'\033[0m"<<endl;
 			return nullptr;
 		}
 	}
@@ -547,7 +712,7 @@ Node* Parser::parse_factor() {
 			return inner;
 		}
 		else {
-			cout<<"\033[1;33mE: small tits on the brackets, excepted ')'\033[0m"<<endl;
+			cout<<"\033[1;33mE: small tits on the brackets, expected ')'\033[0m"<<endl;
 			return nullptr;
 		}
 	}
@@ -566,11 +731,64 @@ Node* Parser::parse_factor() {
      	    node->right_index = expr;
      	    left = node;
 	    }else {
-	        cout<<"\033[1;33mE: excepted your brain or ']' in index\033[0m"<<endl;
+	        cout<<"\033[1;33mE: expected your brain or ']' in index\033[0m"<<endl;
 	        return nullptr;
 	    }
 	}
 	return left;
+}
+Node* Parser::parse_boolea_expression() {
+	Node* left = parse_logic_expression();
+	if(left == nullptr) {
+		return nullptr;
+	}
+	Token current = peer();
+	while(current.KEY == TTYPE::BOOLEA_OPERATOR &&  (current.VAL == "&&" || current.VAL == "||")) {
+		const string current_op = current.VAL;
+		advanced();
+		Node* right = parse_logic_expression();
+		if(right == nullptr) {
+		    cout <<"\033[1;33mE: missing right operand for boolea operator '" << current_op << "'\033[0m" << endl;
+		    if(left != nullptr) {
+		        delete left;
+		    }
+			return nullptr;
+		}
+		Node* node = new Node();
+		node->KEY = ST_BOOLEA_OPERATOR;
+		node->left_index = left;
+		node->right_index = right;
+		node->VAL = current_op;
+		left = node;
+		current = peer();
+	}
+	return left;
+}
+Node* Parser::parse_logic_expression() {
+    Node* left = parse_expression();
+    if(left == nullptr) {
+        return nullptr;
+    }
+    while(peer().KEY == TTYPE::LOGIC_OPERATOR && (peer().VAL == ">" || peer().VAL == "<" 
+    || peer().VAL == "!=" || peer().VAL == "==" || peer().VAL == "<=" || peer().VAL == ">=")) {
+        const string current_op = peer().VAL;
+		advanced();
+		Node* right = parse_expression();
+		if(right == nullptr) {
+		    cout <<"\033[1;33mE: missing right operand for logic operator '" << current_op << "'\033[0m" << endl;
+		    if(left != nullptr) {
+		        delete left;
+		    }
+			return nullptr;
+		}
+		Node* node = new Node();
+		node->KEY = ST_LOGIC_OPERATOR;
+		node->left_index = left;
+		node->right_index = right;
+		node->VAL = current_op;
+		left = node;    
+    }
+    return left;
 }
 Node* Parser::parse_term() {
 	Node* left = parse_factor();

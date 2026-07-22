@@ -1,13 +1,13 @@
 /- example execute multiple lmuck -/
-x = "ruscmi" ; lmuck "my name is ",x ; //execute "my name is ruscmi"
+x = "ruscmi" ; lmuck("my name is ",x); //execute "my name is ruscmi"
 
 /- example multiple assignmentation-/
-x,y = "like"; lmuck "me ",x," lemons "," and ",y," cats "; //execute "me like lemons and like cats"
+x,y = "like"; lmuck("me ",x," lemons "," and ",y," cats "); //execute "me like lemons and like cats"
 
 /-example nested arrays-/
 x = [10,[5,5],"Hello"]; 
-lmuck x[0]; /- execute 10 -/ lmuck x[1]; /-execute nested array [5,5] -/ lmuck x[2]; // execute string "Hello"
+lmuck(x[0]); /- execute 10 -/ lmuck(x[1]); /-execute nested array [5,5] -/ lmuck(x[2]); // execute string "Hello"
 
 /-example mini-code-/
 entertainments = ["software engineering","lowlevel pl"]; le = "like";
-lmuck "my hobbys: ",entertainments," i like ",entertainments[0]," and ",entertainments[1];
+lmuck ("my hobbys: ",entertainments," i like ",entertainments[0]," and ",entertainments[1]);

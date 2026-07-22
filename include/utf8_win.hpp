@@ -1,3 +1,6 @@
+/*
+	lmnlang - GPL v2.0 - see LICENSE or main.cpp file for details
+*/
 #ifndef UTF8_HPP
 #define UTF8_HPP
 #include <iostream>

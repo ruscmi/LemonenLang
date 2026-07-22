@@ -33,7 +33,8 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	  }
 	  if (isalpha(current)) {
 	    string val = "";
-	    while (i < len && isalpha(code[i])) {
+	    while (i < len && (isdigit(code[i]) || isalpha(code[i]) 
+	    || code[i] == '_')) {
 	      val += code[i];
 	      i++;
 	    }
@@ -55,9 +56,37 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	    }
         continue;
 	  }
+	  if (current == '>' || current == '<' || 
+	  current == '!' || (current == '=' && i + 1 < len && code[i+1] == '=')) {
+	    string val = "";
+	    val += current;
+	    if(i + 1 < len && code[i+1] == '=') {
+            val += code[i+1];
+            i++;
+	    }
+	    else if(val == "!") {
+	        cout<<"\033[1;31mE: excepted one '!' in conditions\033[0m"<<endl;
+	        T.KEY = TTYPE::UNKNOWN;
+	        T.VAL = val;
+	        tokens.push_back(T);
+	        return tokens;
+	    }
+	    T.KEY = TTYPE::LOGIC_OPERATOR;
+	    T.VAL = val;
+	    tokens.push_back(T);
+	    i++;
+	    continue;
+	  }
+	  if((current == '&' && i + 1 < len && code[i+1] == '&') || (current == '|' && i + 1 < len && code[i+1] == '|')) {
+	    string val = {code[i],code[i+1]};
+	    T.KEY = TTYPE::BOOLEA_OPERATOR;
+	    T.VAL = val;
+	    tokens.push_back(T);
+	    i += 2;
+	    continue;
+	  }
 	  if (current == '+' || current == '-' || current == '*' ||
-	      current == '/' || current == '=' || current == '<' ||
-	      current == '>') {
+	      current == '/' || current == '=' ) {
 	    string val(1, current);
 	    T.KEY = TTYPE::OPERATOR;
 	    T.VAL = val;
@@ -75,7 +104,8 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	  }
 	  if (current == '[' || current == ']' ||
 	      current == '(' || current == ')' || 
-	      current == ',') {
+	      current == ',' || current == '{' ||
+	      current == '}') {
 	    string val(1, current);
 	    T.KEY = TTYPE::SEPARATOR;
 	    T.VAL = val;
@@ -87,6 +117,13 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	  	i++;
 	  	string val = "";
 	  	while(i < len && code[i] != '"') {
+	  	    if(code[i] == '\\' && i + 1 < len) {
+	  	        if(code[i + 1] == 'n') {
+	  	            val += '\n';
+	  	            i += 2;
+	  	            continue;
+	  	        }
+	  	    }
 	  		val += code[i];
 	  		i++;
 	  	}
@@ -97,7 +134,7 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 		  	tokens.push_back(T);
 		}
 		else {
-			cout<<"\033[1mE: small dick on the quotes, excepted '\"'\033[0m"<<endl;
+			cout<<"\033[1mE: small dick on the quotes, expected '\"'\033[0m"<<endl;
 			tokens.clear();
 			return tokens;
 		}

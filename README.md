@@ -8,7 +8,7 @@
 </p>
 
 Hello everyone! 
-Lmnlang(Lemonenlang) is a fast scripting language. 
+Lmnlang(Lemonenlang) is a fast dynamically typed scripting language with automatic memory management. 
 
 What has been done in it?
 
@@ -19,6 +19,14 @@ What has been done in it?
 - **Runner**
 
 Im using unordered_map to memory for variables,it works very fast and builds an AST tree almost instantly.
+
+to view commands and learn through manuals, enter the following inside the REPL mod:
+
+```lmnlang
+man list
+```
+
+or see [manual](src/manual.cpp)
 
 The language is updated daily and I try to work on it alone.
 
@@ -86,10 +94,6 @@ ON LINUX
 ON WINDOWS
 ```bash
 .\build\lmnlang.exe --file path\to\directory
-```
-to view the manuals, you can enter the following inside the REPL:
-```lmnlang
-man list
 ```
 thanks for reading tutorial
 
