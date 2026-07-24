@@ -8,13 +8,13 @@
 #include <variant>
 using namespace std;
 extern bool is_runner;
-enum TTYPE { KEYWORD, OPERATOR, SEPARATOR, NUMBER, STRING, UNKNOWN,END,STRING_LIT,END_EX,LOGIC_OPERATOR,BOOLEA_OPERATOR };
+enum TTYPE { OPERATOR, SEPARATOR, NUMBER, STRING, UNKNOWN,END,STRING_LIT,END_EX,LOGIC_OPERATOR,BOOLEA_OPERATOR,NOT};
 struct Token {
   TTYPE KEY;
   string VAL;
 };
 enum ASTTAB { ST_ASSIGNMENT, ST_NUMBER , ST_OPERATOR, ST_VARIABLE, ST_SEPARATOR, ST_PRINT, ST_STRING, 
-ST_NOP, ST_INDEX, ST_ARRAY,ST_INPUT,ST_BLOCK,ST_IF,ST_LOGIC_OPERATOR,ST_STOD,ST_BOOLEA_OPERATOR};
+ST_NOP, ST_INDEX, ST_ARRAY,ST_INPUT,ST_BLOCK,ST_IF,ST_LOGIC_OPERATOR,ST_STOD,ST_BOOLEA_OPERATOR,ST_BOOL,ST_PROGRAM,ST_NOT};
 struct Node {
   ASTTAB KEY;
   string VAL;
@@ -31,7 +31,7 @@ struct ErrorValue {
 };
 struct AcceptValue { bool operator==(const AcceptValue& other) const = default; };
 struct ArrayValue;
-using Value = variant<double,string,shared_ptr<ArrayValue>,ErrorValue,AcceptValue>; 
+using Value = variant<double,bool,string,shared_ptr<ArrayValue>,ErrorValue,AcceptValue>; 
 struct ArrayValue {
     vector<Value>elements;
     bool operator==(const ArrayValue& other) const {

@@ -33,9 +33,11 @@ void print_tree(Node* node, unsigned int level) {
 void print_array(const Value& val) {
     if (holds_alternative<double>(val)) {
         cout << get<double>(val);
-    } else if (holds_alternative<string>(val)) {
+    }else if (holds_alternative<string>(val)) {
         cout << get<string>(val);
-    } else if (holds_alternative<shared_ptr<ArrayValue>>(val)) {
+    }else if(holds_alternative<bool>(val)) {
+        cout << get<bool>(val);
+    }else if (holds_alternative<shared_ptr<ArrayValue>>(val)) {
         auto arr = get<shared_ptr<ArrayValue>>(val);
         cout << "[";
         for (size_t i = 0; i < arr->elements.size(); ++i) {
@@ -45,7 +47,7 @@ void print_array(const Value& val) {
         cout << "]";
     } 
     else if(holds_alternative<ErrorValue>(val)) {
-        cout<<"\033[1;31mE: unknown TTYPE to interpreter\033[0m"<<endl;
+        cout<<"\033[1;31mE: unknown TTYPE to interpreter\033[0m";
     } 
     else if(holds_alternative<AcceptValue>(val)) { }
     else {
