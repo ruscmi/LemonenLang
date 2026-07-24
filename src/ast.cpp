@@ -9,6 +9,7 @@ Node::~Node() {
     delete left_index;
     delete if_index;
     delete else_index;
+    delete block_while;
     for(Node* node : children) {
         delete node;
     }
@@ -50,6 +51,8 @@ void print_array(const Value& val) {
         cout<<"\033[1;31mE: unknown TTYPE to interpreter\033[0m";
     } 
     else if(holds_alternative<AcceptValue>(val)) { }
+    else if(holds_alternative<Breaker>(val)) { }
+    else if(holds_alternative<Continuer>(val)) { }
     else {
         cout << "?";
     }

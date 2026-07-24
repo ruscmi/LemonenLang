@@ -1,20 +1,33 @@
-n1 = lmtod(lmout("first number: ")); n2 = lmtod(lmout("second number: ")); op = lmout("op: ");
-if(n1 != 0 && n2 != 0) {
-    if(op == "+") {
-        lmuck(n1+n2,"\n")
-    }
-    else if(op == "-") {
-        lmuck(n1-n2,"\n")
-    }
-    else if(op == "/") {
-        lmuck(n1/n2,"\n")
-    }
-    else if(op == "*") {
-        lmuck(n1*n2,"\n")
-    }
-    else {
-        lmuck("E: do es not parsing expression\n")
-    }
-}else {
-    lmuck("E: do es not parsing two zeros\n")
+/-я под тяжелыми это писал не осуждайте сильно-/
+lmuck(" calculator lmnlang v0.1 
+             by ruscmi        ");
+active = true;
+while(active) {
+    n1 = lmtod(lmout("first number: ")); n2 = lmtod(lmout("second number: ")); op = lmout("op or 'exit': ");
+    if(n1 && n2) {
+        if(op == "exit") {
+            active = false;
+        }
+        else if(op == "+") {
+            lmuck(n1+n2);
+        }
+        else if(op == "-") {
+            lmuck(n1-n2);
+        }
+        else if(op == "/") {
+            if(n2 != 0 || 0.0) {
+                lmuck(n1/n2);
+            }else {
+                lmuck("E: not allowed divided by zero stupid man");
+            }
+        }
+        else if(op == "*") {
+            lmuck(n1*n2);
+        }
+        else {
+            lmuck("E: do es not parsing expression\n")
+        }
+    }else {
+        lmuck("E: do es not parsing two zeros\n")
+    };
 }

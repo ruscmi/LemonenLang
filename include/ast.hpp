@@ -14,7 +14,8 @@ struct Token {
   string VAL;
 };
 enum ASTTAB { ST_ASSIGNMENT, ST_NUMBER , ST_OPERATOR, ST_VARIABLE, ST_SEPARATOR, ST_PRINT, ST_STRING, 
-ST_NOP, ST_INDEX, ST_ARRAY,ST_INPUT,ST_BLOCK,ST_IF,ST_LOGIC_OPERATOR,ST_STOD,ST_BOOLEA_OPERATOR,ST_BOOL,ST_PROGRAM,ST_NOT};
+ST_NOP, ST_INDEX, ST_ARRAY,ST_INPUT,ST_BLOCK,ST_IF,ST_LOGIC_OPERATOR,ST_STOD,ST_BOOLEA_OPERATOR,ST_BOOL,
+ST_PROGRAM,ST_NOT,ST_WHILE,ST_CONTINUE,ST_BREAK};
 struct Node {
   ASTTAB KEY;
   string VAL;
@@ -23,15 +24,18 @@ struct Node {
   vector<Node*> children;
   Node* if_index;
   Node* else_index;
+  Node* block_while;
   ~Node();
 };
 struct ErrorValue {
     string message;
     bool operator==(const ErrorValue& other) const = default;
 };
+struct Continuer { bool operator==(const Continuer& other) const = default; };
+struct Breaker { bool operator==(const Breaker& other) const = default; };
 struct AcceptValue { bool operator==(const AcceptValue& other) const = default; };
 struct ArrayValue;
-using Value = variant<double,bool,string,shared_ptr<ArrayValue>,ErrorValue,AcceptValue>; 
+using Value = variant<double,bool,string,shared_ptr<ArrayValue>,ErrorValue,AcceptValue,Continuer,Breaker>; 
 struct ArrayValue {
     vector<Value>elements;
     bool operator==(const ArrayValue& other) const {

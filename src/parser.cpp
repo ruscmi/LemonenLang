@@ -54,6 +54,88 @@ Node* Parser::parse_program() {
     }
     return end;
 }
+Node* Parser::parse_break() {
+    if(peer().KEY == TTYPE::STRING && peer().VAL == "break") {
+        setup_utf8();
+        advanced();
+        Node* node = new Node();
+        node->KEY = ST_BREAK;
+        node->VAL = "break";
+        return node;
+    }
+    return nullptr;
+}
+Node* Parser::parse_continue() {
+    setup_utf8();
+    if(peer().KEY == TTYPE::STRING && peer().VAL == "continue") {
+        advanced();
+        Node* node = new Node();
+        node->KEY = ST_CONTINUE;
+        node->VAL = "continue";
+        return node;
+    }
+    return nullptr;
+}
+Node* Parser::parse_while() {
+    setup_utf8();
+    advanced();
+    Token current = peer();
+    Node* then_node = nullptr;
+    Node* cond = nullptr;
+    if(current.KEY == TTYPE::SEPARATOR && current.VAL == "(") {
+        advanced();
+        cond = parse_boolea_expression();
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")" ) {
+            advanced();
+            if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "{") {
+                advanced();
+                then_node = new Node();
+                then_node->KEY = ST_BLOCK;
+                while(peer().KEY != TTYPE::SEPARATOR && peer().VAL != "}") {
+                    Node* expr = parse_statement();
+                    if(expr) {
+                        then_node->children.push_back(expr);
+                    }else {
+                        cout<<"\033[1;31mE: expected statement logic in ST_BLOCK\033[0m"<<endl;
+                        delete then_node;
+                        delete cond;
+                        return nullptr;
+                    }
+                    if(peer().KEY == TTYPE::END_EX) {
+                        advanced();
+                    }
+                    if(peer().KEY == TTYPE::END) {
+                        cout<<"\033[1;31mE: expected '}' in ST_BLOCK\033[0m"<<endl;
+                        delete then_node;
+                        delete cond;
+                        return nullptr;
+                    }
+                }
+                advanced();
+            }else {
+                then_node = parse_statement();
+                if(!then_node) {
+                    cout<<"\033[1;31mE: expected TTYPE::UNKNOWN in term\033[0m"<<endl;
+                    delete cond;
+                    return nullptr;
+                }
+            }
+        }else {
+            cout<<"\033[1;31mE: expected sucked ')' or detected extra neurons\033[0m"<<endl;
+            delete cond;
+            return nullptr;
+        }
+    }else {
+        cout<<"\033[1;31mE: expected sucked '(' or detected extra chromosomes\033[0m"<<endl;
+        return nullptr;
+    }
+    Node* while_node = new Node();
+    while_node->KEY = ST_WHILE;
+    while_node->VAL = "while";
+    while_node->left_index = cond;
+    while_node->block_while = then_node;
+    return while_node;
+}
 Node* Parser::parse_bool() {
     setup_utf8();
     Token current = peer();
@@ -213,7 +295,7 @@ Node* Parser::parse_print() {
             return nullptr;
         }
     }else {
-        cout<<"\033[1;33mE: expected '(' after lmuck\033[0m"<<endl;
+        cout<<"\033[1;33mE: expected '(' after lmuck()\033[0m"<<endl;
         delete print_node;
         return nullptr;
     }
@@ -234,14 +316,14 @@ Node* Parser::parse_stod() {
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
                 advanced();
             }else {
-                cout<<"\033[1;33mE: expected ')' in lmout \033[0m"<<endl;
+                cout<<"\033[1;33mE: expected ')' in lmtod \033[0m"<<endl;
                 delete input_node;
                 return nullptr;
             }    
         }
         return input_node; 
     }else {
-        cout<<"\033[1;33mE: expected '(' in lmout \033[0m"<<endl;
+        cout<<"\033[1;33mE: expected '(' in lmtod \033[0m"<<endl;
         return nullptr;
     }
     return nullptr;
@@ -284,6 +366,15 @@ Node* Parser::parse_statement() {
 	}
 	else if (current.KEY == TTYPE::STRING && current.VAL == "if") {
 	    return parse_if();
+	}
+	else if (current.KEY == TTYPE::STRING && current.VAL == "while") {
+	    return parse_while();
+	}
+	else if (current.KEY == TTYPE::STRING && current.VAL == "break") {
+	    return parse_break();
+	}
+	else if (current.KEY == TTYPE::STRING && current.VAL == "continue") {
+	    return parse_continue();
 	}
 	else if(current.KEY == TTYPE::STRING) {
 	    bool is_assignment = false;
@@ -404,11 +495,11 @@ Node* Parser::parse_factor() {
             
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
                 advanced();
-                continue;
                 if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
                     cout<<"\033[1;33mE: you shit it, the next comma in the array is forbidden\033[0m"<<endl;
                     return nullptr;
                 }
+                continue;
             }
             else if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
                 break;
@@ -535,7 +626,7 @@ Node* Parser::parse_logic_expression() {
     || peer().VAL == "!=" || peer().VAL == "==" || peer().VAL == "<=" || peer().VAL == ">=")) {
         const string current_op = peer().VAL;
 		advanced();
-		Node* right = parse_expression();
+		Node* right = parse_term();
 		if(right == nullptr) {
 		    cout <<"\033[1;33mE: missing right operand for logic operator '" << current_op << "'\033[0m" << endl;
 		    if(left != nullptr) {
