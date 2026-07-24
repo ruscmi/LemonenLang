@@ -6,5 +6,5 @@ secret_pass = "666";
 if(name == secret_name && pass == secret_pass) {
     lmuck("Hello,owner!")
 }else {
-    lmuck("Hello,dude!")
+    lmuck("Hello,dude!\n")
 }

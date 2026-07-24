@@ -172,6 +172,7 @@ Node* Parser::parse_manual() {
     )"<<resbc<<endl;
         }
         else if(peer().KEY == TTYPE::STRING && peer().VAL == "comparisons") {
+            advanced();
             cout<<bluec<<R"(   to use the conditions(if,else) 
  you can use C-like syntax.
  Here are some use cases.
@@ -213,6 +214,7 @@ Node* Parser::parse_manual() {
        it depends on your fantasies.)"<<resbc<<endl;
         }
         else if(peer().KEY == TTYPE::STRING && peer().VAL == "input") {
+                    advanced();
                     cout<<bluec<<R"( The 'lmout' syntax is used to use input
  Basic examples and logic:
     lmout() <-- prompts you to enter a string

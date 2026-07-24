@@ -5,6 +5,7 @@
 #include "../include/utf8_win.hpp"
 #include "../include/ast.hpp"
 #include "../src/manual.cpp"
+#include "../include/interpreter.hpp"
 #include <readline/readline.h>
 #include <format>
 #include <iostream>
@@ -25,261 +26,6 @@ Token Parser::advanced() {
 	}
 	return tokenize[position -1];
 }
-Value Parser::evaluate(Node* node) {
-	setup_utf8();
-	if(!node) { return AcceptValue{}; }
-	if(node->KEY == ST_NUMBER) {
-		return stod(node->VAL);
-	}
-	else if(node->KEY == ST_NOP) {
-		return AcceptValue{};
-	}
-	else if(node->KEY == ST_OPERATOR && node->VAL == "u-") {
-		Value val = evaluate(node->right_index);
-        if(holds_alternative<double>(val)) {
-            return -get<double>(val);
-        }else {
-            cout<<"\033[1;31mE: unary minus requires a number\033[0m"<<endl;
-            return ErrorValue{"E: unary minus requires a number"};
-        }
-	}
-	else if(node->KEY == ST_BLOCK) {
-	    for(Node* child : node->children) {
-	        Value val = evaluate(child);
-	        if(holds_alternative<ErrorValue>(val)) { return val; }
-	    }
-	    return AcceptValue{};
-	}
-	else if(node->KEY == ST_ARRAY) {
-        auto arr = make_shared<ArrayValue>();
-        for(Node* element : node->children) {
-            Value val = (evaluate(element));
-            if(holds_alternative<ErrorValue>(val)) {return val;}
-            arr->elements.push_back(val);
-        }
-        return arr;
-    }
-    else if(node->KEY == ST_INDEX) {
-        const Value left_val = evaluate(node->left_index);
-        const Value right_val = evaluate(node->right_index);
-        if(!holds_alternative<shared_ptr<ArrayValue>>(left_val)) {
-           cout<<"\033[1;31mE: dont have ST_ARRAY\033[0m"<<endl;
-           return ErrorValue {"E: dont have ST_ARRAY"};
-        }
-        if(!holds_alternative<double>(right_val)) {
-            cout<<"\033[1;31mE: dont have ST_INDEX in ST_ARRAY\033[0m"<<endl;
-            return ErrorValue {"E: dont have ST_INDEX in ST_ARRAY"};
-        }
-        auto& left = get<shared_ptr<ArrayValue>>(left_val);
-        double index_double = get<double>(right_val);
-        if(index_double != (int)index_double) {
-            cout<<"\033[1;31mE: array index must be integer fucked kid\033[0m"<<endl;
-            return ErrorValue{"E: array index must be integer fucked kid"};
-        }
-        int right = (int)index_double;
-        if(right < 0 || (size_t)right >= left->elements.size()) {
-            cout<<"\033[1;31mE: ST_INDEX < 0 || ST_INDEX > ST_ARRAY.size()\033[0m"<<endl;
-            return ErrorValue {"E: ST_INDEX < 0 || ST_INDEX > ST_ARRAY.size()"};
-        }
-        return left->elements[right];
-    }
-    else if(node->KEY == ST_STRING) {
-        return node->VAL;
-    }
-	else if(node->KEY == ST_VARIABLE) {
-		const string name = node->VAL;
-		const auto it = vars.find(name);
-		if (it != vars.end()) {
-		    return (it->second);
-		}
-		cout<<"\033[1;31mE: Variable not found\033[0m"<<endl;
-		return ErrorValue {"E: Variable not found"};
-	}
-	else if(node->KEY == ST_BOOLEA_OPERATOR) { 
-        Value left_val = evaluate(node->left_index);
-        if(holds_alternative<ErrorValue>(left_val)) {return left_val;}
-        double num = get<double>(left_val);
-        bool l_bool = (num!=0.0);
-        if(node->VAL =="&&") {
-            if(!l_bool) {return 0.0;}
-            Value right_val = evaluate(node->right_index);
-            if(holds_alternative<ErrorValue>(right_val)) {return right_val; }
-            double num1 = get<double>(right_val);
-            bool r_bool = (num1 != 0.0);
-            return r_bool ? 1.0 : 0.0;
-        }
-        else if(node->VAL =="||") {
-            if(l_bool) { return 1.0; }
-            Value right_val = evaluate(node->right_index); 
-            if(holds_alternative<ErrorValue>(right_val)) {return right_val; }
-            double num1 = get<double>(right_val);
-            bool r_bool = (num1 != 0.0);
-            return r_bool ? 1.0 : 0.0;
-        }
-	}
-	else if(node->KEY == ST_LOGIC_OPERATOR) {
-        const Value left_val = evaluate(node->left_index);
-     	const Value right_val = evaluate(node->right_index);
-     	if(holds_alternative<ErrorValue>(left_val)) { return left_val; }
-     	if(holds_alternative<ErrorValue>(right_val)) { return right_val; }
-     	if(holds_alternative<string>(left_val) && holds_alternative<string>(right_val)) {
-     	    string left = get<string>(left_val);
-     	    string right = get<string>(right_val);
-     	    string log_op = node->VAL;
-     	    if(log_op == "!=") {  return (left != right) ? 1.0 : 0.0; } 
-     	    else if(log_op == "==") { return (left == right) ? 1.0 : 0.0; }
-     	    return ErrorValue {"E: unknown logic operator"};   
-     	}
-     	if(holds_alternative<shared_ptr<ArrayValue>>(left_val) && 
-     	holds_alternative<shared_ptr<ArrayValue>>(right_val) ) {
-     	auto left = get<shared_ptr<ArrayValue>>(left_val);
-     	auto right = get<shared_ptr<ArrayValue>>(right_val);
-     	string log_op = node->VAL;
-     	    if(log_op != "!=" && log_op != "==") {
-     	        return ErrorValue{"E: unknown logic operator"};
-     	    }
-         	if(left->elements.size() != right->elements.size()) {
-                return(log_op == "!=") ? 1.0 : 0.0;
-         	}
-         	bool equals = true;
-     	    for(size_t i = 0; i < left->elements.size(); ++i) {
-     	       if(left->elements.at(i) != right->elements.at(i)) {
-     	            equals = false;
-     	            break;
-                }
-            }
-            if(log_op == "==") {
-                return equals ? 1.0 : 0.0;
-            }else {
-                return equals ? 0.0 : 1.0;
-            }
-     	}
-     	if(holds_alternative<double>(left_val) && holds_alternative<double>(right_val)) {
-             double left = get<double>(left_val);
-             double right = get<double>(right_val);
-             string log_op = node->VAL;
-             if(log_op == ">") { double mo = left > right; return mo; }
-             else if(log_op == "<") { double mo = left < right; return mo; } 
-             else if(log_op == ">=") { double mo = left >= right; return mo; } 
-             else if(log_op == "<=") { double mo = left <= right; return mo; } 
-             else if(log_op == "!=") { double mo = left != right; return mo; } 
-             else if(log_op == "==") { double mo = left == right; return mo; }           
-             return ErrorValue {"E: unknown logic operator"};
-        }
-	    if(!holds_alternative<double>(left_val) || !holds_alternative<double>(right_val)) {
-	        cout<<"\033[1;31mE: logic operator return unknown TTYPE or comparison\033[0m"<<endl;
-	        return ErrorValue {"E: logic operator return unknown TTYPE or comparison"};
-	    }
-	}
-	else if(node->KEY == ST_OPERATOR) {
-		const Value left_val = evaluate(node->left_index);
-		const Value right_val = evaluate(node->right_index);
-		if(holds_alternative<ErrorValue>(left_val)) { return left_val; }
-		if(holds_alternative<ErrorValue>(right_val)) { return right_val; }
-		if(!holds_alternative<double>(left_val) || !holds_alternative<double>(right_val)) {
-		    cout<<"\033[1;31mE: operator requires numbers stupid people\033[0m"<<endl;
-		    return ErrorValue {"E: operator requires numbers stupid people"};
-		}
-        double left = get<double>(left_val);
-        double right = get<double>(right_val);
-		string op = node->VAL;
-		if(op == "+") { double mo = left + right; return mo; }
-		else if(op == "-") { double mo = left - right; return mo; }
-		else if(op == "/") {
-			if(right != 0) {
-				double mo = left / right;  return mo; 
-			}
-			else {
-			    cout<<"\033[1;31mE: cannot be divided by fucked zero\033[0m"<<endl;
-				return ErrorValue{"E: cannot be divided by fucked zero"};
-			}
-		}				
-		else if(op == "*") { double mo = left * right;  return mo;  }
-	}
-	else if(node->KEY == ST_ASSIGNMENT) {
-        Value result = evaluate(node->right_index);
-        if(holds_alternative<ErrorValue>(result)) { return result; }
-        if(!node->children.empty()) {
-            for(const auto& node : node->children) {
-                vars[node->VAL] = result;
-            }
-        }else {
-            cout<<"\033[1;31mE: node->children is empty() fucking mudda\033[0m"<<endl;
-            return ErrorValue {"E: node->children is empty() fucking mudda"};
-        }
-        return AcceptValue{};
-    }
-    else if(node->KEY == ST_IF) {
-        Value cond_val = evaluate(node->left_index);
-        if(holds_alternative<ErrorValue>(cond_val)) { return cond_val; }
-        if(!holds_alternative<double>(cond_val)) { 
-            cout<<"\033[1;31mE: TTYPE return value does not is equal to TTYPE::NUMBER\033[0m"<<endl;
-            return ErrorValue{"E: TTYPE return value does not is equal to TTYPE::NUMBER"};
-        }
-        double ev_num = get<double>(cond_val);
-        if(ev_num != 0.0) {
-            if(node->if_index) {
-                return evaluate(node->if_index);
-            }
-        }else {
-            if(node->else_index) {
-                return evaluate(node->else_index);
-            }
-        }
-        return AcceptValue{};
-    }
-    else if(node->KEY == ST_STOD) {
-        Value expr = evaluate(node->right_index);
-        if(holds_alternative<string>(expr)) {
-            try{
-                string prompt = get<string>(expr);
-                double convert = stod(prompt);
-                return convert;
-            }catch(...) {
-                cout<<"\033[1;31mE: do not convert this node->right_index\033[0m"<<endl;
-                return ErrorValue{"E: do not convert this node->right_index"};
-            }
-        }
-        if(holds_alternative<double>(expr)) {return expr;} 
-    }
-    else if(node->KEY == ST_INPUT) {
-        string prompt = "";
-        if(node->right_index != nullptr) {
-            Value prompt_val = evaluate(node->right_index);
-            if(holds_alternative<ErrorValue>(prompt_val)) { return prompt_val; }
-            if(holds_alternative<string>(prompt_val)) {
-                prompt = get<string>(prompt_val);
-            }
-            else if(holds_alternative<double>(prompt_val)) {
-                prompt = format("{:g}", get<double>(prompt_val));
-            }
-        }
-        cout << flush;
-        fflush(stdout);
-        char* input_ptr = readline(prompt.c_str());
-        if(input_ptr == nullptr) {
-            cout<<"\033[1;31mW: input interrupted\033[0m"<<endl;
-            return ErrorValue{"W: input interrupted"};
-        }
-        string input = input_ptr;
-        free(input_ptr);
-        return input; 
-    }
-	else if(node->KEY == ST_PRINT) {
-	    for(size_t i = 0 ; i < node->children.size(); ++i) {
-    	    Value val = evaluate(node->children[i]);
-            if(holds_alternative<ErrorValue>(val)) { return val ; }
-    	    print_array(val);
-        }
-        cout<<endl;
-        return AcceptValue{};
-	}
-	else {
-	    cout<<"\033[1;31mE: unknown Value Parser::evaluate() type\033[0m"<<endl;
-		return ErrorValue{"E: unknown Value Parser::evaluate() type"};
-	}
-	return ErrorValue{"C.E: evaluate() return critical error"};
-}
 Node* Parser::parse_program() {
 	setup_utf8();
 	for(const auto& token : tokenize ) {
@@ -288,47 +34,44 @@ Node* Parser::parse_program() {
 			return nullptr;
 		}
 	}
-	while(true) {
-		Node* expr = parse_statement();
-		if(!expr) {
-			if(peer().KEY == TTYPE::END) {
-				break;
-			}
-			cout<<"\033[1;33mE: expected expression\033[0m"<<endl;
-			return nullptr;
-		}
-		bool s_ok = false;
-		if(peer().KEY == TTYPE::END_EX) {
-		    advanced();
-		    s_ok = true;
-		}
-		else if(peer().KEY == TTYPE::END) {
-		    s_ok = true;
-		}
-		else {
-		    cout<<"\033[1;33mE: expected ';' or end of input\033[0m"<<endl;
+	Node* end = new Node();
+	end->KEY = ST_PROGRAM;
+	while(peer().KEY != TTYPE::END) {
+        Node* expr = parse_statement();
+        if(!expr) { 
+            delete end; return nullptr;
+        }
+        end->children.push_back(expr);
+        
+        if(peer().KEY == TTYPE::END_EX) {
+            advanced();
+        }
+        else if(peer().KEY != TTYPE::END) {
+            cout<<"\033[1;33mE: expected ';' or end of input\033[0m"<<endl;
             delete expr;
-		    return nullptr;
-		}
-		if(s_ok) {
-		    Value res = evaluate(expr);
-		    if(holds_alternative<ErrorValue>(res)) {
-		        if(peer().KEY == TTYPE::END) {
-		            break; 
-		        }
-		        continue;
-		    }
-		    if(holds_alternative<AcceptValue>(res)) {
-		        if(peer().KEY == TTYPE::END) {
-		            break; 
-		        }
-		        continue;
-		    }
-		    print_array(res);
-		    cout<<endl;
-		}
-	}
-	return nullptr;
+            return nullptr;
+        }
+    }
+    return end;
+}
+Node* Parser::parse_bool() {
+    setup_utf8();
+    Token current = peer();
+    if(current.KEY == TTYPE::STRING && current.VAL == "true") {
+        Node* true_f = new Node();
+        true_f->KEY = ST_BOOL;
+        true_f->VAL = "true";
+        advanced();
+        return true_f;
+    }
+    if(current.KEY == TTYPE::STRING && current.VAL == "false") {
+        Node* false_f = new Node();
+        false_f->KEY = ST_BOOL;
+        false_f->VAL = "false";
+        advanced();
+        return false_f;
+    }
+    return nullptr;
 }
 Node* Parser::parse_if() {
     setup_utf8();
@@ -354,6 +97,9 @@ Node* Parser::parse_if() {
                         delete then_node;
                         delete cond;
                         return nullptr;
+                    }
+                    if(peer().KEY == TTYPE::END_EX) {
+                        advanced();
                     }
                     if(peer().KEY == TTYPE::END) {
                         cout<<"\033[1;31mE: expected '}' in ST_BLOCK\033[0m"<<endl;
@@ -397,6 +143,9 @@ Node* Parser::parse_if() {
                     delete then_node;
                     delete cond;
                     return nullptr;
+                }
+                if(peer().KEY == TTYPE::END_EX) {
+                    advanced();
                 }
                 if(peer().KEY == TTYPE::END) {
                     cout<<"\033[1;31mE: expected '}' in ST_BLOCK\033[0m"<<endl;
@@ -620,6 +369,9 @@ Node* Parser::parse_factor() {
         else if(current.VAL == "lmuck") {
             left = parse_print();
         }
+        else if(current.VAL == "true" || current.VAL == "false" ) {
+            left = parse_bool();
+        }
 	    else {
     		Node* node = new Node();
     		node->KEY = ST_VARIABLE;
@@ -680,7 +432,17 @@ Node* Parser::parse_factor() {
 	}
 	else if(current.KEY == TTYPE::END_EX) {
 		advanced();
-		return nullptr;
+    	return nullptr;
+	}
+	else if(current.KEY == TTYPE::NOT) {
+	    advanced();
+	    Node* right = parse_factor();
+	    Node* not_v = new Node();
+	    not_v->KEY = ST_NOT;
+	    not_v->VAL = "!";
+	    not_v->left_index = nullptr;
+	    not_v->right_index = right;
+	    left = not_v;
 	}
 	else if(current.KEY == TTYPE::OPERATOR && current.VAL == "-") {
 		advanced();

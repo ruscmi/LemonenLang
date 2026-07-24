@@ -37,6 +37,7 @@
 #include "../include/lexer.hpp"
 #include "../include/parser.hpp"
 #include "../include/utf8_win.hpp"
+#include "../include/interpreter.hpp"
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <fstream>
@@ -46,6 +47,7 @@ int main(int argc, char *argv[]) {
   setup_utf8();
   const char *big_txt = "\033[1;34m";
   const char *end = "\033[0m";
+  interpreter inter;
   if (argc >= 3 && string(argv[1]) == "--file") {
   	is_runner = true;
     Parser pa;
@@ -62,8 +64,9 @@ int main(int argc, char *argv[]) {
         pa.setTokens(tokenize);
         Node* tree = pa.parse_program();
 		if (tree != nullptr && is_runner == true) {
-			pa.evaluate(tree);
+			inter.evaluate(tree);
 		}
+		delete tree;
         file.close();
       } else {
         cout << "\033[1;34mExcepted \'.lmn\' on name file\033[0m" << endl;
@@ -110,17 +113,12 @@ int main(int argc, char *argv[]) {
       vector<Token> tokenize = lexing.tokenize(inpline);
       p.setTokens(tokenize);
       Node *tree = p.parse_program();
-      // cout<<"==AST-TREE=="<<endl;
       if(tree != nullptr) {
-        Value res = p.evaluate(tree);
-          if (tree->KEY != ST_ASSIGNMENT &&
-          tree->KEY != ST_NOP && tree->VAL != "=") {
-              print_array(res);
-              cout<<endl;
-          }else if(tree->KEY != ST_ASSIGNMENT && tree->KEY != ST_PRINT && tree->KEY != ST_NOP && tree->VAL != "=") {
-              cout<<"\033[1;31mE: return TTYPE::UNKNOWN && cannot display this res\033[0m"<<endl;
-              return 0;
-          }
+        Value res = inter.evaluate(tree);
+        if(!holds_alternative<AcceptValue>(res)) { 
+            print_array(res);
+            cout<<endl;
+        }
         delete tree;
       }
     }

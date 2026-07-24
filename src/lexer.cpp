@@ -57,21 +57,22 @@ std::vector<Token>& LEX::tokenize(const string &code) {
         continue;
 	  }
 	  if (current == '>' || current == '<' || 
-	  current == '!' || (current == '=' && i + 1 < len && code[i+1] == '=')) {
+	  (current == '!' && code[i+1] == '=') || (current == '=' && i + 1 < len && code[i+1] == '=')) {
 	    string val = "";
 	    val += current;
 	    if(i + 1 < len && code[i+1] == '=') {
             val += code[i+1];
             i++;
 	    }
-	    else if(val == "!") {
-	        cout<<"\033[1;31mE: excepted one '!' in conditions\033[0m"<<endl;
-	        T.KEY = TTYPE::UNKNOWN;
-	        T.VAL = val;
-	        tokens.push_back(T);
-	        return tokens;
-	    }
 	    T.KEY = TTYPE::LOGIC_OPERATOR;
+	    T.VAL = val;
+	    tokens.push_back(T);
+	    i++;
+	    continue;
+	  }
+	  if(current == '!') {
+	    string val(1,current);
+	    T.KEY = TTYPE::NOT;
 	    T.VAL = val;
 	    tokens.push_back(T);
 	    i++;

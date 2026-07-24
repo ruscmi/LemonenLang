@@ -1,20 +1,20 @@
 n1 = lmtod(lmout("first number: ")); n2 = lmtod(lmout("second number: ")); op = lmout("op: ");
 if(n1 != 0 && n2 != 0) {
     if(op == "+") {
-        lmuck(n1+n2)
+        lmuck(n1+n2,"\n")
     }
     else if(op == "-") {
-        lmuck(n1-n2)
+        lmuck(n1-n2,"\n")
     }
     else if(op == "/") {
-        lmuck(n1/n2)
+        lmuck(n1/n2,"\n")
     }
     else if(op == "*") {
-        lmuck(n1*n2)
+        lmuck(n1*n2,"\n")
     }
     else {
-        lmuck("E: do es not parsing expression")
+        lmuck("E: do es not parsing expression\n")
     }
 }else {
-    lmuck("E: do es not parsing two zeros")
+    lmuck("E: do es not parsing two zeros\n")
 }
