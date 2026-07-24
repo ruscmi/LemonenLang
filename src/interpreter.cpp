@@ -28,8 +28,42 @@ Value interpreter::evaluate(Node* node) {
 	    for(Node* child : node->children) {
 	        Value val = evaluate(child);
 	        if(holds_alternative<ErrorValue>(val)) { return val; }
+	        if(holds_alternative<Breaker>(val)) { return val; }
+	        if(holds_alternative<Continuer>(val)) { return val; }
 	    }
 	    return AcceptValue{};
+	}
+	else if(node->KEY == ST_BREAK) {
+	    return Breaker{};
+	}
+	else if(node->KEY == ST_CONTINUE) {
+	    return Continuer{};
+	}
+	else if(node->KEY == ST_WHILE) {
+	    Value last_val;
+	    while(true) {
+	        Value val = evaluate(node->left_index);
+	        if(holds_alternative<ErrorValue>(val)) { return val; }
+	        if(holds_alternative<bool>(val)) {
+	            if(!get<bool>(val)) {
+	                break;
+	            }
+	        }
+	        if(holds_alternative<double>(val)) {
+	            if(get<double>(val) == 0.0) {
+	                break;
+	            }
+	        }
+	        if(node->block_while) {
+	            last_val = evaluate(node->block_while);
+	            if(holds_alternative<ErrorValue>(last_val)) { return last_val; }
+	            if(holds_alternative<Breaker>(last_val)) { last_val = AcceptValue{}; break; }
+	            if(holds_alternative<Continuer>(last_val)) { last_val = AcceptValue{}; continue; }	            
+	        }else {
+	            break;
+	        }
+	    }
+	    return last_val;
 	}
 	else if(node->KEY == ST_PROGRAM) {
 	    Value val = AcceptValue{};
@@ -53,7 +87,8 @@ Value interpreter::evaluate(Node* node) {
             var = !get<string>(right).empty();
         }
         else if(holds_alternative<shared_ptr<ArrayValue>>(right)) {
-            var = true;
+            auto arr = get<shared_ptr<ArrayValue>>(right);
+            var = arr->elements.empty();
         }else {
             cout<<"\033[1;31mE: unknown TTYPE for evaluate ST_NOT '!'\033[0m"<<endl;
             return ErrorValue{"E: unknown TTYPE for evaluate ST_NOT '!'"};

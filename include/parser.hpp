@@ -15,8 +15,11 @@ public:
 	Token peer();
 	Token advanced();
 	Node* parse_program();
-	Node* parse_manual();
+	Node* parse_break();
+	Node* parse_continue();
+    Node* parse_while();
 	Node* parse_bool();
+    Node* parse_manual();
     Node* parse_if();
 	Node* parse_print();
     Node* parse_stod();
@@ -24,7 +27,6 @@ public:
 	Node* parse_statement();
 	Node* parse_assignment();
 	Node* parse_factor();
-	Node* parse_not_expression();
     Node* parse_boolea_expression();
 	Node* parse_logic_expression();
 	Node* parse_term();

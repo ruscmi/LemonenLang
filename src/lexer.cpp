@@ -43,7 +43,7 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	    tokens.push_back(T);
 	    continue;
 	  }
-	  if (current == '/' && 1 < len && code[i + 1] == '/') {
+	  if (current == '/' && i + 1 < len && code[i + 1] == '/') {
 	    while(i < len && code[i] != '\n' ) { i++; }
 	    continue;
 	  }
