@@ -54,6 +54,65 @@ Node* Parser::parse_program() {
     }
     return end;
 }
+Node* Parser::parse_len() {
+    setup_utf8();
+    Node* lmlen = new Node();
+    lmlen->KEY = ST_LEN;
+    lmlen->VAL = "lmlen";
+    lmlen->left_index = nullptr;
+    lmlen->right_index = nullptr;
+    if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
+        advanced();
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+            advanced();   
+        }else {
+            Node* expr = parse_expression();
+            lmlen->right_index = expr;
+            if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+                advanced();
+            }else {
+                cout<<"\033[1;33mE: expected ')' in lmlen \033[0m"<<endl;
+                delete lmlen;
+                return nullptr;
+            }    
+        }
+        return lmlen; 
+    }else {
+        cout<<"\033[1;33mE: expected '(' in lmlen \033[0m"<<endl;
+        delete lmlen;
+        return nullptr;
+    }
+    return nullptr;
+}
+Node* Parser::parse_typeof() {
+    setup_utf8();
+    Node* lmtype = new Node();
+    lmtype->KEY = ST_TYPEOF;
+    lmtype->VAL = "lmtype";
+    lmtype->left_index = nullptr;
+    lmtype->right_index = nullptr;
+    if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
+        advanced();
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+            advanced();   
+        }else {
+            Node* expr = parse_expression();
+            lmtype->right_index = expr;
+            if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+                advanced();
+            }else {
+                cout<<"\033[1;33mE: expected ')' in lmtype \033[0m"<<endl;
+                delete lmtype;
+                return nullptr;
+            }    
+        }
+        return lmtype; 
+    }else {
+        cout<<"\033[1;33mE: expected '(' in lmtype \033[0m"<<endl;
+        return nullptr;
+    }
+    return nullptr;    
+}
 Node* Parser::parse_break() {
     if(peer().KEY == TTYPE::STRING && peer().VAL == "break") {
         setup_utf8();
@@ -113,12 +172,10 @@ Node* Parser::parse_while() {
                 }
                 advanced();
             }else {
-                then_node = parse_statement();
-                if(!then_node) {
+                    then_node = parse_statement();
                     cout<<"\033[1;31mE: expected TTYPE::UNKNOWN in term\033[0m"<<endl;
                     delete cond;
                     return nullptr;
-                }
             }
         }else {
             cout<<"\033[1;31mE: expected sucked ')' or detected extra neurons\033[0m"<<endl;
@@ -301,27 +358,27 @@ Node* Parser::parse_print() {
     }
 }
 Node* Parser::parse_stod() {
-    Node* input_node = new Node();
-    input_node->KEY = ST_STOD;
-    input_node->VAL = "lmtod";
-    input_node->left_index = nullptr;
-    input_node->right_index = nullptr;
+    Node* lmtod = new Node();
+    lmtod->KEY = ST_STOD;
+    lmtod->VAL = "lmtod";
+    lmtod->left_index = nullptr;
+    lmtod->right_index = nullptr;
     if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
         advanced();
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
             advanced();   
         }else {
             Node* expr = parse_expression();
-            input_node->right_index = expr;
+            lmtod->right_index = expr;
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
                 advanced();
             }else {
                 cout<<"\033[1;33mE: expected ')' in lmtod \033[0m"<<endl;
-                delete input_node;
+                delete lmtod;
                 return nullptr;
             }    
         }
-        return input_node; 
+        return lmtod; 
     }else {
         cout<<"\033[1;33mE: expected '(' in lmtod \033[0m"<<endl;
         return nullptr;
@@ -457,6 +514,14 @@ Node* Parser::parse_factor() {
 	        advanced();
 	        left = parse_stod();
 	    }
+        else if(current.VAL == "lmtype") {
+            advanced();
+            left = parse_typeof();
+        }
+        else if(current.VAL == "lmlen") {
+            advanced();
+            left = parse_len();
+        }
         else if(current.VAL == "lmuck") {
             left = parse_print();
         }
@@ -469,6 +534,31 @@ Node* Parser::parse_factor() {
     		node->VAL = current.VAL;
     		advanced();
     		left = node;
+    		if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
+                advanced();
+                Node* expr = parse_expression();
+                if(!expr) {
+                    cout<<"\033[1;31mE: expected expression in variable index\033[0m"<<endl;
+                    delete node;
+                    return nullptr;
+                }
+                if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+                    advanced();
+                }else {
+                    cout<<"\033[1;31mE: expected ')' in variable index\033[0m"<<endl;
+                    delete node;
+                    delete expr;
+                    return nullptr;
+                }
+    		    Node* index = new Node();
+    		    index->KEY = ST_INDEX;
+    		    index->VAL = peer().VAL;
+    		    index->left_index = node;
+    		    index->right_index = expr;
+    		    left = index;
+    		}else {
+    		    left = node;
+    		}
         }
 	}
     else if(current.KEY == TTYPE::SEPARATOR && current.VAL == "[") {
@@ -649,7 +739,7 @@ Node* Parser::parse_term() {
 		return nullptr;
 	}
 	Token current = peer();
-	while(current.KEY == TTYPE::OPERATOR &&  (current.VAL == "*" || current.VAL == "/")) {
+	while(current.KEY == TTYPE::OPERATOR &&  (current.VAL == "*" || current.VAL == "/" || current.VAL == "%")) {
 		const string current_op = current.VAL;
 		advanced();
 		Node* right = parse_factor();
