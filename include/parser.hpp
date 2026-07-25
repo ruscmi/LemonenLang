@@ -15,6 +15,8 @@ public:
 	Token peer();
 	Token advanced();
 	Node* parse_program();
+    Node* parse_len();
+    Node* parse_typeof();
 	Node* parse_break();
 	Node* parse_continue();
     Node* parse_while();

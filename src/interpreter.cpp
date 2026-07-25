@@ -6,6 +6,7 @@
 #include <format>
 #include <iostream>
 #include <readline/readline.h>
+#include <cmath>
 Value interpreter::evaluate(Node* node) {
 	setup_utf8();
 	if(!node) { return AcceptValue{}; }
@@ -30,6 +31,44 @@ Value interpreter::evaluate(Node* node) {
 	        if(holds_alternative<ErrorValue>(val)) { return val; }
 	        if(holds_alternative<Breaker>(val)) { return val; }
 	        if(holds_alternative<Continuer>(val)) { return val; }
+	    }
+	    return AcceptValue{};
+	}
+	else if(node->KEY == ST_LEN) {
+	    Value val = evaluate(node->right_index);
+	    if(holds_alternative<ErrorValue>(val)) { return val; }
+	    if(holds_alternative<string>(val)) {
+	        string val_expr = get<string>(val);
+	        return (double)val_expr.length();
+	    }
+	    if(holds_alternative<double>(val)) {
+	        cout<<"\033[1;31mE: you can't measure the length of numbers fucked dude\033[0m"<<endl;
+	        return ErrorValue{"E: you can't measure the length of numbers fucked dude"};
+	    }
+	    if(holds_alternative<bool>(val)) {
+	        cout<<"\033[1;31mE: you can't measure the length of bools fucked dude\033[0m"<<endl;
+	        return ErrorValue{"E: you can't measure the length of bools fucked dude"};
+	    }
+	    if(holds_alternative<shared_ptr<ArrayValue>>(val)) {
+	        auto expr = get<shared_ptr<ArrayValue>>(val);
+	        return (double)expr->elements.size();
+	    }
+	    return AcceptValue{};
+	}
+	else if(node->KEY == ST_TYPEOF) {
+	    Value right = evaluate(node->right_index);
+        if(holds_alternative<ErrorValue>(right)) { return string("ERR"); }
+	    if(holds_alternative<double>(right)) {
+	        return string("NUM");
+	    }
+	    if(holds_alternative<string>(right)) {
+	        return string("STR");
+	    }
+	    if(holds_alternative<bool>(right)) {
+	        return string("BOOL");
+	    }
+	    if(holds_alternative<shared_ptr<ArrayValue>>(right)) {
+	        return string("ARR");
 	    }
 	    return AcceptValue{};
 	}
@@ -120,7 +159,8 @@ Value interpreter::evaluate(Node* node) {
     else if(node->KEY == ST_INDEX) {
         const Value left_val = evaluate(node->left_index);
         const Value right_val = evaluate(node->right_index);
-        if(!holds_alternative<shared_ptr<ArrayValue>>(left_val)) {
+        if(!holds_alternative<shared_ptr<ArrayValue>>(left_val) &&
+        !holds_alternative<string>(left_val)) {
            cout<<"\033[1;31mE: dont have ST_ARRAY\033[0m"<<endl;
            return ErrorValue {"E: dont have ST_ARRAY"};
         }
@@ -128,18 +168,35 @@ Value interpreter::evaluate(Node* node) {
             cout<<"\033[1;31mE: dont have ST_INDEX in ST_ARRAY\033[0m"<<endl;
             return ErrorValue {"E: dont have ST_INDEX in ST_ARRAY"};
         }
-        auto& left = get<shared_ptr<ArrayValue>>(left_val);
-        double index_double = get<double>(right_val);
-        if(index_double != (int)index_double) {
-            cout<<"\033[1;31mE: array index must be integer fucked kid\033[0m"<<endl;
-            return ErrorValue{"E: array index must be integer fucked kid"};
+        if(holds_alternative<shared_ptr<ArrayValue>>(left_val)) {
+            auto& left = get<shared_ptr<ArrayValue>>(left_val);
+            double index_double = get<double>(right_val);
+            if(index_double != (int)index_double) {
+                cout<<"\033[1;31mE: array index must be integer fucked kid\033[0m"<<endl;
+                return ErrorValue{"E: array index must be integer fucked kid"};
+            }
+            int right = (int)index_double;
+            if(right < 0 || (size_t)right >= left->elements.size()) {
+                cout<<"\033[1;31mE: ST_INDEX < 0 || ST_INDEX > ST_ARRAY.size()\033[0m"<<endl;
+                return ErrorValue {"E: ST_INDEX < 0 || ST_INDEX > ST_ARRAY.size()"};
+            }
+            return left->elements[right];
         }
-        int right = (int)index_double;
-        if(right < 0 || (size_t)right >= left->elements.size()) {
-            cout<<"\033[1;31mE: ST_INDEX < 0 || ST_INDEX > ST_ARRAY.size()\033[0m"<<endl;
-            return ErrorValue {"E: ST_INDEX < 0 || ST_INDEX > ST_ARRAY.size()"};
+        if(holds_alternative<string>(left_val)) {
+            string left = get<string>(left_val);
+            double index_double = get<double>(right_val);
+            if(index_double != (int)index_double) {
+                cout<<"\033[1;31mE: string index must be integer fucked kid\033[0m"<<endl;
+                return ErrorValue{"E: string index must be integer fucked kid"};
+            }
+            int right = (int)index_double;
+            if(right < 0 || (size_t)right >= left.length()) {
+                cout<<"\033[1;31mE: ST_INDEX < 0 || ST_INDEX > ST_STRING.length()\033[0m"<<endl;
+                return ErrorValue {"E: ST_INDEX < 0 || ST_INDEX > ST_INDEX.length()"};
+            }
+            return string(1,left[right]);
         }
-        return left->elements[right];
+        return AcceptValue{};
     }
     else if(node->KEY == ST_STRING) {
         return node->VAL;
@@ -261,6 +318,7 @@ Value interpreter::evaluate(Node* node) {
 			}
 		}				
 		else if(op == "*") { double mo = left * right;  return mo;  }
+		else if(op == "%") { double mo = fmod(left,right); return mo; }
 	}
 	else if(node->KEY == ST_ASSIGNMENT) {
         Value result = evaluate(node->right_index);
@@ -305,14 +363,17 @@ Value interpreter::evaluate(Node* node) {
         if(holds_alternative<string>(expr)) {
             try{
                 string prompt = get<string>(expr);
+                if(prompt.empty()) {
+                    return expr;
+                }
                 double convert = stod(prompt);
                 return convert;
             }catch(...) {
-                cout<<"\033[1;31mE: do not convert this node->right_index\033[0m"<<endl;
-                return ErrorValue{"E: do not convert this node->right_index"};
+                return expr;
             }
         }
         if(holds_alternative<double>(expr)) {return expr;} 
+        return expr;
     }
     else if(node->KEY == ST_INPUT) {
         string prompt = "";

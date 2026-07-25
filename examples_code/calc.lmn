@@ -1,33 +1,36 @@
-/-я под тяжелыми это писал не осуждайте сильно-/
-lmuck(" calculator lmnlang v0.1 
-             by ruscmi        ");
-active = true;
-while(active) {
-    n1 = lmtod(lmout("first number: ")); n2 = lmtod(lmout("second number: ")); op = lmout("op or 'exit': ");
-    if(n1 && n2) {
-        if(op == "exit") {
-            active = false;
-        }
-        else if(op == "+") {
-            lmuck(n1+n2);
-        }
-        else if(op == "-") {
-            lmuck(n1-n2);
-        }
-        else if(op == "/") {
-            if(n2 != 0 || 0.0) {
-                lmuck(n1/n2);
-            }else {
-                lmuck("E: not allowed divided by zero stupid man");
-            }
-        }
-        else if(op == "*") {
-            lmuck(n1*n2);
-        }
-        else {
-            lmuck("E: do es not parsing expression\n")
-        }
-    }else {
-        lmuck("E: do es not parsing two zeros\n")
+/-The calculator has error handling thanks to the 
+new function and return of the node calculation-/
+
+lmuck("calculator lmnlang v0.1\n    by ruscmi");
+while(true) {
+    raw_one = lmout("first_num or 'exit': "); 
+    if(raw_one == "exit") {
+        break;
+    }
+    raw_two = lmout("second_num: "); 
+    operator = lmout("operator: ");
+    number_one = lmtod(raw_one);
+    number_two = lmtod(raw_two);
+
+    t1 = lmtype(number_one);
+    t2 = lmtype(number_two);
+    if (t1 != "NUM") {
+        lmuck("E: first argument must be a number");
+    } else if (t2 != "NUM") {
+        lmuck("E: second argument must be a number");
+    } else {
+        if (operator == "+") {
+            lmuck(number_one + number_two);
+        } else if (operator == "-") {
+            lmuck(number_one - number_two);
+        } else if (operator == "*") {
+            lmuck(number_one * number_two);
+        } else if (operator == "/") {
+            lmuck(number_one / number_two);
+        } else if (operator == "%") {
+            lmuck(number_one % number_two);
+        } else {
+            lmuck("E: unknown operator");
+        };
     };
 }

@@ -36,7 +36,121 @@ Node* Parser::parse_manual() {
  runner - see instructions and examples of run files code
  arrays - see examples of working with arrays
  comparisons - see instructions to use comparisons
- input - see examples using input)"<<resbc<<endl;
+ input - see examples using input
+ operators - see all operators and boolea operators
+ typeof - see the manual on using type checking
+ length - see the manual on using length checking
+ while - see examples while loop
+ types - see all data types)"<<resbc<<endl;
+		}
+		else if (peer().KEY == TTYPE::STRING && peer().VAL == "operators") {
+            advanced();
+            cout<<bluec<<R"(
+        All operators in lmnlang
+classic operators:
+
+  +  -  / *  %   
+
+boolea operators:
+
+  &&  ||  !  
+
+        examples:
+
+classic operators:
+
+  5 + 5 - 5 / 5 * 5 % 5
+
+boolea operators: 
+
+  if(x && y || !z ) 
+
+this is all.)"<<resbc<<endl;
+		}
+		else if (peer().KEY == TTYPE::STRING && peer().VAL == "typeof") {
+            advanced();
+            cout<<bluec<<R"(
+    To determine the data type, use the lmtype function.
+examples:
+    x = "string";
+    y = lmtype(x);
+    lmuck(y);
+that's all.)"<<resbc<<endl;
+		}
+		else if (peer().KEY == TTYPE::STRING && peer().VAL == "length") {
+		    advanced();
+		    cout<<bluec<<R"(
+	To measure the length of a string or array, use lmlen:
+examples:
+    x = "string";
+    y = lmlen(x);
+    lmuck(y);
+or on arrays:
+    x = [5,5];
+    y = lmlen(x);
+    lmuck(y);
+WARNING: You cannot measure the length of numbers or the length 
+of a dick... oops, the length of a bool.
+
+that's all.)"<<resbc<<endl;
+		}
+		else if (peer().KEY == TTYPE::STRING && peer().VAL == "while") {
+            advanced();
+		    cout<<bluec<<R"(
+		    Manual to use while
+
+C-style syntax is used for the while loop
+example:
+    while(true) {
+        lmuck(5);
+    }
+ this is endless loop
+    i = 0;
+    while(i < 5) {
+        lmuck(5);
+        i = i + 1;
+    }
+ This is a loop that outputs a number five times.
+ You can also pass a flag into the loop.
+    example:
+        x = true;
+        while(x) {
+            inp = lmout("inp: ");
+            if(inp == "exit") {
+                x = false;
+            }
+        }
+ break and continue are also available:
+    while(true) {
+        inp = lmout("inp: ");
+        if(inp == "exit") {
+            break;
+        }
+        else if(inp == "ruscmi") {
+            lmuck(5);
+            continue;
+        }
+    }
+that's all.)"<<resbc<<endl;		    
+		}
+		else if (peer().KEY == TTYPE::STRING && peer().VAL == "types") {
+		    advanced();
+		    cout<<bluec<<R"(
+		        basic data types on lmnlang
+
+  STR - string
+example: x = "Hello,world!";
+
+  NUM - number
+example: x = 6; or just 6; (this is also number lol yes babe)
+
+  BOOL - bool
+example: x = true; 
+
+  ARR - arrays
+example: x = [5,5];
+
+that's all data types)"<<resbc<<endl;
 		}
 		else if (peer().KEY == TTYPE::STRING && peer().VAL == "math") {
 		advanced();
@@ -87,7 +201,10 @@ Node* Parser::parse_manual() {
   you can also create several variables with the same value at once
     x,y = 5; lmuck x,y
         nano,micro = "lmnlang";
-        lmuck nano        
+        lmuck(nano)        
+  math also supports finding the remainder using the '%' operator:
+    x = 5 % 2;
+    lmuck(x);
   Thank you for reading this part of the manual!)"<<resbc<<endl;
 		}
 		else if(peer().KEY == TTYPE::STRING && peer().VAL == "print") {
@@ -98,27 +215,27 @@ Node* Parser::parse_manual() {
  Let's say you created a variable y with a value of 5
   example:
   	y = 5
-  You can withdraw it by simply writing lmuck y
+  You can withdraw it by simply writing lmuck(y)
    example:
-   	lmuck y
+   	lmuck(y)
   How do I output numbers?
-   	lmuck 5 
-   	 lmuck 50
+   	lmuck(5)
+   	 lmuck(50)
    example:
-   	  lmuck 500
+   	  lmuck(500)
    will give you the numbers.
    How do I print strings?
    	use a quotes for print strings
    	 example:
-   	  lmuck "hello,world"
+   	  lmuck("hello,world")
    	will bring you 'hello,world'
    It is also possible to output the results of algebraic calculations.
     example:
-     lmuck 5 + 5 * 5 / 5
+     lmuck(5 + 5 * 5 / 5)
    will bring you answer
    you can output multiple expressions, variables, or strings
     example:
-        x,y = 5; lmuck "my dick"," ",x," ","sm"," ","my anus"," ",y," ","sm";
+        x,y = 5; lmuck("my dick ",x," sm "," my anus ",y," sm");
    That's all, thank you for viewing this part of the manual.)"<<resbc<<endl;
 		}
 		else if(peer().KEY == TTYPE::STRING && peer().VAL == "runner") {

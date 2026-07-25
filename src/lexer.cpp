@@ -87,7 +87,7 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	    continue;
 	  }
 	  if (current == '+' || current == '-' || current == '*' ||
-	      current == '/' || current == '=' ) {
+	      current == '/' || current == '=' || current == '%') {
 	    string val(1, current);
 	    T.KEY = TTYPE::OPERATOR;
 	    T.VAL = val;
@@ -106,7 +106,7 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	  if (current == '[' || current == ']' ||
 	      current == '(' || current == ')' || 
 	      current == ',' || current == '{' ||
-	      current == '}') {
+	      current == '}' || current == '.') {
 	    string val(1, current);
 	    T.KEY = TTYPE::SEPARATOR;
 	    T.VAL = val;
