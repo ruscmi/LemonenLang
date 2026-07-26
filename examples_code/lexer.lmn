@@ -1,0 +1,42 @@
+tokens = []; 
+while(true) {
+    code = lmout("input or 'exit': "); if(code == "exit") { break; } 
+    i = 0; len = lmlen(code);
+    alphabet = [
+        "a", "b", "c","d","e","f","g","h","i","j","k","l","m",
+        "n","o","p","q","r","s","t","u","v","w","x","y","z"
+    ];
+    numbers = [
+        "1","2","3","4","5","6","7","8","9","0"
+    ];
+    while(i < len) {
+        found = 0; j = 0; alph_len = lmlen(alphabet);
+        num_len = lmlen(numbers);
+        while(j < num_len) {
+            if(code(i) == numbers[j]) {
+                found = 2;
+                break;
+            } 
+            j = j + 1;
+        }
+        j = 0;
+        while(j < alph_len) {
+            if(code(i) == alphabet[j]) {
+                found = 1;
+                break; 
+            }
+            j = j + 1;
+        }
+        if(found == 1) {
+            lmuck("STR");
+            tokens.lmpush(code(i));
+        }
+        else if(found == 2) {
+            lmuck("NUM");
+            tokens.lmpush(code(i));
+        }
+        i = i + 1;
+    }
+    lmuck(tokens);
+};
+lmuck(tokens);

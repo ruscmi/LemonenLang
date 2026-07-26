@@ -15,7 +15,7 @@ struct Token {
 };
 enum ASTTAB { ST_ASSIGNMENT, ST_NUMBER , ST_OPERATOR, ST_VARIABLE, ST_SEPARATOR, ST_PRINT, ST_STRING, 
 ST_NOP, ST_INDEX, ST_ARRAY,ST_INPUT,ST_BLOCK,ST_IF,ST_LOGIC_OPERATOR,ST_STOD,ST_BOOLEA_OPERATOR,ST_BOOL,
-ST_PROGRAM,ST_NOT,ST_WHILE,ST_CONTINUE,ST_BREAK,ST_TYPEOF,ST_LEN};
+ST_PROGRAM,ST_NOT,ST_WHILE,ST_CONTINUE,ST_BREAK,ST_TYPEOF,ST_LEN,ST_ARRAY_PUSH};
 struct Node {
   ASTTAB KEY;
   string VAL;
@@ -38,6 +38,9 @@ struct ArrayValue;
 using Value = variant<double,bool,string,shared_ptr<ArrayValue>,ErrorValue,AcceptValue,Continuer,Breaker>; 
 struct ArrayValue {
     vector<Value>elements;
+    void push(const Value& val) {
+        elements.push_back(val);
+    }
     bool operator==(const ArrayValue& other) const {
         return elements == other.elements;
     }

@@ -635,15 +635,17 @@ Node* Parser::parse_factor() {
 		node->right_index = right;
 		left = node;
 	}
-	else if(current.KEY == TTYPE::SEPARATOR && current.VAL == "\"") {
+	else if((current.KEY == TTYPE::SEPARATOR && current.VAL == "\"") || 
+	(current.KEY == TTYPE::SEPARATOR && current.VAL == "'")) {
 		advanced();
 		Node* inner = parse_expression();
-		if(peer().KEY == TTYPE::SEPARATOR && current.VAL == "\"") {
+		if((peer().KEY == TTYPE::SEPARATOR && peer().VAL == "\"") || 
+		(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "'")) {
 			advanced();
 			return inner;
 		}
 		else {
-			cout<<"\033[1;33mE: small dick on the quotes, expected '\"'\033[0m"<<endl;
+			cout<<"\033[1;33mE: small dick on the quotes, expected '\"' || '\''\033[0m"<<endl;
 			return nullptr;
 		}
 	}
@@ -676,6 +678,33 @@ Node* Parser::parse_factor() {
 	    }else {
 	        cout<<"\033[1;33mE: expected your brain or ']' in index\033[0m"<<endl;
 	        return nullptr;
+	    }
+	}
+	while(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ".") {
+	    advanced();
+	    if(peer().KEY == TTYPE::STRING && peer().VAL == "lmpush") {
+	        advanced();
+	        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
+	            advanced();
+	            Node* expr = parse_expression();
+	            if(!expr) {
+	                cout<<"\033[1;31mE: expected expression in array lmpush\033[0m"<<endl;
+	                return nullptr;
+	            }
+	            if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+	                advanced();
+	                Node* pusher = new Node();
+	                pusher->KEY = ST_ARRAY_PUSH;
+	                pusher->VAL = peer().VAL;
+	                pusher->left_index = left;
+	                pusher->right_index = expr;
+	                left = pusher;
+	            }else {
+	                cout<<"\033[1;31mE: expected ')' in array lmpush\033[0m"<<endl;
+	                delete expr;
+	                return nullptr;
+	            }
+	        }
 	    }
 	}
 	return left;

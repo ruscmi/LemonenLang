@@ -285,6 +285,9 @@ that's all data types)"<<resbc<<endl;
   You can create nested arrays in a single row
     example:
         x = [5,[5,5],5,[555,555,[555,555],555],555];  
+  Numbers, strings, arrays, and bools can also be pushed into arrays.
+  example:
+        x = []; x.lmpush(5); x.lmpush(6); lmuck(x[1]) // outputs 6
   that’s all—thanks for reading.
     )"<<resbc<<endl;
         }
