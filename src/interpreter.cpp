@@ -34,6 +34,23 @@ Value interpreter::evaluate(Node* node) {
 	    }
 	    return AcceptValue{};
 	}
+	else if(node->KEY == ST_ARRAY_PUSH) {
+	    Value left = evaluate(node->left_index);
+	    if(holds_alternative<ErrorValue>(left)) { return left; }
+	    if(!holds_alternative<shared_ptr<ArrayValue>>(left)) { 
+            cout<<"\033[1;31mE: left expression != <shared_ptr<ArrayValue>>\033[0m"<<endl;
+	        return ErrorValue{"E: left expression != <shared_ptr<ArrayValue>>"};
+	    }
+	    auto arr_pusher = get<shared_ptr<ArrayValue>>(left);
+	    if(!arr_pusher) {
+	        cout<<"\033[1;31mE: expected expression node->left_index in lmpush\033[0m"<<endl;
+	        return ErrorValue{"E: expected expression node->left_index in lmpush"};
+	    }
+	    Value right = evaluate(node->right_index);
+	    if(holds_alternative<ErrorValue>(left)) { return right; }
+	    arr_pusher->push(right);
+	    return left;   
+	}
 	else if(node->KEY == ST_LEN) {
 	    Value val = evaluate(node->right_index);
 	    if(holds_alternative<ErrorValue>(val)) { return val; }

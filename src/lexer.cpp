@@ -114,10 +114,11 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	    i++;
 	    continue;
 	  }
-	  if(current == '"' ) {
+	  if(current == '"' || current == '\'' ) {
+	    char quote = current;
 	  	i++;
 	  	string val = "";
-	  	while(i < len && code[i] != '"') {
+	  	while(i < len && code[i] != quote) {
 	  	    if(code[i] == '\\' && i + 1 < len) {
 	  	        if(code[i + 1] == 'n') {
 	  	            val += '\n';
@@ -128,14 +129,14 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	  		val += code[i];
 	  		i++;
 	  	}
-	  	if(i < len && code[i] == '"' ) {
+	  	if(i < len && code[i] == quote) {
 		  	i++;
 		  	T.KEY = TTYPE::STRING_LIT;
 		  	T.VAL = val;
 		  	tokens.push_back(T);
 		}
 		else {
-			cout<<"\033[1mE: small dick on the quotes, expected '\"'\033[0m"<<endl;
+			cout<<"\033[1;31mE: small dick on the quotes, expected (\033[0m"<<quote<<"\033[1;31m)\033[0m"<<endl;
 			tokens.clear();
 			return tokens;
 		}
