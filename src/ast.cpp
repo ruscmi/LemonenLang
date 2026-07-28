@@ -27,7 +27,26 @@ void print_tree(Node* node, unsigned int level) {
 	else if(node->KEY == ST_STRING) { cout<<" [STRING]\n"; }
 	else if(node->KEY == ST_INDEX) { cout<<"[INDEX]\n"; }
 	else if(node->KEY == ST_ARRAY) { cout<<"[ARRAY]\n"; }
+	else if(node->KEY == ST_IF) { cout<<"[IF]\n"; }
+	else if(node->KEY == ST_SEPARATOR) { cout<<"[SEPARATOR]\n"; }
+	else if(node->KEY == ST_INPUT) { cout<<"[INPUT]\n"; }
+	else if(node->KEY == ST_BLOCK) { cout<<"[BLOCK]\n"; }
+	else if(node->KEY == ST_LOGIC_OPERATOR) { cout<<"[LOGIC_OPERATOR]\n"; }
+	else if(node->KEY == ST_STOD) { cout<<"[STOD]\n"; }
+	else if(node->KEY == ST_BOOLEA_OPERATOR) { cout<<"[BOOLEA_OPERATOR]\n";}
+	else if(node->KEY == ST_BOOL) { cout<<"[BOOL]\n";}
+	else if(node->KEY == ST_PROGRAM) { cout<<"[PROGRAM]\n"; }
+	else if(node->KEY == ST_NOT) { cout<<"[NOT]\n"; }
+	else if(node->KEY == ST_WHILE) { cout<<"[WHILE]\n"; }
+	else if(node->KEY == ST_CONTINUE) { cout<<"[CONTINUE]\n"; }
+	else if(node->KEY == ST_TYPEOF) { cout<<"[TYPEOF]\n"; }
+	else if(node->KEY == ST_BREAK) { cout<<"[BREAK]\n"; }
+	else if(node->KEY == ST_LEN) { cout<<"[LEN]\n"; }
+	else if(node->KEY == ST_ARRAY_PUSH) { cout<<"[ARRAY_PUSH]\n"; }
 	else { cout<<" [UNKNOWN]"; }
+	for(Node* child : node->children) {
+	    print_tree(child,level + 1);
+	}
 	print_tree(node->left_index, level + 1);
 	print_tree(node->right_index, level + 1);
 }
