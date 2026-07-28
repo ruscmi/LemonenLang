@@ -122,9 +122,18 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	  	    if(code[i] == '\\' && i + 1 < len) {
 	  	        if(code[i + 1] == 'n') {
 	  	            val += '\n';
-	  	            i += 2;
-	  	            continue;
+	  	        }else if(code[i + 1] == 't') {
+	  	            val += '\t';
+	  	        }else if(code[i + 1] == '\\') {
+	  	            val += '\\';
+	  	        }else if(code[i + 1] == quote) {
+	  	            val += quote;
+	  	        }else {
+	  	            val += '\\';
+	  	            val += code[i + 1];
 	  	        }
+	  	        i += 2;
+	  	        continue;
 	  	    }
 	  		val += code[i];
 	  		i++;

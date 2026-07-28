@@ -113,9 +113,10 @@ int main(int argc, char *argv[]) {
       vector<Token> tokenize = lexing.tokenize(inpline);
       p.setTokens(tokenize);
       Node *tree = p.parse_program();
+      //print_tree(tree,1);
       if(tree != nullptr) {
         Value res = inter.evaluate(tree);
-        if(!holds_alternative<AcceptValue>(res)) { 
+        if(!holds_alternative<AcceptValue>(res)) {
             print_array(res);
             cout<<endl;
         }

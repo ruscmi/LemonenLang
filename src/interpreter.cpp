@@ -3,6 +3,9 @@
 */
 #include "../include/interpreter.hpp"
 #include "../include/utf8_win.hpp"
+#include "../include/lexer.hpp"
+#include "../include/parser.hpp"
+#include <fstream>
 #include <format>
 #include <iostream>
 #include <readline/readline.h>
@@ -33,6 +36,35 @@ Value interpreter::evaluate(Node* node) {
 	        if(holds_alternative<Continuer>(val)) { return val; }
 	    }
 	    return AcceptValue{};
+	}
+	else if(node->KEY == ST_INCLUDE) {
+	    string filename = node->VAL;
+	    ifstream file(filename);
+	    string code((istreambuf_iterator<char>(file)),istreambuf_iterator<char>());
+	    Parser parser;
+	    LEX lexer;
+	    vector<Token> tokenize = lexer.tokenize(code);
+	    parser.setTokens(tokenize);
+	    Node* tree = parser.parse_program();
+		if (tree != nullptr) {
+			evaluate(tree);
+		}
+		return AcceptValue{};
+	}
+	else if(node->KEY == ST_INCLUDE_LIBS) {
+	    string filename = node->VAL;
+	    string full_path = "libs/" + node->VAL;
+	    ifstream file(full_path);
+	    string code((istreambuf_iterator<char>(file)),istreambuf_iterator<char>());
+	    Parser parser;
+	    LEX lexer;
+	    vector<Token> tokenize = lexer.tokenize(code);
+	    parser.setTokens(tokenize);
+	    Node* tree = parser.parse_program();
+		if (tree != nullptr) {
+			evaluate(tree);
+		}
+		return AcceptValue{};	    
 	}
 	else if(node->KEY == ST_ARRAY_PUSH) {
 	    Value left = evaluate(node->left_index);
@@ -427,6 +459,6 @@ Value interpreter::evaluate(Node* node) {
 	else {
 	    cout<<"\033[1;31mE: unknown Value Parser::evaluate() type\033[0m"<<endl;
 		return ErrorValue{"E: unknown Value Parser::evaluate() type"};
-	}
+	} 
 	return ErrorValue{"C.E: evaluate() return critical error"};
 }

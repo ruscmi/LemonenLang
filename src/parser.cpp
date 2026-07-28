@@ -113,6 +113,49 @@ Node* Parser::parse_typeof() {
     }
     return nullptr;    
 }
+Node* Parser::parse_include() {
+    setup_utf8();
+    advanced();
+    if(peer().KEY == TTYPE::STRING_LIT) {
+        string val = peer().VAL;
+        if(val.empty()) {
+            cout<<"\033[1;31mE: this file returning null you stupid man?\033[0m"<<endl;
+            return nullptr;
+        }
+        advanced();
+        Node* files = new Node();
+        files->KEY = ST_INCLUDE;
+        files->VAL = val;
+        return files;
+    }
+    else if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
+        advanced();
+        if(peer().KEY != TTYPE::STRING) {
+            cout<<"\033[1;31mE: returning TTYPE in parentheses is not a string\033[0m"<<endl;
+            return nullptr;
+        }
+        string val = peer().VAL;
+        if(val.empty()) {
+            cout<<"\033[1;31mE: this library there is no bitch\033[0m"<<endl;
+            return nullptr;
+        }
+        advanced();
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+            advanced();
+            Node* lib = new Node();
+            lib->KEY = ST_INCLUDE_LIBS;
+            lib->VAL = val;
+            return lib;
+        }else {
+            cout<<"\033[1;31mE: not closed fucking parentheses\033[0m"<<endl;
+            return nullptr;
+        }
+    }else {
+        cout<<"\033[1;31mE: only support quotes(for stupid mans quotes - '\"') and parentheses\033[0m"<<endl;
+        return nullptr;
+    }
+    return nullptr;
+}
 Node* Parser::parse_break() {
     if(peer().KEY == TTYPE::STRING && peer().VAL == "break") {
         setup_utf8();
@@ -433,6 +476,9 @@ Node* Parser::parse_statement() {
 	else if (current.KEY == TTYPE::STRING && current.VAL == "continue") {
 	    return parse_continue();
 	}
+	else if (current.KEY == TTYPE::STRING && current.VAL == "lmport") {
+	    return parse_include();
+	}
 	else if(current.KEY == TTYPE::STRING) {
 	    bool is_assignment = false;
 	    size_t pos_expr = position;
@@ -634,20 +680,6 @@ Node* Parser::parse_factor() {
 		node->left_index = nullptr;
 		node->right_index = right;
 		left = node;
-	}
-	else if((current.KEY == TTYPE::SEPARATOR && current.VAL == "\"") || 
-	(current.KEY == TTYPE::SEPARATOR && current.VAL == "'")) {
-		advanced();
-		Node* inner = parse_expression();
-		if((peer().KEY == TTYPE::SEPARATOR && peer().VAL == "\"") || 
-		(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "'")) {
-			advanced();
-			return inner;
-		}
-		else {
-			cout<<"\033[1;33mE: small dick on the quotes, expected '\"' || '\''\033[0m"<<endl;
-			return nullptr;
-		}
 	}
 	else if(current.KEY == TTYPE::SEPARATOR && current.VAL == "(" ) {
 		advanced();
