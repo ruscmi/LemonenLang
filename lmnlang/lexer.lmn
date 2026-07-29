@@ -1,0 +1,240 @@
+alphabet = [
+    "a", "b", "c","d","e","f","g","h","i","j","k","l","m",
+    "n","o","p","q","r","s","t","u","v","w","x","y","z"
+];
+numbers = [
+    "1","2","3","4","5","6","7","8","9","0"
+];
+operators = [
+    "+","-","/","*","="
+];
+separators = [
+    "[","]","{","}","(",")",",","."
+];
+sep_len = lmlen(separators);
+op_len = lmlen(operators);
+alph_len = lmlen(alphabet);
+num_len = lmlen(numbers);
+while(true) {
+    code = lmout("-->"); if(code == "exit") { break; }
+    i = 0; len = lmlen(code);
+    tokens = [];
+    while(i < len) {
+        token = [];
+        if(code(i) == "!") {
+            token.lmpush("!");
+            token.lmpush("NOT");
+            tokens.lmpush(token);
+            i = i + 1;
+            continue;
+        }
+        if(code(i) == "&" && code(i + 1) == "&" || code(i) == "|" && code(i + 1) == "|") {
+            bol_arr = [];
+            bol_arr.lmpush(code(i));
+            bol_arr.lmpush(code(i + 1));
+            token.lmpush(bol_arr);
+            token.lmpush("BOL");
+            tokens.lmpush(token);
+            i = i + 1;
+            continue;
+        }
+        if(code(i) == "=" && code(i + 1) == "="  
+        || code(i) == "!" && code(i + 1) == "=" 
+        || code(i) == "<" && code(i + 1) == "=" 
+        || code(i) == ">" && code(i + 1) == "=") {
+            lop_val = [];
+            lop_val.lmpush(code(i));
+            lop_val.lmpush(code(i + 1));
+            token.lmpush(lop_val);
+            token.lmpush("LOP");
+            tokens.lmpush(token);
+            i = i + 2;
+            continue;
+        }
+        if(code(i) == "<" || code(i) == ">") {
+            token.lmpush(code(i));
+            token.lmpush("LOP");
+            tokens.lmpush(token);
+            i = i + 1;
+            continue;
+        }
+        if(code(i) == "\"" || code(i) == "'") {
+            quote = code(i);
+            i = i + 1;
+            str_val = [];
+            while(i < len) {
+                if(code(i) == quote) {
+                    i = i + 1;
+                    break;
+                }
+                if(code(i) == '\\' && i + 1 < len) {
+                    next_char = code(i+1);
+                    if(next_char == "n") {
+                        str_val.lmpush("\n");
+                        i = i + 2;
+                        continue;
+                    }
+                }
+                str_val.lmpush(code(i));
+                i = i + 1;
+            }
+            token.lmpush(str_val);
+            token.lmpush("STL");
+            tokens.lmpush(token);
+            continue;
+        }
+        if(code(i) == " ") {
+            i = i + 1;
+            continue;
+        }
+        if(code(i) == ";") {
+            token.lmpush([";"]);
+            token.lmpush("ENDL");
+            tokens.lmpush(token);
+            i = i + 1;
+            continue;
+        }
+        j = 0; is_sep = 0;
+        while(j < sep_len) {
+            if(code(i) == separators[j]) {
+                is_sep = 1;
+                break;
+            }
+            j = j + 1;
+        }
+        if(is_sep == 1) {
+            sep_arr = [];
+            while(i<len) {
+                k = 0;
+                curr_is_sep = 0;
+                while(k<sep_len) {
+                    if(code(i) == separators[k]) {
+                        curr_is_sep = 1;
+                        break;
+                    } 
+                    k = k + 1;
+                }
+                if(curr_is_sep == 0) {
+                    break;
+                }
+                sep_arr.lmpush(code(i));
+                i = i + 1;
+            }
+            token.lmpush(sep_arr);
+            token.lmpush("SEP");
+            tokens.lmpush(token);
+            continue;
+        }
+        j = 0; is_op = 0;
+        while(j < op_len) {
+            if(code(i) == operators[j]) {
+                is_op = 1;
+                break;
+            }
+            j = j + 1;
+        }
+        if(is_op == 1) {
+            op_arr = [];
+            while(i<len) {
+                k = 0;
+                curr_is_op = 0;
+                while(k<op_len) {
+                    if(code(i) == operators[k]) {
+                        curr_is_op = 1;
+                        break;
+                    }
+                    k = k + 1;
+                }
+                if(curr_is_op == 0) {
+                    break;
+                } 
+                op_arr.lmpush(code(i));
+                i = i + 1;
+            }
+            token.lmpush(op_arr);
+            token.lmpush("OP");
+            tokens.lmpush(token);
+            continue;
+        }
+        j = 0; is_num = 0;
+        while(j < num_len) {
+            if(code(i) == numbers[j]) {
+                is_num = 1;
+                break;
+            } 
+            j = j + 1;
+        }
+        if(is_num == 1) {
+              num_arr = [];
+              while(i<len) {
+                  k = 0;
+                  curr_is_num = 0;
+                  while(k<num_len) {
+                      if(code(i) == numbers[k]) {
+                          curr_is_num = 1;
+                          break;
+                      }
+                      k = k + 1;
+                  }
+                  if(curr_is_num == 0) {
+                      break;
+                  }
+                  num_arr.lmpush(code(i));
+                  i = i + 1;
+              }
+              token.lmpush(num_arr);
+              token.lmpush("NUM");
+              tokens.lmpush(token);
+              continue;
+          }
+          j = 0; is_alph = 0;
+          while(j < alph_len) {
+            if(code(i) == alphabet[j]) {
+                is_alph = 1;
+                break;
+            }
+            j = j + 1;
+          }
+          if(is_alph == 1) {
+              alph_arr = [];
+              while(i<len) {
+                  k = 0;
+                  curr_is_alph = 0;
+                  while(k<alph_len) {
+                      if(code(i) == alphabet[k]) {
+                          curr_is_alph = 1;
+                          break;
+                      }
+                      k = k + 1;
+                  }
+                  if(curr_is_alph == 0) {
+                      break;
+                  }
+                  alph_arr.lmpush(code(i));
+                  i = i + 1;
+              }
+              token.lmpush(alph_arr);
+              token.lmpush("STR");
+              tokens.lmpush(token);
+              continue;
+          } 
+          else {
+              unk_arr = [];
+              unk_arr.lmpush(code(i))
+              token.lmpush(unk_arr);
+              token.lmpush("UNK");
+              tokens.lmpush(token);
+              i = i + 1;
+              continue;
+          }
+          i = i+1;
+    };
+    if(i>=len) {
+        token.lmpush("");
+        token.lmpush("END");
+        tokens.lmpush(token);
+        i = i + 1;
+        continue;
+    };
+    lmuck(tokens);
+}
