@@ -54,6 +54,140 @@ Node* Parser::parse_program() {
     }
     return end;
 }
+Node* Parser::parse_wait() {
+    setup_utf8();
+    Node* lmit = new Node();
+    lmit->KEY = ST_WAIT;
+    lmit->VAL = "lmit";
+    lmit->left_index = nullptr;
+    lmit->right_index = nullptr;
+    if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
+        advanced();
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+            advanced();   
+        }else {
+            Node* expr = parse_expression();
+            lmit->right_index = expr;
+            if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+                advanced();
+            }else {
+                cout<<"\033[1;33mE: expected ')' in lmit \033[0m"<<endl;
+                delete lmit;
+                return nullptr;
+            }    
+        }
+        return lmit; 
+    }else {
+        cout<<"\033[1;33mE: expected '(' in lmit \033[0m"<<endl;
+        delete lmit;
+        return nullptr;
+    }
+    return nullptr;
+}
+Node* Parser::parse_func() {
+    setup_utf8();
+    Node* expr = nullptr;
+    Node* then_node = nullptr;
+    vector<Node*>args;
+    if(peer().KEY == TTYPE::STRING) {
+        string val = peer().VAL;
+        advanced();
+        if(peer().VAL.empty()) {
+            cout<<"\033[1;31mE: expression is empty\033[0m"<<endl;
+            return nullptr;
+        }
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
+            advanced();
+            while(peer().VAL != ")") {
+                if(peer().KEY != TTYPE::STRING) {
+                    cout<<"\033[1;31mE: unknown pussy in the conditions\033[0m"<<endl;
+                    for(Node* arg : args) delete arg;
+                    return nullptr;
+                }
+                Node* arg = new Node();
+                arg->KEY = ST_VARIABLE;
+                arg->VAL = peer().VAL;
+                advanced();
+                if(peer().KEY == TTYPE::OPERATOR && peer().VAL == "=") {
+                    advanced();
+                    expr = parse_logic_expression();
+                    if(expr) {
+                        arg->right_index = expr;
+                    }else {
+                        cout<<"\033[1;31mE: !expr error arg->right_index = expr \033[0m"<<endl;
+                        for(Node* arg : args) delete arg;
+                        return nullptr;
+                    }
+                }
+                args.push_back(arg);
+                if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
+                    advanced();
+                }else if(peer().VAL != ")") {
+                    cout<<"\033[1;31mE: unclosed Fuck Bracket\033[0m"<<endl;
+                    for(Node* arg : args) delete arg;
+                    return nullptr;    
+                }
+            }
+            advanced();
+        }else {
+            cout<<"\033[1;31mE: expected parentheses '('\033[0m"<<endl;
+            return nullptr;
+        }
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "{") {
+            advanced();
+            then_node = new Node();
+            then_node->KEY = ST_BLOCK;
+            while(peer().VAL != "}") {
+                if(peer().KEY == TTYPE::END) {
+                    cout<<"\033[1;31mE: TTYPE::END on no string attached in block\033[0m"<<endl;
+                    for(Node* arg : args) delete arg;
+                    delete then_node;
+                    return nullptr;
+                }
+                if(peer().KEY == TTYPE::END_EX) {
+                    advanced();
+                }
+                expr = parse_statement();
+                if(expr) {
+                    then_node->children.push_back(expr);
+                }else {
+                    cout<<"\033[1;31mE: !expr error then_node->children.push_back(expr)\033[0m"<<endl;
+                    for(Node* arg : args) delete arg;
+                    delete then_node;
+                    delete expr;
+                    return nullptr;
+                }
+            }
+            advanced();
+            Node* func = new Node();
+            func->KEY = ST_FUNC;
+            func->VAL = val;
+            func->children = args;
+            func->right_index = then_node;
+            return func;
+        }else {
+            for(Node* arg : args) delete arg;
+            return nullptr;
+        }
+    }
+    return nullptr;
+}
+Node* Parser::parse_return() {
+    setup_utf8();
+    advanced();
+    Node* returner = new Node();
+    returner->KEY = ST_RETURN;
+    returner->right_index = parse_boolea_expression();
+    if(!returner->right_index) {
+        cout<<"\033[1;31mE: returning null zero value in returner->right_index\033[0m"<<endl;
+        delete returner;
+        return nullptr;
+    }
+    if(peer().KEY == TTYPE::END_EX) {
+        advanced();
+    }
+    return returner;
+}
 Node* Parser::parse_len() {
     setup_utf8();
     Node* lmlen = new Node();
@@ -461,6 +595,9 @@ Node* Parser::parse_statement() {
 	if (current.KEY == TTYPE::STRING && current.VAL == "lmuck") {
 	    return parse_print();
 	}
+	else if (current.KEY == TTYPE::STRING && current.VAL == "return") {
+	    return parse_return();
+	}
 	else if (current.KEY == TTYPE::STRING && current.VAL == "man") {
 		return parse_manual();
 	}
@@ -482,8 +619,12 @@ Node* Parser::parse_statement() {
 	else if(current.KEY == TTYPE::STRING) {
 	    bool is_assignment = false;
 	    size_t pos_expr = position;
+
+	    int parens = 0;
 	    while(pos_expr < tokenize.size() && tokenize[pos_expr].KEY != TTYPE::END_EX) {
-	        if(tokenize[pos_expr].KEY == TTYPE::OPERATOR && tokenize[pos_expr].VAL == "=") {
+	        if(tokenize[pos_expr].VAL == "(" || tokenize[pos_expr].VAL == "{") parens++; 
+	        if(tokenize[pos_expr].VAL == ")" || tokenize[pos_expr].VAL == "}") parens--; 
+	        if(parens == 0 && tokenize[pos_expr].KEY == TTYPE::OPERATOR && tokenize[pos_expr].VAL == "=") {
 	            is_assignment = true;
 	            break;
 	        }
@@ -515,7 +656,7 @@ Node* Parser::parse_assignment() {
             advanced();
             continue;
         }
-        else if(peer().KEY == TTYPE::OPERATOR && peer().VAL == "=") {
+        if(peer().KEY == TTYPE::OPERATOR && peer().VAL == "=") {
             break;
         }
         else {
@@ -560,6 +701,10 @@ Node* Parser::parse_factor() {
 	        advanced();
 	        left = parse_stod();
 	    }
+	    else if(current.VAL == "lmit") {
+	        advanced();
+	        left = parse_wait();
+	    }
         else if(current.VAL == "lmtype") {
             advanced();
             left = parse_typeof();
@@ -574,35 +719,63 @@ Node* Parser::parse_factor() {
         else if(current.VAL == "true" || current.VAL == "false" ) {
             left = parse_bool();
         }
+        else if(current.VAL == "func") {
+            advanced();
+            left = parse_func();
+        }
 	    else {
-    		Node* node = new Node();
-    		node->KEY = ST_VARIABLE;
-    		node->VAL = current.VAL;
-    		advanced();
-    		left = node;
-    		if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
+	        string name = peer().VAL;
+	        advanced();
+    		if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "[") {
                 advanced();
                 Node* expr = parse_expression();
                 if(!expr) {
                     cout<<"\033[1;31mE: expected expression in variable index\033[0m"<<endl;
-                    delete node;
                     return nullptr;
                 }
-                if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+                if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
                     advanced();
                 }else {
-                    cout<<"\033[1;31mE: expected ')' in variable index\033[0m"<<endl;
-                    delete node;
+                    cout<<"\033[1;31mE: expected ']' in variable index\033[0m"<<endl;
                     delete expr;
                     return nullptr;
                 }
+                Node* var_node = new Node();
+                var_node->KEY = ST_VARIABLE;
+                var_node->VAL = name;
     		    Node* index = new Node();
     		    index->KEY = ST_INDEX;
     		    index->VAL = peer().VAL;
-    		    index->left_index = node;
+    		    index->left_index = var_node;
     		    index->right_index = expr;
     		    left = index;
+    		}else if (peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
+    		    advanced();
+    		    Node* call_node = new Node();
+    		    call_node->KEY = ST_CALL;
+    		    call_node->VAL = name;
+    		    while(peer().VAL != ")") {
+    		        Node* expr = parse_expression();
+    		        if(!expr) {
+    		            cout<<"\033[1;31mE: unknown expression in parentheses\033[0m"<<endl;
+    		            delete call_node;
+    		            return nullptr;
+    		        }
+    		        call_node->children.push_back(expr);
+    		        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
+    		            advanced();
+    		        } else if(peer().VAL != ")") {
+    		            cout<<"\033[1;31mE: expected ')' in function \033[0m"<<endl;
+    		            delete call_node;
+    		            return nullptr;    		            
+    		        }
+    		    }
+    		    advanced();
+    		    left = call_node;
     		}else {
+    		    Node* node = new Node();
+    		    node->KEY = ST_VARIABLE;
+    		    node->VAL = name;
     		    left = node;
     		}
         }
@@ -777,7 +950,7 @@ Node* Parser::parse_logic_expression() {
     || peer().VAL == "!=" || peer().VAL == "==" || peer().VAL == "<=" || peer().VAL == ">=")) {
         const string current_op = peer().VAL;
 		advanced();
-		Node* right = parse_term();
+		Node* right = parse_expression();
 		if(right == nullptr) {
 		    cout <<"\033[1;33mE: missing right operand for logic operator '" << current_op << "'\033[0m" << endl;
 		    if(left != nullptr) {

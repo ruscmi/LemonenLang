@@ -63,6 +63,7 @@ int main(int argc, char *argv[]) {
         vector<Token> tokenize = lexing.tokenize(code);
         pa.setTokens(tokenize);
         Node* tree = pa.parse_program();
+//        print_tree(tree,1);
 		if (tree != nullptr && is_runner == true) {
 			inter.evaluate(tree);
 		}
@@ -113,14 +114,13 @@ int main(int argc, char *argv[]) {
       vector<Token> tokenize = lexing.tokenize(inpline);
       p.setTokens(tokenize);
       Node *tree = p.parse_program();
-      //print_tree(tree,1);
+//      print_tree(tree,1);
       if(tree != nullptr) {
         Value res = inter.evaluate(tree);
         if(!holds_alternative<AcceptValue>(res)) {
             print_array(res);
             cout<<endl;
         }
-        delete tree;
       }
     }
     clear_history();

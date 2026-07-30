@@ -1,0 +1,47 @@
+/-
+	lmnlib - GPL v2.0 - see LICENSE or main.cpp file for details
+                   ansi sequences by ruscmi
+-/
+
+func paint_black(string) {
+    lmuck("\033[30m",string,"\033[0m")
+};
+func paint_red(string) {
+    lmuck("\033[31m",string,"\033[0m")
+};
+func paint_green(string) {
+    lmuck("\033[32m",string,"\033[0m")
+};
+func paint_yellow(string) {
+    lmuck("\033[33m",string,"\033[0m")
+};
+func paint_blue(string) {
+    lmuck("\033[34m",string,"\033[0m")
+};
+func paint_magenta(string) {
+    lmuck("\033[35m",string,"\033[0m")
+};
+func paint_cyan(string) {
+    lmuck("\033[36m",string,"\033[0m")
+};
+func paint_white(string) {
+    lmuck("\033[37m",string,"\033[0m")
+};
+func clear_screen() {
+    lmuck("\033[2J\033[H")
+};
+func dim_write(string) {
+    lmuck("\033[2m",string,"\033[0m")
+};
+func underlined_write(string) {
+    lmuck("\033[4m",string,"\033[0m")
+};
+func through_write(string) {
+    lmuck("\033[9m",string,"\033[0m")
+};
+func clear_line() {
+    lmuck("\033[2K\r")
+};
+func neon_line(string) {
+    lmuck("\033[5m",string,"\033[0m")
+}

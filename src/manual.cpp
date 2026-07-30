@@ -41,7 +41,85 @@ Node* Parser::parse_manual() {
  typeof - see the manual on using type checking
  length - see the manual on using length checking
  while - see examples while loop
- types - see all data types)"<<resbc<<endl;
+ types - see all data types
+ func - see examples using functions
+ wait - see lmit command manual
+ lib - use lib + <arg> or lib list)"<<resbc<<endl;
+		}
+		else if(peer().KEY == TTYPE::STRING && peer().VAL == "wait") {
+		    advanced();
+		    cout<<bluec<<R"(   for use wait command
+		    it makes the program fall asleep for a certain amount of time
+Use the 'lmit' keyword.
+    example:
+        lmuck("L",lmit(1),"M",lmit(1),"N");
+it's all thx for huge tits.
+		    )"<<resbc<<endl;
+		}
+		else if(peer().KEY == TTYPE::STRING && peer().VAL == "func") {
+		    advanced();
+		    cout<<bluec<<R"(
+		        in Lmnlang, the functions 
+		have about the same scope as in the petyhon
+    basic func:
+        example:
+            func f() {
+                lmuck(5)
+            };
+            f()
+        write '5'
+    Nested Functions:
+        example:
+            func f() { 
+                func d() { 
+                    lmuck(7) 
+                }; 
+                lmuck(6); 
+                d() 
+            }; 
+            f()
+        write '6' \n '7'	 
+    Scopes:
+        example:
+            func f() {
+                x = 5;
+                return x;
+            }
+            f()
+        write '5'
+    it's all suchary
+        )"<<resbc<<endl;
+		}
+		else if (peer().KEY == TTYPE::STRING && peer().VAL == "lib") {
+		    advanced();
+		    cout<<bluec<<R"(
+		        hello,this is all libs
+    ansi - see manual for ansi lib
+		    )"<<resbc<<endl;
+		    if(peer().KEY == TTYPE::STRING && peer().VAL == "ansi") {
+		        advanced();
+		        cout<<bluec<<R"(
+    all ansi commands
+    paint_<color>("line") - paint line;
+    What colors are there?
+    black,red,green,blue,yellow,magenta,cyan and white.
+    example:
+        paint_yellow("lemon");
+    execute 'lemon' with yellow color.
+
+    clear_screen() - will clear your terminal of everything.
+    clear_line() - will clear line of text. 
+    <style>_write() - More unusual styles for text.
+    What are the styles?
+    dim,underlined and through.
+    example:
+        dim_write("python");
+    will paint the 'python' with a dull shade
+    Another unusual method is neon_line()
+    neon_line("arg") will make your quoted arg blink.
+
+    it's all lemons.)"<<resbc<<endl;
+		    }
 		}
 		else if (peer().KEY == TTYPE::STRING && peer().VAL == "operators") {
             advanced();
