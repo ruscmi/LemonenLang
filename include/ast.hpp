@@ -6,6 +6,7 @@
 #include <vector>
 #include <memory>
 #include <variant>
+#include <unordered_map>
 using namespace std;
 extern bool is_runner;
 enum TTYPE { OPERATOR, SEPARATOR, NUMBER, STRING, UNKNOWN,END,STRING_LIT,END_EX,LOGIC_OPERATOR,BOOLEA_OPERATOR,NOT};
@@ -15,7 +16,8 @@ struct Token {
 };
 enum ASTTAB { ST_ASSIGNMENT, ST_NUMBER , ST_OPERATOR, ST_VARIABLE, ST_SEPARATOR, ST_PRINT, ST_STRING, 
 ST_NOP, ST_INDEX, ST_ARRAY,ST_INPUT,ST_BLOCK,ST_IF,ST_LOGIC_OPERATOR,ST_STOD,ST_BOOLEA_OPERATOR,ST_BOOL,
-ST_PROGRAM,ST_NOT,ST_WHILE,ST_CONTINUE,ST_BREAK,ST_TYPEOF,ST_LEN,ST_ARRAY_PUSH,ST_INCLUDE,ST_INCLUDE_LIBS};
+ST_PROGRAM,ST_NOT,ST_WHILE,ST_CONTINUE,ST_BREAK,ST_TYPEOF,ST_LEN,ST_ARRAY_PUSH,ST_INCLUDE,ST_INCLUDE_LIBS,
+ST_FUNC,ST_CALL,ST_RETURN,ST_WAIT};
 struct Node {
   ASTTAB KEY;
   string VAL;
@@ -27,15 +29,30 @@ struct Node {
   Node* block_while;
   ~Node();
 };
+struct ForFunction {
+    vector<string>par_names;
+    Node* body;
+    bool operator==(const ForFunction& other) const = default;
+};
 struct ErrorValue {
     string message;
     bool operator==(const ErrorValue& other) const = default;
 };
+struct ReturnFunc;
 struct Continuer { bool operator==(const Continuer& other) const = default; };
 struct Breaker { bool operator==(const Breaker& other) const = default; };
 struct AcceptValue { bool operator==(const AcceptValue& other) const = default; };
 struct ArrayValue;
-using Value = variant<double,bool,string,shared_ptr<ArrayValue>,ErrorValue,AcceptValue,Continuer,Breaker>; 
+using Value = variant<double,bool,string,shared_ptr<ArrayValue>,shared_ptr<ReturnFunc>,ErrorValue,AcceptValue,Continuer,Breaker,ForFunction>; 
+struct ReturnFunc {
+    Value value;
+    bool operator==(const ReturnFunc& other) const {
+        return value == other.value;
+    }
+    bool operator!=(const ReturnFunc& other) const {
+        return !(*this == other);
+    }
+};
 struct ArrayValue {
     vector<Value>elements;
     void push(const Value& val) {

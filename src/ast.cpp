@@ -43,6 +43,12 @@ void print_tree(Node* node, unsigned int level) {
 	else if(node->KEY == ST_BREAK) { cout<<"[BREAK]\n"; }
 	else if(node->KEY == ST_LEN) { cout<<"[LEN]\n"; }
 	else if(node->KEY == ST_ARRAY_PUSH) { cout<<"[ARRAY_PUSH]\n"; }
+	else if(node->KEY == ST_FUNC) { cout<<"[FUNCTION]\n"; }
+	else if(node->KEY == ST_INCLUDE) { cout<<"[INCLUDE]\n"; }
+	else if(node->KEY == ST_INCLUDE_LIBS) { cout<<"[INCLUDE_LIBS]\n"; }
+	else if(node->KEY == ST_CALL) { cout<<"[CALL]\n"; }
+	else if(node->KEY == ST_RETURN) { cout<<"[RETURN]\n"; }
+	else if(node->KEY == ST_WAIT) { cout<<"[WAIT]\n"; }
 	else { cout<<" [UNKNOWN]"; }
 	for(Node* child : node->children) {
 	    print_tree(child,level + 1);

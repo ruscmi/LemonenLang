@@ -10,6 +10,10 @@
 #include <iostream>
 #include <readline/readline.h>
 #include <cmath>
+#include <filesystem>
+#include <unordered_set>
+#include <thread>
+#include <chrono>
 Value interpreter::evaluate(Node* node) {
 	setup_utf8();
 	if(!node) { return AcceptValue{}; }
@@ -28,18 +32,111 @@ Value interpreter::evaluate(Node* node) {
             return ErrorValue{"E: unary minus requires a number"};
         }
 	}
+	else if(node->KEY == ST_RETURN) {
+	    Value val = evaluate(node->right_index);
+	    if(holds_alternative<ErrorValue>(val)) { return val; }
+	    return make_shared<ReturnFunc>(ReturnFunc{val});
+	}
 	else if(node->KEY == ST_BLOCK) {
 	    for(Node* child : node->children) {
 	        Value val = evaluate(child);
 	        if(holds_alternative<ErrorValue>(val)) { return val; }
 	        if(holds_alternative<Breaker>(val)) { return val; }
 	        if(holds_alternative<Continuer>(val)) { return val; }
+	        if(holds_alternative<shared_ptr<ReturnFunc>>(val)) { return val; }
 	    }
 	    return AcceptValue{};
 	}
+	else if(node->KEY == ST_FUNC) {
+	    vector<string>childs;
+	    Node* body = nullptr;
+	    for(Node* child : node->children) {
+	        if(child->KEY == ST_VARIABLE) {
+	            childs.push_back(child->VAL);
+	        }else if(child->KEY == ST_BLOCK) {
+	            body = child;
+	        }
+	    }
+	    if(!body) {
+	        body = node->right_index;
+	    }
+	    vars.back()[node->VAL] = ForFunction { 
+	        childs,
+	        body
+	    };
+	    return AcceptValue{};
+	}
+	else if(node->KEY == ST_WAIT) {
+	    Value val = evaluate(node->right_index);
+	    if(holds_alternative<ErrorValue>(val)) { return val; }
+	    if(holds_alternative<string>(val)) {
+	        cout<<"\033[1;31mE: are you faggot? why string? here you need numbers\033[0m"<<endl;
+	        return ErrorValue{"E: are you faggot? why string? here you need numbers"};
+	    }
+	    if(holds_alternative<bool>(val)) {
+	        cout<<"\033[1;31mE: are you faggot? why bool? here you need numbers\033[0m"<<endl;
+	        return ErrorValue{"E: are you faggot? why bool? here you need numbers"};      
+	    }
+	    if(holds_alternative<shared_ptr<ArrayValue>>(val)) {
+	        cout<<"\033[1;31mE: are you faggot? why array? here you need numbers\033[0m"<<endl;
+	        return ErrorValue{"E: are you faggot? why array? here you need numbers"};	        
+	    }
+	    if(holds_alternative<double>(val)) {
+	        double seconds = get<double>(val);
+	        this_thread::sleep_for(chrono::milliseconds(static_cast<long long>(seconds * 1000)));
+	    }
+	    return AcceptValue{};
+	}
+	else if(node->KEY == ST_CALL) {
+	    const string name = node->VAL;
+	    ForFunction func;
+	    bool found_func = false;
+	    for(auto it = vars.rbegin(); it != vars.rend(); ++it) {
+	        auto find = it->find(name);
+	        if(find != it->end()) {
+	            if(auto* fn = get_if<ForFunction>(&find->second)) {
+	                func = *fn;
+	                found_func = true;
+	                break;
+	            }
+	        }
+	    }
+	    if(!found_func) {
+	        cout<<"\033[1;31mE: not found fucked function\033[0m"<<endl;
+	        return ErrorValue{};
+	    }
+	    vector<Value>evaluated_args;
+	    for(Node* child : node->children) {
+	        Value val = evaluate(child);
+	        if(holds_alternative<ErrorValue>(val)) { return val; }
+	        evaluated_args.push_back(val);
+	    }
+	    if(evaluated_args.size() != func.par_names.size()) {
+	        cout<<"\033[1;31mE: evaluated_args.size() != func.par_names.size()\033[0m"<<endl;
+	        return ErrorValue{};
+	    }
+	    vars.push_back({});
+	    for(size_t i = 0; i < func.par_names.size(); ++i) {
+	        vars.back()[func.par_names[i]] = evaluated_args[i];
+	    }
+	    Value result = evaluate(func.body);
+	    vars.pop_back();
+	    if(auto* ret = get_if<shared_ptr<ReturnFunc>>(&result)) {
+	        return (*ret)->value;
+	    }
+	    return result;
+	}
 	else if(node->KEY == ST_INCLUDE) {
+	    static unordered_set<string>load_files;
 	    string filename = node->VAL;
-	    ifstream file(filename);
+	    error_code ec;
+	    string abs_path = filesystem::weakly_canonical(filename, ec).string();
+        if(ec) abs_path = filename;
+	    if(load_files.count(abs_path) > 0) {
+	        return ErrorValue{"E: recursion files"};
+	    }
+	    load_files.insert(abs_path);
+	    ifstream file(abs_path);
 	    string code((istreambuf_iterator<char>(file)),istreambuf_iterator<char>());
 	    Parser parser;
 	    LEX lexer;
@@ -252,9 +349,11 @@ Value interpreter::evaluate(Node* node) {
     }
 	else if(node->KEY == ST_VARIABLE) {
 		const string name = node->VAL;
-		const auto it = vars.find(name);
-		if (it != vars.end()) {
-		    return (it->second);
+		for(auto it = vars.rbegin(); it != vars.rend(); ++it) {
+		    auto find = it->find(name);
+		    if(find != it->end()) {
+		        return find->second;
+		    }
 		}
 		cout<<"\033[1;31mE: Variable not found\033[0m"<<endl;
 		return ErrorValue {"E: Variable not found"};
@@ -373,8 +472,9 @@ Value interpreter::evaluate(Node* node) {
         Value result = evaluate(node->right_index);
         if(holds_alternative<ErrorValue>(result)) { return result; }
         if(!node->children.empty()) {
-            for(const auto& node : node->children) {
-                vars[node->VAL] = result;
+            for(const auto& child : node->children) {
+                const string var_name = child->VAL;
+                vars.back()[var_name] = result;
             }
         }else {
             cout<<"\033[1;31mE: node->children is empty() fucking mudda\033[0m"<<endl;
@@ -452,6 +552,9 @@ Value interpreter::evaluate(Node* node) {
     	    Value val = evaluate(node->children[i]);
             if(holds_alternative<ErrorValue>(val)) { return val ; }
     	    print_array(val);
+    	    /*if (auto* str = get_if<string>(&val)) {
+    	        cout << *str << " (bytes: " << str->length() << ")" << endl;
+    	    }*/
         }
         cout<<endl;
         return AcceptValue{};

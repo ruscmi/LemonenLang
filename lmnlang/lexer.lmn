@@ -226,15 +226,15 @@ while(true) {
               tokens.lmpush(token);
               i = i + 1;
               continue;
-          }
+          }       
           i = i+1;
-    };
+    };  
     if(i>=len) {
         token.lmpush("");
         token.lmpush("END");
         tokens.lmpush(token);
+        lmuck(tokens);
         i = i + 1;
         continue;
     };
-    lmuck(tokens);
-}
+};

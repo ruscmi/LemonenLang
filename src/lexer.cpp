@@ -124,10 +124,32 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	  	            val += '\n';
 	  	        }else if(code[i + 1] == 't') {
 	  	            val += '\t';
-	  	        }else if(code[i + 1] == '\\') {
+	  	        }else if(code[i + 1] == 'r') {
+	  	            val += '\r';
+                }else if(code[i + 1] == '\\') {
 	  	            val += '\\';
+	  	        }else if(code[i + 1] == 'x') {
+                    if(i + 3 < len && isxdigit(code[i + 2]) && isxdigit(code[i + 3])) {
+                        string hex = code.substr(i + 2,2);
+                        char byte = static_cast<char>(stoi(hex,nullptr,16));
+                        val += byte;
+                        i += 2;
+                    }else {
+                        cout<<"\033[1;31mE: invalid hex arguments \033[0m"<<endl;
+                        tokens.clear();
+                        return tokens;
+                    }
 	  	        }else if(code[i + 1] == quote) {
 	  	            val += quote;
+	  	        }else if(code[i + 1] == 'e') {
+	  	            val += '\x1B';
+	  	        }else if(code[i + 1] == '0'){
+	  	            if(i + 3 < len && code[i + 2] == '3' && code[i + 3] == '3') {
+	  	                val += '\033';
+	  	                i += 2;
+	  	            }else {
+	  	                val += '\0';
+	  	            }
 	  	        }else {
 	  	            val += '\\';
 	  	            val += code[i + 1];

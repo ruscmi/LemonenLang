@@ -4,7 +4,10 @@
 #include "ast.hpp"
 class interpreter {
 private:
-    unordered_map<string,Value> vars;
+    vector<unordered_map<string,Value>> vars;
 public:
+    interpreter() {
+        vars.push_back({});
+    }
     Value evaluate(Node* node);
 };
