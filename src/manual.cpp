@@ -93,7 +93,7 @@ it's all thx for huge tits.
 		else if (peer().KEY == TTYPE::STRING && peer().VAL == "lib") {
 		    advanced();
 		    if(peer().KEY == TTYPE::STRING && peer().VAL == "list") {
-		        advanced();
+		       advanced();
 		       cout<<bluec<<R"(   hello,this is all libs
 ansi - see manual for ansi lib
 string - see manual for string lib)"<<resbc<<endl;
