@@ -19,6 +19,7 @@ What has been done in it?
 - **AST-tree**
 - **Interpreter**
 - **Runner**
+- **Libs**
 
 Im using unordered_map to memory for variables,it works very fast and builds an AST tree almost instantly.
 
@@ -52,7 +53,7 @@ chmod +x builder.sh
 
 For Windows, you will have to sweat. 
 
-best way to install [MSYS2](https::/www.msys2.org/)
+best way to install [MSYS2](https://www.msys2.org/)
 
 in terminal `MSYS2 UCRT64` :
 
@@ -65,8 +66,6 @@ Assemble the project:
 ```bash
 cmake -B build && cmake --build build
 ```
-
-
 
 **Executing files and REPL**
 
