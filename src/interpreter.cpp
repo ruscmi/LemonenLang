@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <unordered_set>
 #include <thread>
+#include <cstdlib>
 #include <chrono>
 Value interpreter::evaluate(Node* node) {
 	setup_utf8();
@@ -150,7 +151,13 @@ Value interpreter::evaluate(Node* node) {
 	}
 	else if(node->KEY == ST_INCLUDE_LIBS) {
 	    string filename = node->VAL;
-	    string full_path = "libs/" + node->VAL;
+	    string home = getenv("HOME") ? getenv("HOME") : "";
+	    string full_path = home + "/LemonenLang/libs/" + node->VAL;
+	    if(filename.empty()) {
+	        cout<<"\033[1;31mE: file is empty()\033[0m"<<endl;
+	        return ErrorValue{};
+	    }
+	    if(!filesystem::exists(full_path) && filesystem::exists(node->VAL)) { full_path = node->VAL; }
 	    ifstream file(full_path);
 	    string code((istreambuf_iterator<char>(file)),istreambuf_iterator<char>());
 	    Parser parser;

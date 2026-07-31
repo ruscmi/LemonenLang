@@ -92,11 +92,13 @@ it's all thx for huge tits.
 		}
 		else if (peer().KEY == TTYPE::STRING && peer().VAL == "lib") {
 		    advanced();
-		    cout<<bluec<<R"(
-		        hello,this is all libs
-    ansi - see manual for ansi lib
-		    )"<<resbc<<endl;
-		    if(peer().KEY == TTYPE::STRING && peer().VAL == "ansi") {
+		    if(peer().KEY == TTYPE::STRING && peer().VAL == "list") {
+		        advanced();
+		       cout<<bluec<<R"(   hello,this is all libs
+ansi - see manual for ansi lib
+string - see manual for string lib)"<<resbc<<endl;
+		    }
+		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "ansi") {
 		        advanced();
 		        cout<<bluec<<R"(
     all ansi commands
@@ -119,6 +121,9 @@ it's all thx for huge tits.
     neon_line("arg") will make your quoted arg blink.
 
     it's all lemons.)"<<resbc<<endl;
+		    }else {
+		        advanced();
+		        cout<<bluec<<R"(use: lib + <arg> see lib list)"<<resbc<<endl;
 		    }
 		}
 		else if (peer().KEY == TTYPE::STRING && peer().VAL == "operators") {
