@@ -1,6 +1,35 @@
 #!/bin/bash
-
-mkdir -p build && cd build
-
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make 
+set -e
+BUILD_DIR="build"
+INSTALL_PREFIX="$HOME/.local"
+SYSTEM_INSTALL=false
+for arg in "$@"
+do
+    case $arg in
+        --system)
+        SYSTEM_INSTALL=true
+        shift
+        ;;
+        --clean)
+        echo "clean old builder"
+        rm -rf "$BUILD_DIR"
+        shift
+        ;;
+    esac
+done
+echo "Configuring..."
+if [ "$SYSTEM_INSTALL" = true ]; then
+    cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release
+else
+    cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
+fi
+echo "Compilation lmnlang..."
+cmake --build "$BUILD_DIR" -j$(nproc)
+echo "Download..."
+if [ "$SYSTEM_INSTALL" = true ]; then
+    echo "need a fucking installation rights"
+    sudo cmake --install "$BUILD_DIR"
+else
+    cmake --install "$BUILD_DIR"
+fi
+echo "succefull"

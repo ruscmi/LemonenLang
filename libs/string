@@ -1,0 +1,49 @@
+/-
+	lmnlib - GPL v2.0 - see LICENSE or main.cpp file for details
+                   string sequences by ruscmi
+-/
+
+func str_invertion(string) {
+    len_string = lmlen(string);
+    str_comp = "";
+    i = len_string - 1;
+    while(i >= 0) {
+        str_comp = str_comp,string[i]
+        i = i - 1;
+        return str_comp
+    }
+};
+func str_repeat(string,count) {
+    if(count <= 0 ) {
+        return ""
+    }
+    if(count == 1) {
+        return string
+    }
+    res = ""
+    i = 0
+    while(i < count) {
+        res = res,string
+        i = i + 1
+    }
+    return res
+};
+func str_substring(string,start,length) {
+    if(start < 0 || start >= lmlen(string)) {
+        return "";
+    }
+    if(length <= 0) {
+        return "";
+    }
+    if(start + length > lmlen(string)) {
+        length = lmlen(string) - start
+    }
+    res = ""
+    i = start
+    finish = start + length
+    while(i < finish) {
+        res = res,string[i]
+        i = i + 1
+    } 
+    return res
+}

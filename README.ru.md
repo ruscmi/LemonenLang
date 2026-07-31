@@ -1,4 +1,4 @@
-# ⚠️ Проект находится в разработке, версия v0.1
+# ⚠️ Проект находится в разработке, версия v0.2
 
 == **Путь к [примерам для запуска](examples_code/)** ==
 
@@ -47,11 +47,23 @@ git clone https://github.com/ruscmi/LemonenLang && cd LemonenLang
 chmod +x builder.sh
 ./builder.sh
 ```
-== **ДЛЯ WINDOWS** == 
-Для Windows придётся потеть. 
-Сначала установите установщик GCC и используйте 
-его для компиляции проекта. 
-Но я бы посоветовал использовать WSL (терминал Linux на Windows). 
+== **ДЛЯ WINDOWS** ==
+
+Для Windows придётся страдать. 
+
+легчайший способ - установите [MSYS2](https::/www.msys2.org/) 
+
+в терминале `MSYS2 UCRT64` : 
+
+```bash 
+pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-readline 
+``` 
+
+Соберите проект: 
+
+```bash 
+cmake -B build && cmake --build build 
+```
 
 **Выполнение файлов и REPL** 
 
@@ -99,6 +111,18 @@ cd путь/к/директории
 
 ```lmnlang
 man list
+```
+
+Но после обновления версии 0.2 вы можете просто запустить его командой в терминале:
+
+```bash 
+lmnlang 
+``` 
+
+Для открытия файлов: 
+
+```bash 
+lmnlang --file /path/to/directory 
 ```
  
 Спасибо, что прочитали туториал
