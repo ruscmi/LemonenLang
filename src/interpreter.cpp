@@ -471,12 +471,83 @@ Value interpreter::evaluate(Node* node) {
 	else if(node->KEY == ST_ASSIGNMENT) {
         Value result = evaluate(node->right_index);
         if(holds_alternative<ErrorValue>(result)) { return result; }
-        if(!node->children.empty()) {
-            for(const auto& child : node->children) {
-                const string var_name = child->VAL;
-                vars.back()[var_name] = result;
+        if(node->children.empty()) {
+            cout<<"\033[1;31mE: left_elements is empty(), open your eyes asshole\033[0m"<<endl;
+            return ErrorValue{};
+        }
+        if(node->right_children.empty()) {
+            cout<<"\033[1;31mE: right_elements is empty(), open your eyes asshole\033[0m"<<endl;
+            return ErrorValue{};
+        }
+        vector<Value>right_values;
+        for(const auto& child : node->right_children) {
+            Value res = evaluate(child);
+            if(holds_alternative<ErrorValue>(res)) { return res; };
+            right_values.push_back(res);
+        }
+        if(node->children.size() == 1 && right_values.size() > 1) {
+            string res = "";
+            for(const auto& chil : node->right_children) {
+                Value ev = evaluate(chil);
+                if(holds_alternative<ErrorValue>(ev)) { return ev; }
+                if(holds_alternative<string>(ev)) {
+                    res += get<string>(ev);
+                }
+                if(holds_alternative<double>(ev)) { 
+                    double num = get<double>(ev);
+                    if(fmod(num, 1.0) == 0.0) {
+                        res += to_string(static_cast<long long>(num));
+                    } else {
+                        res += to_string(num);
+                    }
+                }
+                if(holds_alternative<bool>(ev)) {
+                    res += (get<bool>(ev) ? "true" : "false");
+                }
+                if(holds_alternative<shared_ptr<ArrayValue>>(ev)) {
+                    string arr = "[";
+                    auto getter = get<shared_ptr<ArrayValue>>(ev);
+                    for(unsigned i = 0; i < getter->elements.size(); ++i) {
+                        Value item = getter->elements[i];
+                        if(holds_alternative<string>(item)) {
+                            arr += get<string>(item);
+                        }
+                        if(holds_alternative<double>(item)) {
+                            double num = get<double>(item);
+                            if(fmod(num, 1.0) == 0.0) {
+                                arr += to_string(static_cast<long long>(num));
+                            } else {
+                                arr += to_string(num);
+                            }
+                        }
+                        if(holds_alternative<bool>(item)) {
+                            arr += (get<bool>(item) ? "true" : "false");
+                        }
+                        if(i + 1 <getter->elements.size()) {
+                            arr += ", ";
+                        }
+                    }
+                    arr += "]";
+                    res += arr;
+                }
             }
-        }else {
+            const string result = node->children[0]->VAL;
+            vars.back()[result] = res;
+        }
+        else if(node->children.size() == right_values.size()) {
+            for(unsigned i = 0; i < node->children.size(); i++) {
+                string name = node->children[i]->VAL;
+                vars.back()[name] = right_values[i];
+            }
+        }
+        else if(node->children.size() > 1 && right_values.size() == 1) {
+            Value expr = right_values[0];
+            for(const auto& child : node->children) {
+                const string name = child->VAL;
+                vars.back()[name] = expr;
+            }
+        }
+        else {
             cout<<"\033[1;31mE: node->children is empty() fucking mudda\033[0m"<<endl;
             return ErrorValue {"E: node->children is empty() fucking mudda"};
         }

@@ -27,6 +27,7 @@ struct Node {
   Node* if_index;
   Node* else_index;
   Node* block_while;
+  vector<Node*> right_children;
   ~Node();
 };
 struct ForFunction {

@@ -1,3 +1,0 @@
-lmport(ansi);
-paint_red("привет");
-dim_write("че")

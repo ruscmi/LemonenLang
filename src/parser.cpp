@@ -641,7 +641,7 @@ Node* Parser::parse_statement() {
 	}
 }
 Node* Parser::parse_assignment() {
-    vector<Node*>elements;
+    vector<Node*>left_elements;
     while(true) {
         if(peer().KEY != TTYPE::STRING) {
             cout<<"\033[1;33mE: peer().KEY != TTYPE::STRING(thong)\033[0m"<<endl;
@@ -651,7 +651,7 @@ Node* Parser::parse_assignment() {
         var_node->KEY = ST_VARIABLE;
         var_node->VAL = peer().VAL;
         advanced();
-        elements.push_back(var_node);
+        left_elements.push_back(var_node);
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
             advanced();
             continue;
@@ -665,20 +665,33 @@ Node* Parser::parse_assignment() {
         }
     }
     advanced();
-    Node* right_expr = parse_expression();
-    if(!right_expr) {
-        cout<<"\033[1;33mE: expected TTYPE::OPERATOR \"=\" \033[0m"<<endl;
-        for(Node* node : elements) {
-            delete node;
+    vector<Node*>right_elements;
+    while(true) {
+        Node* expr = parse_expression();
+        if(!expr) {
+            cout<<"\033[1;33mE: expected TTYPE::OPERATOR \"=\" \033[0m"<<endl;
+            for(Node* node : left_elements) {
+                delete node;
+            }
+            for(Node* node : right_elements) {
+                delete node;
+            }
+            return nullptr;
         }
-        return nullptr;
+        right_elements.push_back(expr);
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
+            advanced();
+            continue;
+        }else {
+            break;
+        }
     }
     Node* assign = new Node();
     assign->KEY = ST_ASSIGNMENT;
     assign->VAL = "=";
     assign->left_index = nullptr;
-    assign->right_index = right_expr;
-    assign->children = elements;
+    assign->children = left_elements;
+    assign->right_children = right_elements;
     return assign;
 }
 Node* Parser::parse_factor() {
