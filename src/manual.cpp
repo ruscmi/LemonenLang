@@ -98,10 +98,29 @@ it's all thx for huge tits.
 ansi - see manual for ansi lib
 string - see manual for string lib)"<<resbc<<endl;
 		    }
+		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "string") {
+		        advanced();
+		        cout<<bluec<<R"(    how use string library?
+ str_invertion(str) - invertion string in parentheses
+ example:
+    str_invertion("Hello")
+ execute 'olleH' 
+
+ str_repeat(str,count) - repeat string 
+ as many times as you type in instead of count
+ example:
+    str_repeat("lmn",5)
+ execute 'lmnlmnlmnlmnlmn'
+  
+ str_substring(str,start,len) - will cut off the part from the start 
+ counter from the row to the length you want to cut 
+ example:
+    str_substring("HELLO",1,2)
+ execute 'EL')"<<resbc<<endl;
+		    }
 		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "ansi") {
 		        advanced();
-		        cout<<bluec<<R"(
-    all ansi commands
+		        cout<<bluec<<R"(      all ansi commands
     paint_<color>("line") - paint line;
     What colors are there?
     black,red,green,blue,yellow,magenta,cyan and white.
