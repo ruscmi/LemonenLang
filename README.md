@@ -1,4 +1,4 @@
-# ⚠️ The project is under development,version v0.1
+# ⚠️ The project is under development,version v0.2
 
 == **Russian [README.ru](README.ru.md)** ==
 
@@ -52,9 +52,21 @@ chmod +x builder.sh
 
 For Windows, you will have to sweat. 
 
-First, install some GCC installer and use it to compile the project.
- 
-But I would advise you to use WSL (Linux terminal on Windows).
+best way to install [MSYS2](https::/www.msys2.org/)
+
+in terminal `MSYS2 UCRT64` :
+
+```bash
+pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-readline
+```
+
+Assemble the project:
+
+```bash
+cmake -B build && cmake --build build
+```
+
+
 
 **Executing files and REPL**
 
@@ -97,6 +109,19 @@ ON WINDOWS
 ```bash
 .\build\lmnlang.exe --file path\to\directory
 ```
+
+But since the v0.2 update, you can run it simply with the command in the terminal:
+
+```bash
+lmnlang
+```
+
+for open files:
+
+```bash
+lmnlang --file /path/to/directory
+```
+
 thanks for reading tutorial
 
 # Logo
