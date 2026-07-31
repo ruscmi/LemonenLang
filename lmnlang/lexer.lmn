@@ -21,61 +21,61 @@ while(true) {
     tokens = [];
     while(i < len) {
         token = [];
-        if(code(i) == "!") {
+        if(code[i] == "!") {
             token.lmpush("!");
             token.lmpush("NOT");
             tokens.lmpush(token);
             i = i + 1;
             continue;
         }
-        if(code(i) == "&" && code(i + 1) == "&" || code(i) == "|" && code(i + 1) == "|") {
+        if(code[i] == "&" && code[i + 1] == "&" || code[i] == "|" && code[i + 1] == "|") {
             bol_arr = [];
-            bol_arr.lmpush(code(i));
-            bol_arr.lmpush(code(i + 1));
+            bol_arr.lmpush(code[i]);
+            bol_arr.lmpush(code[i + 1]);
             token.lmpush(bol_arr);
             token.lmpush("BOL");
             tokens.lmpush(token);
             i = i + 1;
             continue;
         }
-        if(code(i) == "=" && code(i + 1) == "="  
-        || code(i) == "!" && code(i + 1) == "=" 
-        || code(i) == "<" && code(i + 1) == "=" 
-        || code(i) == ">" && code(i + 1) == "=") {
+        if(code[i] == "=" && code[i + 1] == "="  
+        || code[i] == "!" && code[i + 1] == "=" 
+        || code[i] == "<" && code[i + 1] == "=" 
+        || code[i] == ">" && code[i + 1] == "=") {
             lop_val = [];
-            lop_val.lmpush(code(i));
-            lop_val.lmpush(code(i + 1));
+            lop_val.lmpush(code[i]);
+            lop_val.lmpush(code[i + 1]);
             token.lmpush(lop_val);
             token.lmpush("LOP");
             tokens.lmpush(token);
             i = i + 2;
             continue;
         }
-        if(code(i) == "<" || code(i) == ">") {
-            token.lmpush(code(i));
+        if(code[i] == "<" || code[i] == ">") {
+            token.lmpush(code[i]);
             token.lmpush("LOP");
             tokens.lmpush(token);
             i = i + 1;
             continue;
         }
-        if(code(i) == "\"" || code(i) == "'") {
-            quote = code(i);
+        if(code[i] == "\"" || code[i] == "'") {
+            quote = code[i];
             i = i + 1;
             str_val = [];
             while(i < len) {
-                if(code(i) == quote) {
+                if(code[i] == quote) {
                     i = i + 1;
                     break;
                 }
-                if(code(i) == '\\' && i + 1 < len) {
-                    next_char = code(i+1);
+                if(code[i] == '\\' && i + 1 < len) {
+                    next_char = code[i+1];
                     if(next_char == "n") {
                         str_val.lmpush("\n");
                         i = i + 2;
                         continue;
                     }
                 }
-                str_val.lmpush(code(i));
+                str_val.lmpush(code[i]);
                 i = i + 1;
             }
             token.lmpush(str_val);
@@ -83,11 +83,11 @@ while(true) {
             tokens.lmpush(token);
             continue;
         }
-        if(code(i) == " ") {
+        if(code[i] == " ") {
             i = i + 1;
             continue;
         }
-        if(code(i) == ";") {
+        if(code[i] == ";") {
             token.lmpush([";"]);
             token.lmpush("ENDL");
             tokens.lmpush(token);
@@ -96,7 +96,7 @@ while(true) {
         }
         j = 0; is_sep = 0;
         while(j < sep_len) {
-            if(code(i) == separators[j]) {
+            if(code[i] == separators[j]) {
                 is_sep = 1;
                 break;
             }
@@ -108,7 +108,7 @@ while(true) {
                 k = 0;
                 curr_is_sep = 0;
                 while(k<sep_len) {
-                    if(code(i) == separators[k]) {
+                    if(code[i] == separators[k]) {
                         curr_is_sep = 1;
                         break;
                     } 
@@ -117,7 +117,7 @@ while(true) {
                 if(curr_is_sep == 0) {
                     break;
                 }
-                sep_arr.lmpush(code(i));
+                sep_arr.lmpush(code[i]);
                 i = i + 1;
             }
             token.lmpush(sep_arr);
@@ -127,7 +127,7 @@ while(true) {
         }
         j = 0; is_op = 0;
         while(j < op_len) {
-            if(code(i) == operators[j]) {
+            if(code[i] == operators[j]) {
                 is_op = 1;
                 break;
             }
@@ -139,7 +139,7 @@ while(true) {
                 k = 0;
                 curr_is_op = 0;
                 while(k<op_len) {
-                    if(code(i) == operators[k]) {
+                    if(code[i] == operators[k]) {
                         curr_is_op = 1;
                         break;
                     }
@@ -148,7 +148,7 @@ while(true) {
                 if(curr_is_op == 0) {
                     break;
                 } 
-                op_arr.lmpush(code(i));
+                op_arr.lmpush(code[i]);
                 i = i + 1;
             }
             token.lmpush(op_arr);
@@ -158,7 +158,7 @@ while(true) {
         }
         j = 0; is_num = 0;
         while(j < num_len) {
-            if(code(i) == numbers[j]) {
+            if(code[i] == numbers[j]) {
                 is_num = 1;
                 break;
             } 
@@ -170,7 +170,7 @@ while(true) {
                   k = 0;
                   curr_is_num = 0;
                   while(k<num_len) {
-                      if(code(i) == numbers[k]) {
+                      if(code[i] == numbers[k]) {
                           curr_is_num = 1;
                           break;
                       }
@@ -179,7 +179,7 @@ while(true) {
                   if(curr_is_num == 0) {
                       break;
                   }
-                  num_arr.lmpush(code(i));
+                  num_arr.lmpush(code[i]);
                   i = i + 1;
               }
               token.lmpush(num_arr);
@@ -189,7 +189,7 @@ while(true) {
           }
           j = 0; is_alph = 0;
           while(j < alph_len) {
-            if(code(i) == alphabet[j]) {
+            if(code[i] == alphabet[j]) {
                 is_alph = 1;
                 break;
             }
@@ -201,7 +201,7 @@ while(true) {
                   k = 0;
                   curr_is_alph = 0;
                   while(k<alph_len) {
-                      if(code(i) == alphabet[k]) {
+                      if(code[i] == alphabet[k]) {
                           curr_is_alph = 1;
                           break;
                       }
@@ -210,7 +210,7 @@ while(true) {
                   if(curr_is_alph == 0) {
                       break;
                   }
-                  alph_arr.lmpush(code(i));
+                  alph_arr.lmpush(code[i]);
                   i = i + 1;
               }
               token.lmpush(alph_arr);
@@ -220,7 +220,7 @@ while(true) {
           } 
           else {
               unk_arr = [];
-              unk_arr.lmpush(code(i))
+              unk_arr.lmpush(code[i])
               token.lmpush(unk_arr);
               token.lmpush("UNK");
               tokens.lmpush(token);

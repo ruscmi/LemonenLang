@@ -8,9 +8,10 @@
 using namespace std;
 class LEX {
 private:
-  vector<Token> tokens;
-  Token T;
+    vector<Token> tokens;
+    Token T;
 public:
-  vector<Token>& tokenize(const string &code);
+    vector<Token>& tokenize(const string &code);
+    size_t get_utf8(unsigned char c);
 };
   

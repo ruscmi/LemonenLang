@@ -3,6 +3,8 @@
                    ansi sequences by ruscmi
 -/
 
+/- --COLORS-- -/
+
 func paint_black(string) {
     string = "\033[30m",string,"\033[0m"
     return string
@@ -35,25 +37,47 @@ func paint_white(string) {
     string = "\033[37m",string,"\033[0m"
     return string
 };
+
+/- --CLEARING-- -/
+
 func clear_screen() {
     lmuck("\033[2J\033[H")
-};
-func dim_write(string) {
-    string = "\033[2m",string,"\033[0m"
-    return string
-};
-func underlined_write(string) {
-    string = "\033[4m",string,"\033[0m"
-    return string
-};
-func through_write(string) {
-    string = "\033[9m",string,"\033[0m"
-    return string
 };
 func clear_line() {
     lmuck("\033[2K\r")
 };
-func neon_line(string) {
+
+/- --WRITING-- -/
+
+func dim_write(string) {
+    string = "\033[2m",string,"\033[0m"
+    return string
+};
+func italic_write(string) {
+    string = "\033[3m",string,"\033[0m"
+    return string
+}
+func underlined_write(string) {
+    string = "\033[4m",string,"\033[0m"
+    return string
+};
+func neon_write(string) {
     string = "\033[5m",string,"\033[0m"
     return string
 }
+func blink_write(string) {
+    string = "\033[6m",string,"\033[0m"
+    return string
+}
+func invert_write(string) {
+    string = "\033[7m",string,"\033[0m"
+    return string
+}
+func hidden_write(string) {
+    string = "\033[8m",string,"\033[0m"
+    return string
+}
+func through_write(string) {
+    string = "\033[9m",string,"\033[0m"
+    return string
+};

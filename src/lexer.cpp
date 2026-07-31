@@ -5,13 +5,21 @@
 #include "../include/utf8_win.hpp"
 #include <cctype>
 #include <iostream>
-std::vector<Token>& LEX::tokenize(const string &code) {
+size_t LEX::get_utf8(unsigned char c) {
+    if((c & 0x80) == 0) return 1;
+    if((c & 0xE0) == 0xC0) return 2;
+    if((c & 0xF0) == 0xE0) return 3;
+    if((c & 0xF8) == 0xF0) return 4;
+    return 1;
+}
+vector<Token>& LEX::tokenize(const string &code) {
 	setup_utf8();
 	tokens.clear();
 	unsigned int i = 0;
 	unsigned int len = code.length();
 	while (i < len) {
 	  unsigned char current = code[i];
+	  size_t char_len = get_utf8(current);
 	  if (isspace(current)) {
 	    i++;
 	    continue;
@@ -31,17 +39,29 @@ std::vector<Token>& LEX::tokenize(const string &code) {
 	    tokens.push_back(T);
 	    continue;
 	  }
-	  if (isalpha(current)) {
-	    string val = "";
-	    while (i < len && (isdigit(code[i]) || isalpha(code[i]) 
-	    || code[i] == '_')) {
-	      val += code[i];
-	      i++;
-	    }
-	    T.KEY = TTYPE::STRING;
-	    T.VAL = val;
-	    tokens.push_back(T);
-	    continue;
+	  if (char_len > 1 || isalpha(current) || current == '_') {
+        string val = "";
+        while(i < len) {
+            size_t curr = get_utf8(code[i]);
+            if(curr > 1) {
+                for(size_t k = 0; k < curr; ++k) {
+                    val += code[i];
+                    i++;
+                }
+            }
+            else if (i < len && (isdigit(code[i]) || isalpha(code[i]) 
+            || code[i] == '_')) {
+                val += code[i];
+                i++;
+            }
+            else {
+                break;
+            }
+        }
+        T.KEY = TTYPE::STRING;
+        T.VAL = val;
+        tokens.push_back(T);
+        continue;
 	  }
 	  if (current == '/' && i + 1 < len && code[i + 1] == '/') {
 	    while(i < len && code[i] != '\n' ) { i++; }

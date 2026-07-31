@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     LEX lexing;
     cout << big_txt << R"(    lmnlang REPL mode 
   Read Eval Print Loop mode
-	 by ruscmi V 0.1
+	 by ruscmi V 0.2
   type 'man list' for manual
 	  )"<< end << endl;
     while (ActiveRequest) {
