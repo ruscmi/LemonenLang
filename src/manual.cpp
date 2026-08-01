@@ -12,12 +12,12 @@
 moved the manual here because it grows and interferes in the parser, 
 otherwise it can simply be inserted and called in recursion descent inside the parser
 */
-Node* Parser::parse_manual() {
+unique_ptr<Node> Parser::parse_manual() {
 	setup_utf8();
 	Token current = peer();
 	const char* bluec = "\033[34m";
 	const char* resbc = "\033[0m";
-	Node* node = new Node();
+	auto node = make_unique<Node>(peer());
 	node->KEY = ST_NOP;
 	node->VAL = "nop";
 	if(is_runner) {
@@ -44,7 +44,25 @@ Node* Parser::parse_manual() {
  types - see all data types
  func - see examples using functions
  wait - see lmit command manual
- lib - use lib + <arg> or lib list)"<<resbc<<endl;
+ lib - use lib + <arg> or lib list
+ dictionaries - see manual to use dictionares)"<<resbc<<endl;
+		}
+		else if(peer().KEY == TTYPE::STRING && peer().VAL == "dictionaries") {
+		    advanced();
+		    cout<<bluec<<R"(    sup this is a manual on dictionaries
+ To create dictionaries, use the following syntax
+    example:
+        dict = {
+            "age" : 14,
+            "name" : "ruscmi"
+        }
+ To add to the dictionary
+    example:
+        dict["hobby"] = "programming"
+ to manage the index
+    example:
+        dict["age"] = 15;
+ that's all for big dick)"<<resbc<<endl;
 		}
 		else if(peer().KEY == TTYPE::STRING && peer().VAL == "wait") {
 		    advanced();
@@ -95,8 +113,25 @@ it's all thx for huge tits.
 		    if(peer().KEY == TTYPE::STRING && peer().VAL == "list") {
 		       advanced();
 		       cout<<bluec<<R"(   hello,this is all libs
+all libs written on the lmn itself
 ansi - see manual for ansi lib
-string - see manual for string lib)"<<resbc<<endl;
+string - see manual for string lib
+random - see manual for random lib
+for load libs or file use:
+    lmport(lib)
+or for file:
+    lmport "/path/to/file")"<<resbc<<endl;
+		    }
+		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "random") {
+		        advanced();
+		        cout<<bluec<<R"(this lib is small
+it has 2 features: <randint> and <choice>
+use:
+    rnd_<func>
+example:
+    rnd_randint(1,10);
+execute a number from 1 to 10
+this all thx for reading manual)"<<resbc<<endl;
 		    }
 		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "string") {
 		        advanced();
@@ -116,7 +151,22 @@ string - see manual for string lib)"<<resbc<<endl;
  counter from the row to the length you want to cut 
  example:
     str_substring("HELLO",1,2)
- execute 'EL')"<<resbc<<endl;
+ execute 'EL'
+ str_join(arr,text) - joins all the elements of 
+ the array into a single line 
+ You can also enter an argument between
+ the attached elements of the
+ array instead of the text:
+   example: 
+         str_join(["+7",777,77,77],"-")
+    execute '+7-777-77-77'
+ str_split(string) - slices the string by spaces 
+ and places each word in the string in a 
+ separate array element.
+    example:
+        str_split("hello world !")
+    execute '[hello, world, !]'
+  thank you all for that.)"<<resbc<<endl;
 		    }
 		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "ansi") {
 		        advanced();
@@ -132,13 +182,10 @@ string - see manual for string lib)"<<resbc<<endl;
     clear_line() - will clear line of text. 
     <style>_write() - More unusual styles for text.
     What are the styles?
-    dim,underlined and through.
+    dim,underlined,through,neon,blink,italic,invert,hidden
     example:
         dim_write("python");
     will paint the 'python' with a dull shade
-    Another unusual method is neon_line()
-    neon_line("arg") will make your quoted arg blink.
-
     it's all lemons.)"<<resbc<<endl;
 		    }else {
 		        advanced();
@@ -454,7 +501,7 @@ In general, that's all, the use is very simple,
 everything will depend on your fantasies.)"<<resbc<<endl;
         }
 		else {
-			cout<<"\033[1;33mW: use man <arg> and <list> to see args\033[0m"<<endl;
+			error("use man + <arg> or write 'man list'");
 			advanced();
 		}
 	}

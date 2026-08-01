@@ -1,6 +1,0 @@
-lmport(string);
-y = "  привет  попа   ";
-z = lmlen(y);
-x = str_trim(y);
-n = lmlen(x);
-lmuck("длина сначала: ",z," длина потом: ",n)
