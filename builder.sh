@@ -17,6 +17,12 @@ do
         ;;
     esac
 done
+echo "
+        lmnlang - lightweight and fast interpreter
+        Copyright (C) 2026 ruscmi
+        lmnlang is probided under:
+        GNU V2.0 GENERAL PUBLIC LICENSE
+"
 echo "Configuring..."
 if [ "$SYSTEM_INSTALL" = true ]; then
     cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release

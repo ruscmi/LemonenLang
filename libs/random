@@ -1,0 +1,30 @@
+/-
+	lmnlib - GPL v2.0 - see LICENSE or main.cpp file for details
+                   random sequences by ruscmi
+-/
+lmport(ansi);
+
+RAND = { 
+    "seed" : 123456789,
+    "a" : 1103515245,
+    "c" : 12345,
+    "m" : 2147483648 
+};
+func rnd_randint(min_val,max_val) {
+    func next_raw() {
+        RAND["seed"] = (RAND["a"] * RAND["seed"] + RAND["c"]) % RAND["m"]; 
+        return RAND["seed"];
+    };
+    span = (max_val - min_val) + 1;
+    raw = next_raw();
+    if(raw < 0) {
+        raw = 0 - raw;
+    };
+    return min_val + (raw % span);
+};
+func rnd_choice(arr) {
+    len = lmlen(arr);
+    if(len == 0) { return lmuck(paint_red("E: lmlen(arr) == 0")); }
+    idx = rnd_randint(0,len - 1);
+    return arr[idx];  
+}

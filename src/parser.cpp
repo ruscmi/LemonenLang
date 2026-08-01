@@ -622,8 +622,8 @@ Node* Parser::parse_statement() {
 
 	    int parens = 0;
 	    while(pos_expr < tokenize.size() && tokenize[pos_expr].KEY != TTYPE::END_EX) {
-	        if(tokenize[pos_expr].VAL == "(" || tokenize[pos_expr].VAL == "{") parens++; 
-	        if(tokenize[pos_expr].VAL == ")" || tokenize[pos_expr].VAL == "}") parens--; 
+	        if(tokenize[pos_expr].VAL == "(" || tokenize[pos_expr].VAL == "{" || tokenize[pos_expr].VAL == "[") parens++; 
+	        if(tokenize[pos_expr].VAL == ")" || tokenize[pos_expr].VAL == "}" || tokenize[pos_expr].VAL == "]") parens--; 
 	        if(parens == 0 && tokenize[pos_expr].KEY == TTYPE::OPERATOR && tokenize[pos_expr].VAL == "=") {
 	            is_assignment = true;
 	            break;
@@ -643,15 +643,15 @@ Node* Parser::parse_statement() {
 Node* Parser::parse_assignment() {
     vector<Node*>left_elements;
     while(true) {
-        if(peer().KEY != TTYPE::STRING) {
-            cout<<"\033[1;33mE: peer().KEY != TTYPE::STRING(thong)\033[0m"<<endl;
+        Node* expr = parse_expression();
+        if(!expr) {
+            cout<<"\033[1;31mE: unknown left_index in ASSIGNMENTATION\033[0m"<<endl;
             return nullptr;
         }
-        Node* var_node = new Node();
-        var_node->KEY = ST_VARIABLE;
-        var_node->VAL = peer().VAL;
-        advanced();
-        left_elements.push_back(var_node);
+        if(expr->KEY != ST_VARIABLE && expr->KEY != ST_INDEX) { 
+            cout<<"\033[1;31mE: unknown datatype in assignmentation\033[0m"<<endl; delete expr; return nullptr;
+        }
+        left_elements.push_back(expr);
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
             advanced();
             continue;
@@ -835,6 +835,65 @@ Node* Parser::parse_factor() {
         node->children = elements;
         advanced();
         left = node;
+    }
+    else if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "{") {
+        advanced();
+        vector<Node*>dickes;
+        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "}") {
+            advanced();
+            Node* dick = new Node();
+            dick->KEY = ST_DICTIONARY;
+            dick->children = {};
+            left = dick;
+            return left;
+        }
+        while(true) {
+            Node* element = parse_expression();
+            if(!element) {
+                cout<<"\033[1;31mE: fucked muddaeb get out of lmnlang,expected left_element\033[0m"<<endl;
+                for(Node* dicke : dickes) delete dicke;
+                return nullptr;
+            }
+            if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ":") {
+                advanced();
+            }else {
+                cout<<"\033[1;31mE: fucked muddaeb get out of lmnlang, expected ':' \033[0m"<<endl;
+                delete element;
+                for(Node* dicke : dickes) delete dicke;
+                return nullptr; 
+            }
+            Node* s_element = parse_expression();
+            if(!s_element) {
+                cout<<"\033[1;31mE: fucked muddaeb get out of lmnlang,expected right_element\033[0m"<<endl;
+                delete element;
+                for(Node* dicke : dickes) delete dicke;
+                return nullptr;                    
+            }
+            dickes.push_back(element);
+            dickes.push_back(s_element);
+            if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
+                advanced();
+                if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "}") {
+                    cout<<"\033[1;31mE: dont parsing fucked '}' sucked pidoras\033[0m"<<endl;
+                    for(Node* dicke : dickes) delete dicke;
+                    return nullptr;
+                }
+                continue;
+            }
+            else if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "}") {
+                advanced();
+                break;
+            }else {
+                cout<<"\033[1;31mE: EBLAN where is the parenthesis fucking?\033[0m"<<endl;
+                for(Node* dicke : dickes) delete dicke;
+                return nullptr;
+            }
+        }
+        Node* dictionary = new Node();
+        dictionary->KEY = ST_DICTIONARY;
+        dictionary->children = dickes;
+        left = dictionary;
+        return left;
     }
 	else if(current.KEY == TTYPE::STRING_LIT) {
 		Node* node = new Node();

@@ -17,7 +17,7 @@ struct Token {
 enum ASTTAB { ST_ASSIGNMENT, ST_NUMBER , ST_OPERATOR, ST_VARIABLE, ST_SEPARATOR, ST_PRINT, ST_STRING, 
 ST_NOP, ST_INDEX, ST_ARRAY,ST_INPUT,ST_BLOCK,ST_IF,ST_LOGIC_OPERATOR,ST_STOD,ST_BOOLEA_OPERATOR,ST_BOOL,
 ST_PROGRAM,ST_NOT,ST_WHILE,ST_CONTINUE,ST_BREAK,ST_TYPEOF,ST_LEN,ST_ARRAY_PUSH,ST_INCLUDE,ST_INCLUDE_LIBS,
-ST_FUNC,ST_CALL,ST_RETURN,ST_WAIT};
+ST_FUNC,ST_CALL,ST_RETURN,ST_WAIT,ST_DICTIONARY};
 struct Node {
   ASTTAB KEY;
   string VAL;
@@ -44,7 +44,20 @@ struct Continuer { bool operator==(const Continuer& other) const = default; };
 struct Breaker { bool operator==(const Breaker& other) const = default; };
 struct AcceptValue { bool operator==(const AcceptValue& other) const = default; };
 struct ArrayValue;
-using Value = variant<double,bool,string,shared_ptr<ArrayValue>,shared_ptr<ReturnFunc>,ErrorValue,AcceptValue,Continuer,Breaker,ForFunction>; 
+struct DictValue;
+using Value = 
+variant<
+double,
+bool,
+string,
+shared_ptr<DictValue>,
+shared_ptr<ArrayValue>,
+shared_ptr<ReturnFunc>,
+ErrorValue,
+AcceptValue,
+Continuer,
+Breaker,
+ForFunction>; 
 struct ReturnFunc {
     Value value;
     bool operator==(const ReturnFunc& other) const {
@@ -53,6 +66,15 @@ struct ReturnFunc {
     bool operator!=(const ReturnFunc& other) const {
         return !(*this == other);
     }
+};
+struct DictValue {
+    unordered_map<string,Value>dict_val;
+    bool operator==(const DictValue& other) const {
+        return dict_val == other.dict_val;
+    }
+    bool operator!=(const DictValue& other) const {
+        return !(*this == other);
+    }    
 };
 struct ArrayValue {
     vector<Value>elements;

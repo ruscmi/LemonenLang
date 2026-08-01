@@ -206,6 +206,10 @@ Value interpreter::evaluate(Node* node) {
 	        auto expr = get<shared_ptr<ArrayValue>>(val);
 	        return (double)expr->elements.size();
 	    }
+	    if(holds_alternative<shared_ptr<DictValue>>(val)) {
+	        auto expr = get<shared_ptr<DictValue>>(val);
+	        return (double)expr->dict_val.size();
+	    }
 	    return AcceptValue{};
 	}
 	else if(node->KEY == ST_TYPEOF) {
@@ -296,6 +300,26 @@ Value interpreter::evaluate(Node* node) {
         }
         return arr;
     }
+    else if(node->KEY == ST_DICTIONARY) {
+        auto dict = make_shared<DictValue>();
+        for(size_t i = 0; i<node->children.size(); i+=2) {
+            if(i+1 >= node->children.size()) {
+                cout<<"\033[1;31mE: expected odd match in dictionary\033[0m"<<endl;
+                return ErrorValue{};
+            }
+            Value key = evaluate(node->children[i]);
+            Value value = evaluate(node->children[i+1]);
+            if(holds_alternative<ErrorValue>(key)) { return key; }
+            if(holds_alternative<ErrorValue>(value)) { return value; }
+            if(!holds_alternative<string>(key)) {
+                cout<<"\033[1;31mE: key is not ST_STRING,return UNKNOWN value\033[0m"<<endl;
+                return ErrorValue{};
+            }
+            string getter = get<string>(key);
+            dict->dict_val[getter] = value;
+        }
+        return dict;
+    }
     else if(node->KEY == ST_BOOL) {
         if(node->VAL == "true") {
             Value val = true;
@@ -312,16 +336,19 @@ Value interpreter::evaluate(Node* node) {
     else if(node->KEY == ST_INDEX) {
         const Value left_val = evaluate(node->left_index);
         const Value right_val = evaluate(node->right_index);
+        if(holds_alternative<ErrorValue>(left_val)) { return left_val; }
+        if(holds_alternative<ErrorValue>(right_val)) { return right_val; }        
         if(!holds_alternative<shared_ptr<ArrayValue>>(left_val) &&
-        !holds_alternative<string>(left_val)) {
+        !holds_alternative<string>(left_val) && 
+        !holds_alternative<shared_ptr<DictValue>>(left_val)){
            cout<<"\033[1;31mE: dont have ST_ARRAY\033[0m"<<endl;
            return ErrorValue {"E: dont have ST_ARRAY"};
         }
-        if(!holds_alternative<double>(right_val)) {
-            cout<<"\033[1;31mE: dont have ST_INDEX in ST_ARRAY\033[0m"<<endl;
-            return ErrorValue {"E: dont have ST_INDEX in ST_ARRAY"};
-        }
         if(holds_alternative<shared_ptr<ArrayValue>>(left_val)) {
+            if(!holds_alternative<double>(right_val)) {
+                cout<<"\033[1;31mE: dont have ST_INDEX in ST_ARRAY\033[0m"<<endl;
+                return ErrorValue {"E: dont have ST_INDEX in ST_ARRAY"};
+            }
             auto& left = get<shared_ptr<ArrayValue>>(left_val);
             double index_double = get<double>(right_val);
             if(index_double != (int)index_double) {
@@ -336,6 +363,10 @@ Value interpreter::evaluate(Node* node) {
             return left->elements[right];
         }
         if(holds_alternative<string>(left_val)) {
+            if(!holds_alternative<double>(right_val)) {
+                cout<<"\033[1;31mE: dont have ST_INDEX in ST_ARRAY\033[0m"<<endl;
+                return ErrorValue {"E: dont have ST_INDEX in ST_ARRAY"};
+            }
             string left = get<string>(left_val);
             double index_double = get<double>(right_val);
             if(index_double != (int)index_double) {
@@ -348,6 +379,21 @@ Value interpreter::evaluate(Node* node) {
                 return ErrorValue {"E: ST_INDEX < 0 || ST_INDEX > ST_INDEX.length()"};
             }
             return string(1,left[right]);
+        }
+        if(holds_alternative<shared_ptr<DictValue>>(left_val)) {
+            if(!holds_alternative<string>(right_val)) {
+                cout<<"\033[1;31mE: dont have ST_INDEX in ST_DICTIONARY\033[0m"<<endl;
+                return ErrorValue {"E: dont have ST_INDEX in ST_DICTIONARY"};
+            }
+            auto value = get<shared_ptr<DictValue>>(left_val);
+            string key = get<string>(right_val);
+            auto finder = value->dict_val.find(key);
+            if(finder != value->dict_val.end()) {
+                return finder->second;
+            }else {
+                cout<<"\033[1;31mE: ST_INDEX returning nullptr\033[0m"<<endl;
+                return ErrorValue{"E: ST_INDEX returning nullptr"};
+            }
         }
         return AcceptValue{};
     }
@@ -543,8 +589,42 @@ Value interpreter::evaluate(Node* node) {
         }
         else if(node->children.size() == right_values.size()) {
             for(unsigned i = 0; i < node->children.size(); i++) {
-                string name = node->children[i]->VAL;
-                vars.back()[name] = right_values[i];
+                if(node->children[i]->KEY == ST_VARIABLE) {
+                    string name = node->children[i]->VAL;
+                    vars.back()[name] = right_values[i];
+                }
+                if(node->children[i]->KEY == ST_INDEX) {
+                    Value target = evaluate(node->children[i]->left_index);
+                    Value index = evaluate(node->children[i]->right_index);
+                    if(holds_alternative<ErrorValue>(target)) return target;
+                    if(holds_alternative<ErrorValue>(index)) return index;
+                    if(holds_alternative<shared_ptr<ArrayValue>>(target)) {
+                        auto getter = get<shared_ptr<ArrayValue>>(target);
+                        double idx_d = get<double>(index);
+                        if(idx_d < 0) {
+                            cout<<"\033[1;31mE: index in array < 0 \033[0m"<<endl;
+                            return ErrorValue{};
+                        }
+                        size_t idx = static_cast<size_t>(idx_d);
+                        if(idx < getter->elements.size()) {
+                            getter->elements[idx] = right_values[i];   
+                        }else {
+                            cout<<"\033[1;31mE: ST_INDEX > ARRAY.SIZE()\033[0m"<<endl;
+                            return ErrorValue{};
+                        }
+                    }else if(holds_alternative<shared_ptr<DictValue>>(target)) {
+                        if(!holds_alternative<string>(index)) {
+                            cout<<"\033[1;31mE: index is not string,return unknown value\033[0m"<<endl;
+                            return ErrorValue{};
+                        }
+                        auto get_target = get<shared_ptr<DictValue>>(target);
+                        string get_index = get<string>(index);
+                        get_target->dict_val[get_index] = right_values[i];;
+                    }else {
+                        cout<<"\033[1;31mE: this is not correct type for ST_INDEX\033[0m"<<endl;
+                        return ErrorValue{};
+                    }
+                }
             }
         }
         else if(node->children.size() > 1 && right_values.size() == 1) {

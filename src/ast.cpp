@@ -49,6 +49,7 @@ void print_tree(Node* node, unsigned int level) {
 	else if(node->KEY == ST_CALL) { cout<<"[CALL]\n"; }
 	else if(node->KEY == ST_RETURN) { cout<<"[RETURN]\n"; }
 	else if(node->KEY == ST_WAIT) { cout<<"[WAIT]\n"; }
+	else if(node->KEY == ST_DICTIONARY) { cout<<"[DICTIONARY]\n"; }
 	else { cout<<" [UNKNOWN]"; }
 	for(Node* child : node->children) {
 	    print_tree(child,level + 1);
@@ -71,10 +72,24 @@ void print_array(const Value& val) {
             if (i != arr->elements.size() - 1) cout << ", ";
         }
         cout << "]";
+    }
+    else if(holds_alternative<shared_ptr<DictValue>>(val)) {
+        auto dict = get<shared_ptr<DictValue>>(val);
+        cout << "{";
+        bool first = true;
+        for(const auto& [key,val] : dict->dict_val) {
+            if(!first) {
+                cout<<", ";
+            }
+            first = false;
+            cout<<"'"<<key<<"' : ";
+            print_array(val);
+        }
+        cout<<"}";
     } 
     else if(holds_alternative<ErrorValue>(val)) {
         cout<<"\033[1;31mE: unknown TTYPE to interpreter\033[0m";
-    } 
+    }
     else if(holds_alternative<AcceptValue>(val)) { }
     else if(holds_alternative<Breaker>(val)) { }
     else if(holds_alternative<Continuer>(val)) { }

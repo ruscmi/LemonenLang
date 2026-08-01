@@ -126,7 +126,8 @@ vector<Token>& LEX::tokenize(const string &code) {
 	  if (current == '[' || current == ']' ||
 	      current == '(' || current == ')' || 
 	      current == ',' || current == '{' ||
-	      current == '}' || current == '.') {
+	      current == '}' || current == '.' ||
+	      current == ':') {
 	    string val(1, current);
 	    T.KEY = TTYPE::SEPARATOR;
 	    T.VAL = val;

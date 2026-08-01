@@ -1,0 +1,113 @@
+/- 
+        ИДЕАЛЬНОЕ ГОВНО by русьмм lmnlang v0.2 on License GNU 2.0 
+-/
+lmport(ansi);
+lmport(string);
+lmport(random);
+LMNMEM = {};
+while(true) {
+    input = lmout("ввод или 'help' для виндусятников: ");
+    ev = str_split(input);
+    len = lmlen(ev);
+    if(len > 0) {
+        if(ev[0] == "exit") {
+             lmuck("goodbye")
+             break
+        }
+        else if(ev[0] == "set") {
+            if(len > 2) {
+                LMNMEM[ev[1]] = ev[2];
+                lmuck(ev[1],"=",LMNMEM[ev[1]]);
+            }else {
+                lmuck(paint_red("E: len < 3 or unknown ГОВНО иди нахуй короче виндусятник."));
+            }
+        }
+        else if(len >= 1 && lmlen(LMNMEM) > 0) {
+            if(ev[0] == "выведи") {
+                k = 1;
+                while(k < len) {
+                    val = LMNMEM[ev[k]];
+                    if(lmtype(val) == "STR") {
+                        lmuck(val);
+                    }else {
+                        lmuck("E: ");
+                    }
+                    k = k + 1;
+                }
+            }else {
+                lmuck("E: я негр")
+            }
+        }
+        else if(ev[0] == "arch") {
+            blue_txt = paint_blue(" 󰣇 ");
+            lmuck(blue_txt);
+        }
+        if(ev[0] == "казино") {
+            lmuck(neon_write("превет ет казино от смирнова тут круто"))
+            lmit(0.5);
+            while(true) {
+                вопрос = lmout("🎰ИГРАЕМ В КАЗИК ЕПТА?: ");
+                if(вопрос == "ДА") {
+                    lmuck("ПОГНАЛИ ЕПТА");
+                }
+                else if(вопрос == "exit") {
+                    lmuck("пока уебок...😑😑😑")
+                    break;
+                }
+                else if(вопрос == "нет") {
+                    lmuck("всм 'нет',а не пойдешь ка ты нахуй все,вась играем!");
+                }
+                else {
+                    lmuck("незнаю что за говно ты ввел но надо отвечать 'ДА'");
+                }
+                lmuck("🎲кидаем кубики ебучие..."); lmit(1)
+                lmit(1);
+                lmuck(rnd_randint(1,1000));
+                
+            }
+        }
+        else if(ev[0] == "help") {
+            lmuck("\tпривет тут пи#ец
+так ну крч ты там введи\nlinux,arch,github,windows\nхуйня или просто windows если ты
+виндусятник и выясни че как\nтут еще математика\nесть по пробелам епта\nеще тут set есть для детишек
+простенько епта\nвывод переменных через 'выведи'\n тут еще казик есть 'казино' введи да\nOKAY YES YES СУЧАРА")
+        }
+        else if(ev[0] == "linux") {
+            lmuck("божество"); lmit(0.5); readed = str_repeat("da  ",10);
+            lmuck(readed)
+        }
+        else if(ev[0] == "github") {
+            lmuck("microsoft пидорасы в остальном похуй"); lmit(1);
+            lmuck("")
+        }
+        else if(ev[0] == "windows") {
+            if(len > 1 && ev[1] == "хуйня") {
+                lmuck(paint_green("согласен"));
+            }else{
+                lmuck(" а вот хуй тебе а не ебучий понос");
+                lmit(1); lmuck("ладно на..."); lmit(0.2); lmuck(paint_blue("  "));
+            }
+        }
+        else if(len > 2  && lmtype(lmtod(ev[0])) == "NUM" ) {
+            if(ev[1] == "+" || ev[1] == "-" 
+            || ev[1] == "/" || ev[1] == "*" 
+            || ev[1] == "%") {
+                if(lmtype(lmtod(ev[2])) == "NUM") {
+                    op = ev[1];
+                    num1 = lmtod(ev[0]);
+                    num2 = lmtod(ev[2]);
+                    if(op == "+") { lmuck(num1 + num2); }
+                    if(op == "-") { lmuck(num1 - num2); }
+                    if(op == "/") { if(num2 != 0) {lmuck(num1 / num2); }else { lmuck("ты че уебок тупой,тебе пиздец",lmit(1));
+                    lmuck("1...",lmit(1));lmuck("2...",lmit(1));lmuck("3...",lmit(1));lmuck("4...",lmit(1))
+                    lmuck("5...","ДОСВИДАНИЯ ВИНДУСЯТНИК."); break; } }
+                    if(op == "*") { lmuck(num1 * num2); }
+                    if(op == "%") { lmuck(num1 % num2); }
+                }
+            }
+        }
+        else {
+            lmuck(str_invertion(paint_red("E: unknown говно не 🤔🤔🤔poniмаю тебя🤔🤔🤔")))
+        }
+    }
+}
