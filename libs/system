@@ -1,0 +1,28 @@
+/-
+	lmnlib - GPL v2.0 - see LICENSE or main.cpp file for details
+                   system sequences by ruscmi
+-/
+func get_win_lastinp() {
+    return __builtin_getlast_inputinfo();
+};
+func get_os() { 
+    return __builtin_os();
+};
+func exec(cmd) {
+    return __builtin_exec(cmd);
+};
+func read(msg) {
+    return __builtin_read(msg);
+};
+func sleep() {
+    current_os = get_os();
+    if(current_os == "windows") {
+        exec("rundll32.exe powrprof.dll,SetSuspendState 0,1,0");
+    }
+    else if(current_os == "linux") {
+        exec("systemctl suspend");
+    }
+};
+func getcwd() {
+    return __builtin_getcwd();
+};

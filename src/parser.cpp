@@ -16,7 +16,9 @@ void Parser::setTokens(const vector<Token>& tokenize) {
 }
 Token Parser::peer() {
 	if(position >= tokenize.size()) {
-		return Token{TTYPE::END,""};
+	    size_t line = tokenize.empty() ? 1 : tokenize.back().LINE;
+	    size_t col = tokenize.empty() ? 1 : tokenize.back().COL;
+		return Token{TTYPE::END,"",line,col};
 	}
 	return tokenize[position];
 }
@@ -26,37 +28,47 @@ Token Parser::advanced() {
 	}
 	return tokenize[position -1];
 }
-Node* Parser::parse_program() {
+void Parser::error(const string& msg) {
+    Token current = peer();
+    cerr<<"\033[1;31m[e]: "<<msg<<"\033[0m"<<endl;
+    if(!current.VAL.empty()) {
+        cerr<<" "<<current.LINE<<" |\n   | '"<<current.VAL<<"'"<<endl;
+        cerr<<"\033[1;34m     ^----------"<<"this in col:\033[0m"<<"["<<current.COL<<"]"<<endl;
+    }else {
+        cerr<<" "<<current.LINE<<" |\n   |"<<" "<<endl;
+        cerr<<"\033[1;34m     ^---unexpected input in col:\033[0m"<<"["<<current.COL<<"]"<<endl;
+    }
+}
+unique_ptr<Node> Parser::parse_program() {
 	setup_utf8();
 	for(const auto& token : tokenize ) {
 		if(token.KEY == TTYPE::UNKNOWN ) {
-			cout<<"\033[1;31mE: Deer,my parser doesn't understand this shit\033[0m"<<endl;
+			error("Deer,my parser doesn't understand this shit");
 			return nullptr;
 		}
 	}
-	Node* end = new Node();
+	auto end = make_unique<Node>(peer());
 	end->KEY = ST_PROGRAM;
 	while(peer().KEY != TTYPE::END) {
-        Node* expr = parse_statement();
-        if(!expr) { 
-            delete end; return nullptr;
+        unique_ptr<Node> expr = parse_statement();
+        if(expr == nullptr) { 
+            return nullptr;
         }
-        end->children.push_back(expr);
+        end->children.push_back(move(expr));
         
         if(peer().KEY == TTYPE::END_EX) {
             advanced();
         }
         else if(peer().KEY != TTYPE::END) {
-            cout<<"\033[1;33mE: expected ';' or end of input\033[0m"<<endl;
-            delete expr;
+            error("expected ';' or end of input");
             return nullptr;
         }
     }
     return end;
 }
-Node* Parser::parse_wait() {
+unique_ptr<Node> Parser::parse_wait() {
     setup_utf8();
-    Node* lmit = new Node();
+    auto lmit = make_unique<Node>(peer());
     lmit->KEY = ST_WAIT;
     lmit->VAL = "lmit";
     lmit->left_index = nullptr;
@@ -66,45 +78,42 @@ Node* Parser::parse_wait() {
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
             advanced();   
         }else {
-            Node* expr = parse_expression();
-            lmit->right_index = expr;
+            unique_ptr<Node>expr = parse_expression();
+            lmit->right_index = move(expr);
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
                 advanced();
             }else {
-                cout<<"\033[1;33mE: expected ')' in lmit \033[0m"<<endl;
-                delete lmit;
+                error("expected ')' in lmit");
                 return nullptr;
             }    
         }
         return lmit; 
     }else {
-        cout<<"\033[1;33mE: expected '(' in lmit \033[0m"<<endl;
-        delete lmit;
+        error("expected '(' in lmit");
         return nullptr;
     }
     return nullptr;
 }
-Node* Parser::parse_func() {
+unique_ptr<Node> Parser::parse_func() {
     setup_utf8();
-    Node* expr = nullptr;
-    Node* then_node = nullptr;
-    vector<Node*>args;
+    unique_ptr<Node> expr = nullptr;
+    unique_ptr<Node>then_node = nullptr;
+    vector<unique_ptr<Node>>args;
     if(peer().KEY == TTYPE::STRING) {
         string val = peer().VAL;
         advanced();
         if(peer().VAL.empty()) {
-            cout<<"\033[1;31mE: expression is empty\033[0m"<<endl;
+            error("expression is empty");
             return nullptr;
         }
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
             advanced();
             while(peer().VAL != ")") {
                 if(peer().KEY != TTYPE::STRING) {
-                    cout<<"\033[1;31mE: unknown pussy in the conditions\033[0m"<<endl;
-                    for(Node* arg : args) delete arg;
+                    error("unknown pussy in the conditions");
                     return nullptr;
                 }
-                Node* arg = new Node();
+                auto arg = make_unique<Node>(peer());
                 arg->KEY = ST_VARIABLE;
                 arg->VAL = peer().VAL;
                 advanced();
@@ -112,36 +121,32 @@ Node* Parser::parse_func() {
                     advanced();
                     expr = parse_logic_expression();
                     if(expr) {
-                        arg->right_index = expr;
+                        arg->right_index = move(expr);
                     }else {
-                        cout<<"\033[1;31mE: !expr error arg->right_index = expr \033[0m"<<endl;
-                        for(Node* arg : args) delete arg;
+                        error("!expr error arg->right_index = expr");
                         return nullptr;
                     }
                 }
-                args.push_back(arg);
+                args.push_back(move(arg));
                 if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
                     advanced();
                 }else if(peer().VAL != ")") {
-                    cout<<"\033[1;31mE: unclosed Fuck Bracket\033[0m"<<endl;
-                    for(Node* arg : args) delete arg;
+                    error("unclosed Fuck Bracket");
                     return nullptr;    
                 }
             }
             advanced();
         }else {
-            cout<<"\033[1;31mE: expected parentheses '('\033[0m"<<endl;
+            error("expected parentheses '('");
             return nullptr;
         }
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "{") {
             advanced();
-            then_node = new Node();
+            then_node = make_unique<Node>(peer());
             then_node->KEY = ST_BLOCK;
             while(peer().VAL != "}") {
                 if(peer().KEY == TTYPE::END) {
-                    cout<<"\033[1;31mE: TTYPE::END on no string attached in block\033[0m"<<endl;
-                    for(Node* arg : args) delete arg;
-                    delete then_node;
+                    error("TTYPE::END in block return null");
                     return nullptr;
                 }
                 if(peer().KEY == TTYPE::END_EX) {
@@ -149,38 +154,33 @@ Node* Parser::parse_func() {
                 }
                 expr = parse_statement();
                 if(expr) {
-                    then_node->children.push_back(expr);
+                    then_node->children.push_back(move(expr));
                 }else {
-                    cout<<"\033[1;31mE: !expr error then_node->children.push_back(expr)\033[0m"<<endl;
-                    for(Node* arg : args) delete arg;
-                    delete then_node;
-                    delete expr;
+                    error("!expr error then_node->children.push_back(expr)");
                     return nullptr;
                 }
             }
             advanced();
-            Node* func = new Node();
+            auto func = make_unique<Node>(peer());
             func->KEY = ST_FUNC;
             func->VAL = val;
-            func->children = args;
-            func->right_index = then_node;
+            func->children = move(args);
+            func->right_index = move(then_node);
             return func;
         }else {
-            for(Node* arg : args) delete arg;
             return nullptr;
         }
     }
     return nullptr;
 }
-Node* Parser::parse_return() {
+unique_ptr<Node> Parser::parse_return() {
     setup_utf8();
     advanced();
-    Node* returner = new Node();
+    auto returner = make_unique<Node>(peer());
     returner->KEY = ST_RETURN;
     returner->right_index = parse_boolea_expression();
     if(!returner->right_index) {
-        cout<<"\033[1;31mE: returning null zero value in returner->right_index\033[0m"<<endl;
-        delete returner;
+        error("returning null zero value in returner->right_index");
         return nullptr;
     }
     if(peer().KEY == TTYPE::END_EX) {
@@ -188,9 +188,9 @@ Node* Parser::parse_return() {
     }
     return returner;
 }
-Node* Parser::parse_len() {
+unique_ptr<Node> Parser::parse_len() {
     setup_utf8();
-    Node* lmlen = new Node();
+    auto lmlen = make_unique<Node>(peer());
     lmlen->KEY = ST_LEN;
     lmlen->VAL = "lmlen";
     lmlen->left_index = nullptr;
@@ -200,27 +200,25 @@ Node* Parser::parse_len() {
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
             advanced();   
         }else {
-            Node* expr = parse_expression();
-            lmlen->right_index = expr;
+            unique_ptr<Node>expr = parse_expression();
+            lmlen->right_index = move(expr);
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
                 advanced();
             }else {
-                cout<<"\033[1;33mE: expected ')' in lmlen \033[0m"<<endl;
-                delete lmlen;
+                error("expected ')' in lmlen ");
                 return nullptr;
             }    
         }
         return lmlen; 
     }else {
-        cout<<"\033[1;33mE: expected '(' in lmlen \033[0m"<<endl;
-        delete lmlen;
+        error("expected '(' in lmlen ");
         return nullptr;
     }
     return nullptr;
 }
-Node* Parser::parse_typeof() {
+unique_ptr<Node> Parser::parse_typeof() {
     setup_utf8();
-    Node* lmtype = new Node();
+    auto lmtype = make_unique<Node>(peer());
     lmtype->KEY = ST_TYPEOF;
     lmtype->VAL = "lmtype";
     lmtype->left_index = nullptr;
@@ -230,94 +228,108 @@ Node* Parser::parse_typeof() {
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
             advanced();   
         }else {
-            Node* expr = parse_expression();
-            lmtype->right_index = expr;
+            unique_ptr<Node> expr = parse_expression();
+            lmtype->right_index = move(expr);
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
                 advanced();
             }else {
-                cout<<"\033[1;33mE: expected ')' in lmtype \033[0m"<<endl;
-                delete lmtype;
+                error("expected ')' in lmtype ");
                 return nullptr;
             }    
         }
         return lmtype; 
     }else {
-        cout<<"\033[1;33mE: expected '(' in lmtype \033[0m"<<endl;
+        error("expected '(' in lmtype ");
         return nullptr;
     }
     return nullptr;    
 }
-Node* Parser::parse_include() {
+unique_ptr<Node> Parser::parse_include() {
     setup_utf8();
     advanced();
     if(peer().KEY == TTYPE::STRING_LIT) {
         string val = peer().VAL;
         if(val.empty()) {
-            cout<<"\033[1;31mE: this file returning null you stupid man?\033[0m"<<endl;
+            error("this file returning null you stupid man?");
+            return nullptr;
+        }
+        if(peer().KEY == TTYPE::END) {
+            error("returning TTYPE::END fucked shiting man");
             return nullptr;
         }
         advanced();
-        Node* files = new Node();
+        auto files = make_unique<Node>(peer());
         files->KEY = ST_INCLUDE;
         files->VAL = val;
+        files->right_index = nullptr;
+        files->left_index = nullptr;
         return files;
     }
     else if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
         advanced();
         if(peer().KEY != TTYPE::STRING) {
-            cout<<"\033[1;31mE: returning TTYPE in parentheses is not a string\033[0m"<<endl;
+            error("returning TTYPE in parentheses is not a string");
+            return nullptr;
+        }
+        if(peer().KEY == TTYPE::END) {
+            error("returning TTYPE::END fucked shiting man");
+            return nullptr;
+        }
+        if(peer().KEY == TTYPE::SEPARATOR) {
             return nullptr;
         }
         string val = peer().VAL;
         if(val.empty()) {
-            cout<<"\033[1;31mE: this library there is no bitch\033[0m"<<endl;
+            error("this library there is no bitch");
             return nullptr;
         }
         advanced();
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
             advanced();
-            Node* lib = new Node();
+            auto lib = make_unique<Node>(peer());
             lib->KEY = ST_INCLUDE_LIBS;
             lib->VAL = val;
+            lib->right_index = nullptr;
+            lib->left_index = nullptr;
             return lib;
         }else {
-            cout<<"\033[1;31mE: not closed fucking parentheses\033[0m"<<endl;
+            error("not closed fucking parentheses");
             return nullptr;
         }
     }else {
-        cout<<"\033[1;31mE: only support quotes(for stupid mans quotes - '\"') and parentheses\033[0m"<<endl;
+        error("only support quotes(for stupid mans quotes - '\"') and parentheses");
         return nullptr;
     }
     return nullptr;
 }
-Node* Parser::parse_break() {
+unique_ptr<Node> Parser::parse_break() {
     if(peer().KEY == TTYPE::STRING && peer().VAL == "break") {
         setup_utf8();
         advanced();
-        Node* node = new Node();
+        auto node = make_unique<Node>(peer());
         node->KEY = ST_BREAK;
         node->VAL = "break";
         return node;
     }
     return nullptr;
 }
-Node* Parser::parse_continue() {
+unique_ptr<Node> Parser::parse_continue() {
     setup_utf8();
     if(peer().KEY == TTYPE::STRING && peer().VAL == "continue") {
         advanced();
-        Node* node = new Node();
+        auto node = make_unique<Node>(peer());
         node->KEY = ST_CONTINUE;
         node->VAL = "continue";
         return node;
     }
     return nullptr;
 }
-Node* Parser::parse_while() {
+unique_ptr<Node> Parser::parse_while() {
     setup_utf8();
     advanced();
     Token current = peer();
-    Node* then_node = nullptr;
-    Node* cond = nullptr;
+    unique_ptr<Node> then_node = nullptr;
+    unique_ptr<Node> cond = nullptr;
     if(current.KEY == TTYPE::SEPARATOR && current.VAL == "(") {
         advanced();
         cond = parse_boolea_expression();
@@ -325,63 +337,57 @@ Node* Parser::parse_while() {
             advanced();
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "{") {
                 advanced();
-                then_node = new Node();
+                then_node = make_unique<Node>(peer());
                 then_node->KEY = ST_BLOCK;
                 while(peer().KEY != TTYPE::SEPARATOR && peer().VAL != "}") {
-                    Node* expr = parse_statement();
+                    unique_ptr<Node>expr = parse_statement();
                     if(expr) {
-                        then_node->children.push_back(expr);
+                        then_node->children.push_back(move(expr));
                     }else {
-                        cout<<"\033[1;31mE: expected statement logic in ST_BLOCK\033[0m"<<endl;
-                        delete then_node;
-                        delete cond;
+                        error("expected statement logic in ST_BLOCK");
                         return nullptr;
                     }
                     if(peer().KEY == TTYPE::END_EX) {
                         advanced();
                     }
                     if(peer().KEY == TTYPE::END) {
-                        cout<<"\033[1;31mE: expected '}' in ST_BLOCK\033[0m"<<endl;
-                        delete then_node;
-                        delete cond;
+                        error("expected TTYPE::END in ST_BLOCK");
                         return nullptr;
                     }
                 }
                 advanced();
             }else {
                     then_node = parse_statement();
-                    cout<<"\033[1;31mE: expected TTYPE::UNKNOWN in term\033[0m"<<endl;
-                    delete cond;
+                    error("expected TTYPE::UNKNOWN in term");
                     return nullptr;
             }
         }else {
-            cout<<"\033[1;31mE: expected sucked ')' or detected extra neurons\033[0m"<<endl;
-            delete cond;
+            error("expected sucked ')' or detected extra neurons");
             return nullptr;
         }
     }else {
-        cout<<"\033[1;31mE: expected sucked '(' or detected extra chromosomes\033[0m"<<endl;
+        error("expected sucked '(' or detected extra chromosomes");
         return nullptr;
     }
-    Node* while_node = new Node();
+    auto while_node = make_unique<Node>(peer());
     while_node->KEY = ST_WHILE;
     while_node->VAL = "while";
-    while_node->left_index = cond;
-    while_node->block_while = then_node;
+    while_node->left_index = move(cond);
+    while_node->block_while = move(then_node);
     return while_node;
 }
-Node* Parser::parse_bool() {
+unique_ptr<Node> Parser::parse_bool() {
     setup_utf8();
     Token current = peer();
     if(current.KEY == TTYPE::STRING && current.VAL == "true") {
-        Node* true_f = new Node();
+        auto true_f = make_unique<Node>(peer());
         true_f->KEY = ST_BOOL;
         true_f->VAL = "true";
         advanced();
         return true_f;
     }
     if(current.KEY == TTYPE::STRING && current.VAL == "false") {
-        Node* false_f = new Node();
+        auto false_f = make_unique<Node>(peer());
         false_f->KEY = ST_BOOL;
         false_f->VAL = "false";
         advanced();
@@ -389,12 +395,12 @@ Node* Parser::parse_bool() {
     }
     return nullptr;
 }
-Node* Parser::parse_if() {
+unique_ptr<Node> Parser::parse_if() {
     setup_utf8();
     advanced();
     Token current = peer();
-    Node* then_node = nullptr;
-    Node* cond = nullptr;
+    unique_ptr<Node> then_node = nullptr;
+    unique_ptr<Node> cond = nullptr;
     if(current.KEY == TTYPE::SEPARATOR && current.VAL == "(") {
         advanced();
         cond = parse_boolea_expression();
@@ -402,25 +408,21 @@ Node* Parser::parse_if() {
             advanced();
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "{") {
                 advanced();
-                then_node = new Node();
+                then_node = make_unique<Node>(peer());
                 then_node->KEY = ST_BLOCK;
                 while(peer().KEY != TTYPE::SEPARATOR && peer().VAL != "}") {
-                    Node* expr = parse_statement();
+                    unique_ptr<Node>expr = parse_statement();
                     if(expr) {
-                        then_node->children.push_back(expr);
+                        then_node->children.push_back(move(expr));
                     }else {
-                        cout<<"\033[1;31mE: expected statement logic in ST_BLOCK\033[0m"<<endl;
-                        delete then_node;
-                        delete cond;
+                        error("expected statement logic in ST_BLOCK");
                         return nullptr;
                     }
                     if(peer().KEY == TTYPE::END_EX) {
                         advanced();
                     }
                     if(peer().KEY == TTYPE::END) {
-                        cout<<"\033[1;31mE: expected '}' in ST_BLOCK\033[0m"<<endl;
-                        delete then_node;
-                        delete cond;
+                        error("expected TTYPE::END in ST_BLOCK");
                         return nullptr;
                     }
                 }
@@ -428,46 +430,38 @@ Node* Parser::parse_if() {
             }else {
                 then_node = parse_statement();
                 if(!then_node) {
-                    cout<<"\033[1;31mE: expected TTYPE::UNKNOWN in term\033[0m"<<endl;
-                    delete cond;
+                    error("expected TTYPE::UNKNOWN in term");
                     return nullptr;
                 }
             }
         }else {
-            cout<<"\033[1;31mE: expected sucked ')' or detected extra neurons\033[0m"<<endl;
-            delete cond;
+            error("expected sucked ')' or detected extra neurons");
             return nullptr;
         }
     }else {
-        cout<<"\033[1;31mE: expected sucked '(' or detected extra chromosomes\033[0m"<<endl;
+        error("expected sucked '(' or detected extra chromosomes");
         return nullptr;
     }
-    Node* else_node = nullptr;
+    unique_ptr<Node> else_node = nullptr;
     if(peer().KEY == TTYPE::STRING && peer().VAL == "else") {
         advanced();
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "{") {
             advanced();
-            else_node = new Node();
+            else_node = make_unique<Node>(peer());
             else_node->KEY = ST_BLOCK;
             while(peer().KEY != TTYPE::SEPARATOR && peer().VAL != "}") {
-                Node* expr = parse_statement();
+                unique_ptr<Node>expr = parse_statement();
                 if(expr) {
-                    else_node->children.push_back(expr);
+                    else_node->children.push_back(move(expr));
                 }else {
-                    cout<<"\033[1;31mE: expected statement logic in ST_BLOCK\033[0m"<<endl;
-                    delete else_node;
-                    delete then_node;
-                    delete cond;
+                    error("expected statement logic in ST_BLOCK");
                     return nullptr;
                 }
                 if(peer().KEY == TTYPE::END_EX) {
                     advanced();
                 }
                 if(peer().KEY == TTYPE::END) {
-                    cout<<"\033[1;31mE: expected '}' in ST_BLOCK\033[0m"<<endl;
-                    delete else_node;
-                    delete then_node;
-                    delete cond;
+                    error("expected '}' in ST_BLOCK");
                     return nullptr;
                 }
             }
@@ -475,25 +469,23 @@ Node* Parser::parse_if() {
         }else {
             else_node = parse_statement();
             if(!else_node) {
-                cout<<"\033[1;31mE: expected TTYPE::UNKNOWN in term\033[0m"<<endl;
-                delete then_node;
-                delete cond;
+                error("expected TTYPE::UNKNOWN in term");
                 return nullptr;
             }
         }
     }
-    Node* if_node = new Node();
+    auto if_node = make_unique<Node>(peer());
     if_node->KEY = ST_IF;
     if_node->VAL = "if";
-    if_node->left_index = cond;
-    if_node->if_index = then_node;
-    if_node->else_index = else_node;
+    if_node->left_index = move(cond);
+    if_node->if_index = move(then_node);
+    if_node->else_index = move(else_node);
     return if_node;
 }
-Node* Parser::parse_print() {
+unique_ptr<Node> Parser::parse_print() {
 	setup_utf8();
 	advanced();
-	Node* print_node = new Node();
+	auto print_node = make_unique<Node>(peer());
 	print_node->KEY = ST_PRINT;
 	print_node->VAL = "lmuck";
 	print_node->left_index = nullptr;
@@ -504,38 +496,35 @@ Node* Parser::parse_print() {
 	        advanced();
 	        return print_node;
 	    }
-    	Node* expr = parse_expression();
+    	unique_ptr<Node> expr = parse_expression();
     	if(expr == nullptr) {
-    		cout<<"\033[1;33mE: you didn't add the arguments fucked mudda\033[0m"<<endl;
-            delete print_node;
+    		error("you didn't add the arguments fucked mudda");
     		return nullptr;
     	}
-    	print_node->children.push_back(expr);
+    	print_node->children.push_back(move(expr));
     	while(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
             advanced();
-            Node* t_expr = parse_expression();
+            unique_ptr<Node>t_expr = parse_expression();
             if(!t_expr) {
-                cout<<"\033[1;33mE: you didn't add the arguments fucked mudda\033[0m"<<endl;
+                error("expected expression in lmuck()");
                 return nullptr;
             }
-            print_node->children.push_back(t_expr);
+            print_node->children.push_back(move(t_expr));
         }
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
             advanced();
             return print_node;
         }else {
-            cout<<"\033[1;33mE: expected ')' in lmuck()\033[0m"<<endl;
-            delete print_node;
+            error("expected ')' in lmuck()");
             return nullptr;
         }
     }else {
-        cout<<"\033[1;33mE: expected '(' after lmuck()\033[0m"<<endl;
-        delete print_node;
+        error("expected '(' in lmuck()");
         return nullptr;
     }
 }
-Node* Parser::parse_stod() {
-    Node* lmtod = new Node();
+unique_ptr<Node> Parser::parse_stod() {
+    auto lmtod = make_unique<Node>(peer());
     lmtod->KEY = ST_STOD;
     lmtod->VAL = "lmtod";
     lmtod->left_index = nullptr;
@@ -545,25 +534,24 @@ Node* Parser::parse_stod() {
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
             advanced();   
         }else {
-            Node* expr = parse_expression();
-            lmtod->right_index = expr;
+            unique_ptr<Node> expr = parse_expression();
+            lmtod->right_index = move(expr);
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
                 advanced();
             }else {
-                cout<<"\033[1;33mE: expected ')' in lmtod \033[0m"<<endl;
-                delete lmtod;
+                error("expected ')' in lmtod");
                 return nullptr;
             }    
         }
         return lmtod; 
     }else {
-        cout<<"\033[1;33mE: expected '(' in lmtod \033[0m"<<endl;
+        error("expected '(' in lmtod");
         return nullptr;
     }
     return nullptr;
 }
-Node* Parser::parse_input() {
-    Node* input_node = new Node();
+unique_ptr<Node> Parser::parse_input() {
+    auto input_node = make_unique<Node>(peer());
     input_node->KEY = ST_INPUT;
     input_node->VAL = "lmout";
     input_node->left_index = nullptr;
@@ -573,24 +561,23 @@ Node* Parser::parse_input() {
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
             advanced();   
         }else {
-            Node* expr = parse_expression();
-            input_node->right_index = expr;
+            unique_ptr<Node> expr = parse_expression();
+            input_node->right_index = move(expr);
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
                 advanced();
             }else {
-                cout<<"\033[1;33mE: expected ')' in lmout \033[0m"<<endl;
-                delete input_node;
+                error("expected ')' in lmout");
                 return nullptr;
             }    
         }
         return input_node; 
     }else {
-        cout<<"\033[1;33mE: expected '(' in lmout \033[0m"<<endl;
+        error("expected '(' in lmout ");
         return nullptr;
     }
     return nullptr;
 }
-Node* Parser::parse_statement() {
+unique_ptr<Node> Parser::parse_statement() {
 	Token current = peer();
 	if (current.KEY == TTYPE::STRING && current.VAL == "lmuck") {
 	    return parse_print();
@@ -640,18 +627,18 @@ Node* Parser::parse_statement() {
 		return parse_expression();
 	}
 }
-Node* Parser::parse_assignment() {
-    vector<Node*>left_elements;
+unique_ptr<Node> Parser::parse_assignment() {
+    vector<unique_ptr<Node>>left_elements;
     while(true) {
-        Node* expr = parse_expression();
+        unique_ptr<Node> expr = parse_expression();
         if(!expr) {
-            cout<<"\033[1;31mE: unknown left_index in ASSIGNMENTATION\033[0m"<<endl;
+            error("unknown left_index in ASSIGNMENTATION");
             return nullptr;
         }
         if(expr->KEY != ST_VARIABLE && expr->KEY != ST_INDEX) { 
-            cout<<"\033[1;31mE: unknown datatype in assignmentation\033[0m"<<endl; delete expr; return nullptr;
+            error("unknown datatype in assignmentation"); return nullptr;
         }
-        left_elements.push_back(expr);
+        left_elements.push_back(move(expr));
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
             advanced();
             continue;
@@ -660,25 +647,23 @@ Node* Parser::parse_assignment() {
             break;
         }
         else {
-            cout<<"\033[1;33mE: UNKNOWN::TTYPE in assignmentation  \033[0m"<<endl;
+            error("UNKNOWN::TTYPE in assignmentation");
             return nullptr; 
         }
     }
     advanced();
-    vector<Node*>right_elements;
+    if(peer().KEY == TTYPE::END) {
+        error("expected left_expression in assignmentation");
+        return nullptr;
+    }
+    vector<unique_ptr<Node>>right_elements;
     while(true) {
-        Node* expr = parse_expression();
+        unique_ptr<Node> expr = parse_expression();
         if(!expr) {
-            cout<<"\033[1;33mE: expected TTYPE::OPERATOR \"=\" \033[0m"<<endl;
-            for(Node* node : left_elements) {
-                delete node;
-            }
-            for(Node* node : right_elements) {
-                delete node;
-            }
+            error("expected TTYPE::OPERATOR \"=\" ");
             return nullptr;
         }
-        right_elements.push_back(expr);
+        right_elements.push_back(move(expr));
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
             advanced();
             continue;
@@ -686,24 +671,24 @@ Node* Parser::parse_assignment() {
             break;
         }
     }
-    Node* assign = new Node();
+    auto assign = make_unique<Node>(peer());
     assign->KEY = ST_ASSIGNMENT;
     assign->VAL = "=";
     assign->left_index = nullptr;
-    assign->children = left_elements;
-    assign->right_children = right_elements;
+    assign->children = move(left_elements);
+    assign->right_children = move(right_elements);
     return assign;
 }
-Node* Parser::parse_factor() {
+unique_ptr<Node> Parser::parse_factor() {
 	setup_utf8();
 	Token current = peer();
-	Node* left = nullptr;
+	unique_ptr<Node>left = nullptr;
     if(current.KEY == TTYPE::NUMBER) {
-		Node* node = new Node();
+		auto node = make_unique<Node>(peer());
 		node->KEY = ST_NUMBER;
 		node->VAL = current.VAL;
 		advanced();
-		left = node;
+		left = move(node);
 	}
 	else if(current.KEY == TTYPE::STRING) {
 	    if(current.VAL == "lmout") {
@@ -741,55 +726,52 @@ Node* Parser::parse_factor() {
 	        advanced();
     		if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "[") {
                 advanced();
-                Node* expr = parse_expression();
+                unique_ptr<Node> expr = parse_expression();
                 if(!expr) {
-                    cout<<"\033[1;31mE: expected expression in variable index\033[0m"<<endl;
+                    error("expected expression in variable index");
                     return nullptr;
                 }
                 if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
                     advanced();
                 }else {
-                    cout<<"\033[1;31mE: expected ']' in variable index\033[0m"<<endl;
-                    delete expr;
+                    error("expected ']' in variable index");
                     return nullptr;
                 }
-                Node* var_node = new Node();
+                auto var_node = make_unique<Node>(peer());
                 var_node->KEY = ST_VARIABLE;
                 var_node->VAL = name;
-    		    Node* index = new Node();
+    		    auto index = make_unique<Node>(peer());
     		    index->KEY = ST_INDEX;
     		    index->VAL = peer().VAL;
-    		    index->left_index = var_node;
-    		    index->right_index = expr;
-    		    left = index;
+    		    index->left_index = move(var_node);
+    		    index->right_index = move(expr);
+    		    left = move(index);
     		}else if (peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
     		    advanced();
-    		    Node* call_node = new Node();
+    		    auto call_node = make_unique<Node>(peer());
     		    call_node->KEY = ST_CALL;
-    		    call_node->VAL = name;
+    		    call_node->VAL = move(name);
     		    while(peer().VAL != ")") {
-    		        Node* expr = parse_expression();
+    		        unique_ptr<Node> expr = parse_expression();
     		        if(!expr) {
-    		            cout<<"\033[1;31mE: unknown expression in parentheses\033[0m"<<endl;
-    		            delete call_node;
+    		            error("unknown expression in parentheses");
     		            return nullptr;
     		        }
-    		        call_node->children.push_back(expr);
+    		        call_node->children.push_back(move(expr));
     		        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
     		            advanced();
     		        } else if(peer().VAL != ")") {
-    		            cout<<"\033[1;31mE: expected ')' in function \033[0m"<<endl;
-    		            delete call_node;
+    		            error("expected ')' in function");
     		            return nullptr;    		            
     		        }
     		    }
     		    advanced();
-    		    left = call_node;
+    		    left = move(call_node);
     		}else {
-    		    Node* node = new Node();
+    		    auto node = make_unique<Node>(peer());
     		    node->KEY = ST_VARIABLE;
-    		    node->VAL = name;
-    		    left = node;
+    		    node->VAL = move(name);
+    		    left = move(node);
     		}
         }
 	}
@@ -797,28 +779,28 @@ Node* Parser::parse_factor() {
         advanced();
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
             advanced();
-            Node* node = new Node();
+            auto node = make_unique<Node>(peer());
             node->KEY = ST_ARRAY;
-            node->children = {};
-            left = node;
+            node->children = vector<unique_ptr<Node>>();
+            left = move(node);
             return left;
         }
         if(peer().KEY == TTYPE::END) {
             return nullptr;
         }
-        vector<Node*>elements;
+        vector<unique_ptr<Node>>elements;
         while(true) {
-            Node* element = parse_expression();
+            unique_ptr<Node> element = parse_expression();
             if(!element) {
-                cout<<"\033[1;33mE: cant parsing array,detection TTYPE::UNKNOWN in array\033[0m"<<endl;
+                error("cant parsing array,detection TTYPE::UNKNOWN in array");
                 return nullptr;
             }
-            elements.push_back(element);
+            elements.push_back(move(element));
             
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
                 advanced();
                 if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
-                    cout<<"\033[1;33mE: you shit it, the next comma in the array is forbidden\033[0m"<<endl;
+                    error("you shit it, the next comma in the array is forbidden");
                     return nullptr;
                 }
                 continue;
@@ -826,56 +808,50 @@ Node* Parser::parse_factor() {
             else if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
                 break;
             }else {
-                cout<<"\033[1;33mE: expected stupid parenthesis in fucked ST_ARRAY\033[0m"<<endl;
+                error("expected stupid parenthesis in fucked ST_ARRAY");
                 return nullptr;
             }
         }
-        Node* node = new Node();
+        auto node = make_unique<Node>(peer());
         node->KEY = ST_ARRAY;
-        node->children = elements;
+        node->children = move(elements);
         advanced();
-        left = node;
+        left = move(node);
     }
     else if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "{") {
         advanced();
-        vector<Node*>dickes;
+        vector<unique_ptr<Node>>dickes;
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "}") {
             advanced();
-            Node* dick = new Node();
+            auto dick = make_unique<Node>(peer());
             dick->KEY = ST_DICTIONARY;
-            dick->children = {};
-            left = dick;
+            dick->children = vector<unique_ptr<Node>>();
+            left = move(dick);
             return left;
         }
         while(true) {
-            Node* element = parse_expression();
+            unique_ptr<Node> element = parse_expression();
             if(!element) {
-                cout<<"\033[1;31mE: fucked muddaeb get out of lmnlang,expected left_element\033[0m"<<endl;
-                for(Node* dicke : dickes) delete dicke;
+                error("fucked muddaeb get out of lmnlang,expected left_element");
                 return nullptr;
             }
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ":") {
                 advanced();
             }else {
-                cout<<"\033[1;31mE: fucked muddaeb get out of lmnlang, expected ':' \033[0m"<<endl;
-                delete element;
-                for(Node* dicke : dickes) delete dicke;
+                error("fucked muddaeb get out of lmnlang, expected ':'");
                 return nullptr; 
             }
-            Node* s_element = parse_expression();
+            unique_ptr<Node> s_element = parse_expression();
             if(!s_element) {
-                cout<<"\033[1;31mE: fucked muddaeb get out of lmnlang,expected right_element\033[0m"<<endl;
-                delete element;
-                for(Node* dicke : dickes) delete dicke;
+                error("fucked muddaeb get out of lmnlang,expected right_element");
                 return nullptr;                    
             }
-            dickes.push_back(element);
-            dickes.push_back(s_element);
+            dickes.push_back(move(element));
+            dickes.push_back(move(s_element));
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
                 advanced();
                 if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "}") {
-                    cout<<"\033[1;31mE: dont parsing fucked '}' sucked pidoras\033[0m"<<endl;
-                    for(Node* dicke : dickes) delete dicke;
+                    error("E: dont parsing fucked '}' sucked pidoras");
                     return nullptr;
                 }
                 continue;
@@ -884,23 +860,22 @@ Node* Parser::parse_factor() {
                 advanced();
                 break;
             }else {
-                cout<<"\033[1;31mE: EBLAN where is the parenthesis fucking?\033[0m"<<endl;
-                for(Node* dicke : dickes) delete dicke;
+                error("EBLAN where is the parenthesis fucking?");
                 return nullptr;
             }
         }
-        Node* dictionary = new Node();
+        auto dictionary = make_unique<Node>(peer());
         dictionary->KEY = ST_DICTIONARY;
-        dictionary->children = dickes;
-        left = dictionary;
+        dictionary->children = move(dickes);
+        left = move(dictionary);
         return left;
     }
 	else if(current.KEY == TTYPE::STRING_LIT) {
-		Node* node = new Node();
+		auto node = make_unique<Node>(peer());
 		node->KEY = ST_STRING;
 		node->VAL = current.VAL;
 		advanced();
-		left = node;
+		left = move(node);
 	}
 	else if(current.KEY == TTYPE::END_EX) {
 		advanced();
@@ -908,52 +883,54 @@ Node* Parser::parse_factor() {
 	}
 	else if(current.KEY == TTYPE::NOT) {
 	    advanced();
-	    Node* right = parse_factor();
-	    Node* not_v = new Node();
+	    unique_ptr<Node> right = parse_factor();
+	    auto not_v = make_unique<Node>(peer());
 	    not_v->KEY = ST_NOT;
 	    not_v->VAL = "!";
 	    not_v->left_index = nullptr;
-	    not_v->right_index = right;
-	    left = not_v;
+	    not_v->right_index = move(right);
+	    left = move(not_v);
 	}
 	else if(current.KEY == TTYPE::OPERATOR && current.VAL == "-") {
 		advanced();
-		Node* right = parse_factor();
-		Node* node = new Node();
+		unique_ptr<Node> right = parse_factor();
+		auto node = make_unique<Node>(peer());
 		node->KEY = ST_OPERATOR;
 		node->VAL = "u-";
 		node->left_index = nullptr;
-		node->right_index = right;
-		left = node;
+		node->right_index = move(right);
+		left = move(node);
 	}
 	else if(current.KEY == TTYPE::SEPARATOR && current.VAL == "(" ) {
 		advanced();
-		Node* inner = parse_expression();
+		unique_ptr<Node>inner = parse_expression();
 		if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")" ) {
 			advanced();
 			return inner;
 		}
 		else {
-			cout<<"\033[1;33mE: small tits on the brackets, expected ')'\033[0m"<<endl;
+			error("small tits on the brackets, expected ')'");
 			return nullptr;
 		}
 	}
 	else {
+	    error("unknown token in parse_factor(): '" + peer().VAL + "'");
+	    advanced();
 		return nullptr;
 	}
 	if(!left) {return nullptr;}
 	while(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "[") {
 	    advanced();
-	    Node* expr = parse_expression();
+	    unique_ptr<Node> expr = parse_expression();
 	    if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
 	        advanced();
-     	    Node* node = new Node();
+     	    auto node = make_unique<Node>(peer());
      	    node->KEY = ST_INDEX;
-     	    node->left_index = left;
-     	    node->right_index = expr;
-     	    left = node;
+     	    node->left_index = move(left);
+     	    node->right_index = move(expr);
+     	    left = move(node);
 	    }else {
-	        cout<<"\033[1;33mE: expected your brain or ']' in index\033[0m"<<endl;
+	        error("expected your brain or ']' in index");
 	        return nullptr;
 	    }
 	}
@@ -963,22 +940,21 @@ Node* Parser::parse_factor() {
 	        advanced();
 	        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
 	            advanced();
-	            Node* expr = parse_expression();
+	            unique_ptr<Node> expr = parse_expression();
 	            if(!expr) {
-	                cout<<"\033[1;31mE: expected expression in array lmpush\033[0m"<<endl;
+	                error("expected expression in array lmpush");
 	                return nullptr;
 	            }
 	            if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
 	                advanced();
-	                Node* pusher = new Node();
+	                auto pusher = make_unique<Node>(peer());
 	                pusher->KEY = ST_ARRAY_PUSH;
 	                pusher->VAL = peer().VAL;
-	                pusher->left_index = left;
-	                pusher->right_index = expr;
-	                left = pusher;
+	                pusher->left_index = move(left);
+	                pusher->right_index = move(expr);
+	                left = move(pusher);
 	            }else {
-	                cout<<"\033[1;31mE: expected ')' in array lmpush\033[0m"<<endl;
-	                delete expr;
+	                error("expected ')' in array lmpush");
 	                return nullptr;
 	            }
 	        }
@@ -986,8 +962,8 @@ Node* Parser::parse_factor() {
 	}
 	return left;
 }
-Node* Parser::parse_boolea_expression() {
-	Node* left = parse_logic_expression();
+unique_ptr<Node> Parser::parse_boolea_expression() {
+	unique_ptr<Node>left = parse_logic_expression();
 	if(left == nullptr) {
 		return nullptr;
 	}
@@ -995,26 +971,23 @@ Node* Parser::parse_boolea_expression() {
 	while(current.KEY == TTYPE::BOOLEA_OPERATOR &&  (current.VAL == "&&" || current.VAL == "||")) {
 		const string current_op = current.VAL;
 		advanced();
-		Node* right = parse_logic_expression();
+		unique_ptr<Node> right = parse_logic_expression();
 		if(right == nullptr) {
-		    cout <<"\033[1;33mE: missing right operand for boolea operator '" << current_op << "'\033[0m" << endl;
-		    if(left != nullptr) {
-		        delete left;
-		    }
+		    error("missing right operand for boolea operator");
 			return nullptr;
 		}
-		Node* node = new Node();
+		auto node = make_unique<Node>(peer());
 		node->KEY = ST_BOOLEA_OPERATOR;
-		node->left_index = left;
-		node->right_index = right;
-		node->VAL = current_op;
-		left = node;
+		node->left_index = move(left);
+		node->right_index = move(right);
+		node->VAL = move(current_op);
+		left = move(node);
 		current = peer();
 	}
 	return left;
 }
-Node* Parser::parse_logic_expression() {
-    Node* left = parse_expression();
+unique_ptr<Node> Parser::parse_logic_expression() {
+    unique_ptr<Node>left = parse_expression();
     if(left == nullptr) {
         return nullptr;
     }
@@ -1022,73 +995,66 @@ Node* Parser::parse_logic_expression() {
     || peer().VAL == "!=" || peer().VAL == "==" || peer().VAL == "<=" || peer().VAL == ">=")) {
         const string current_op = peer().VAL;
 		advanced();
-		Node* right = parse_expression();
+		unique_ptr<Node> right = parse_expression();
 		if(right == nullptr) {
-		    cout <<"\033[1;33mE: missing right operand for logic operator '" << current_op << "'\033[0m" << endl;
-		    if(left != nullptr) {
-		        delete left;
-		    }
+		    error("missing right operand for logic operator");
 			return nullptr;
 		}
-		Node* node = new Node();
+		auto node = make_unique<Node>(peer());
 		node->KEY = ST_LOGIC_OPERATOR;
-		node->left_index = left;
-		node->right_index = right;
-		node->VAL = current_op;
-		left = node;    
+		node->left_index = move(left);
+		node->right_index = move(right);
+		node->VAL = move(current_op);
+		left = move(node);    
     }
     return left;
 }
-Node* Parser::parse_term() {
-	Node* left = parse_factor();
+unique_ptr<Node> Parser::parse_term() {
+	unique_ptr<Node> left = parse_factor();
 	if(left == nullptr) {
 		return nullptr;
 	}
 	Token current = peer();
 	while(current.KEY == TTYPE::OPERATOR &&  (current.VAL == "*" || current.VAL == "/" || current.VAL == "%")) {
 		const string current_op = current.VAL;
+		Token op_token = peer();
 		advanced();
-		Node* right = parse_factor();
+		unique_ptr<Node> right = parse_factor();
 		if(right == nullptr) {
-		    cout <<"\033[1;33mE: missing right operand for operator '" << current_op << "'\033[0m" << endl;
-		    if(left != nullptr) {
-		        delete left;
-		    }
+		    error("missing right operand for logic operator");
 			return nullptr;
 		}
-		Node* node = new Node();
+		auto node = make_unique<Node>(op_token);
 		node->KEY = ST_OPERATOR;
-		node->left_index = left;
-		node->right_index = right;
-		node->VAL = current_op;
-		left = node;
+		node->left_index = move(left);
+		node->right_index = move(right);
+		node->VAL = move(current_op);
+		left = move(node);
 		current = peer();
 	}
 	return left;
 }
-Node* Parser::parse_expression() {
-	Node* left = parse_term();
+unique_ptr<Node> Parser::parse_expression() {
+	unique_ptr<Node> left = parse_term();
 	if(left == nullptr) {
 		return nullptr;
 	}
 	Token current = peer();
 	while(current.KEY == TTYPE::OPERATOR && (current.VAL == "+" || current.VAL == "-")) {
 		const string current_op = current.VAL;
+		Token op_token = peer();
 		advanced();
-		Node* right = parse_term();
+		unique_ptr<Node> right = parse_term();
 		if(right == nullptr) {
-		    cout <<"\033[1;33mE: missing right operand for operator '" << current_op << "'\033[0m" << endl;
-		    if(left != nullptr) {
-		        delete left;
-		    }
+		    error("missing right operand for operator");
 			return nullptr;
 		}
-		Node* node = new Node();
+		auto node = make_unique<Node>(op_token);
 		node->KEY = ST_OPERATOR;
-		node->left_index = left;
-		node->right_index = right;
-		node->VAL = current_op;
-		left = node;
+		node->left_index = move(left);
+		node->right_index = move(right);
+		node->VAL = move(current_op);
+		left = move(node);
 		current = peer();
 	}
 	return left;

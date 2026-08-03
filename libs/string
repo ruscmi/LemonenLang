@@ -93,14 +93,42 @@ func str_split(string) {
     result = [];
     i = 0;
     len = lmlen(string);
-    while(i<len) {
+    in_quotes = false;
+    quote_char = "";
+    while(i < len) {
         c = string[i];
-        if(c != " " && c != "\t" && c != "\n" && c!= "\r") {
-            null_word = null_word,c;
-        }else {
-            if(lmlen(null_word) > 0) {
-                result.lmpush(null_word);
-                null_word = "";
+        if(in_quotes) {
+            if(c == quote_char) {
+                in_quotes = false;
+                quote_char = "";
+            } else {
+                null_word = null_word, c;
+            };
+        } 
+        else {
+            if(c == "\"") {
+                in_quotes = true;
+                quote_char = c;
+            } else if(c == "'") {
+                in_quotes = true;
+                quote_char = c;
+            } else if(c == " ") {
+                if(lmlen(null_word) > 0) {
+                    result.lmpush(null_word);
+                    null_word = "";
+                };
+            } else if(c == "\t") {
+                if(lmlen(null_word) > 0) {
+                    result.lmpush(null_word);
+                    null_word = "";
+                };
+            } else if(c == "\n") {
+                if(lmlen(null_word) > 0) {
+                    result.lmpush(null_word);
+                    null_word = "";
+                };
+            } else {
+                null_word = null_word, c;
             };
         };
         i = i + 1;

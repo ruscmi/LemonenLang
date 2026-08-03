@@ -4,17 +4,7 @@
 #include <iostream>
 #include "../include/ast.hpp"
 #include "../include/utf8_win.hpp"
-Node::~Node() {
-    delete right_index;
-    delete left_index;
-    delete if_index;
-    delete else_index;
-    delete block_while;
-    for(Node* node : children) {
-        delete node;
-    }
-}
-void print_tree(Node* node, unsigned int level) {
+void print_tree(const Node* node, unsigned int level) {
 	setup_utf8();
 	if(node == nullptr) { return; }
 	for(unsigned int i = 0; i < level; i++ ) { cout<<"   "; }
@@ -51,11 +41,11 @@ void print_tree(Node* node, unsigned int level) {
 	else if(node->KEY == ST_WAIT) { cout<<"[WAIT]\n"; }
 	else if(node->KEY == ST_DICTIONARY) { cout<<"[DICTIONARY]\n"; }
 	else { cout<<" [UNKNOWN]"; }
-	for(Node* child : node->children) {
-	    print_tree(child,level + 1);
+	for(const auto& child : node->children) {
+	    print_tree(child.get(),level + 1);
 	}
-	print_tree(node->left_index, level + 1);
-	print_tree(node->right_index, level + 1);
+	print_tree(node->left_index.get(), level + 1);
+	print_tree(node->right_index.get(), level + 1);
 }
 void print_array(const Value& val) {
     if (holds_alternative<double>(val)) {
@@ -87,9 +77,7 @@ void print_array(const Value& val) {
         }
         cout<<"}";
     } 
-    else if(holds_alternative<ErrorValue>(val)) {
-        cout<<"\033[1;31mE: unknown TTYPE to interpreter\033[0m";
-    }
+    else if(holds_alternative<ErrorValue>(val)) { }
     else if(holds_alternative<AcceptValue>(val)) { }
     else if(holds_alternative<Breaker>(val)) { }
     else if(holds_alternative<Continuer>(val)) { }

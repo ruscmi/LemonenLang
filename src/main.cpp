@@ -38,8 +38,10 @@
 #include "../include/parser.hpp"
 #include "../include/utf8_win.hpp"
 #include "../include/interpreter.hpp"
+#if defined(__linux__) || defined(__APPLE__)
 #include <readline/readline.h>
 #include <readline/history.h>
+#endif
 #include <fstream>
 #include <iostream>
 extern bool is_runner;
@@ -48,10 +50,10 @@ int main(int argc, char *argv[]) {
   const char *big_txt = "\033[1;34m";
   const char *end = "\033[0m";
   interpreter inter;
-  if (argc >= 3 && string(argv[1]) == "--file") {
+  if (argc == 2) {
   	is_runner = true;
     Parser pa;
-    string filename = argv[2];
+    string filename = argv[1];
     ifstream file(filename);
     unsigned int pos = filename.find_last_of('.');
     if (pos != string::npos) {
@@ -62,68 +64,63 @@ int main(int argc, char *argv[]) {
                     istreambuf_iterator<char>());
         vector<Token> tokenize = lexing.tokenize(code);
         pa.setTokens(tokenize);
-        Node* tree = pa.parse_program();
+        unique_ptr<Node> tree = pa.parse_program();
 //        print_tree(tree,1);
 		if (tree != nullptr && is_runner == true) {
-			inter.evaluate(tree);
+			inter.evaluate(tree.get());
 		}
-		delete tree;
         file.close();
       } else {
         cout << "\033[1;34mExcepted \'.lmn\' on name file\033[0m" << endl;
       }
     }
   }
-  else if (argc >= 2 && string(argv[1]) == "--man") {
-     cout<<big_txt<<R"(	How open files in lmnlang?
- type: 
-   ./lmnlang --file <file_name>
-   WARNING: Only files with the .lmn extension open.)" <<end<<endl;
-  }
    else if (argc == 1) {
     setup_utf8();
     bool ActiveRequest = true;
-    Parser p;
-    LEX lexing;
     cout << big_txt << R"(    lmnlang REPL mode 
   Read Eval Print Loop mode
 	 by ruscmi V 0.2
   type 'man list' for manual
 	  )"<< end << endl;
     while (ActiveRequest) {
+      string inpline;
+      Parser p;
+      LEX lexing;
+      #if defined(__linux__) || defined(__APPLE__)
       char* prompt = readline("#> ");
-      bool is_exit = false;
       if(!prompt) {
         cout<<"\033[1;34mGoodbye lemon!\033[0m"<<endl;
         break;
       }
-      string inpline(prompt);
+      inpline = prompt;
       free(prompt);
+      add_history(inpline.c_str());
+      #else
+      cout<<"#> ";
+      if(!getline(cin,inpline)) break;
+      #endif
       if (inpline.empty()) {
         continue;
       }
-      add_history(inpline.c_str());
       if (inpline == "exit" || inpline == "quit" ) {
-        is_exit = true;
         break;
-      }
-      if(is_exit) {
-         ActiveRequest = false;
-         break;
       }
       vector<Token> tokenize = lexing.tokenize(inpline);
       p.setTokens(tokenize);
-      Node *tree = p.parse_program();
-//      print_tree(tree,1);
+      unique_ptr<Node>tree = p.parse_program();
+      print_tree(tree.get(),1);
       if(tree != nullptr) {
-        Value res = inter.evaluate(tree);
+        Value res = inter.evaluate(tree.get());
         if(!holds_alternative<AcceptValue>(res)) {
             print_array(res);
             cout<<endl;
         }
       }
     }
+    #if defined(__linux__) || defined(__APPLE__)
     clear_history();
+    #endif
   }else {
     cout << "\033[1;34mE: just not open file\033[0m" << endl;
     return 1;

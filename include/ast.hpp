@@ -13,6 +13,8 @@ enum TTYPE { OPERATOR, SEPARATOR, NUMBER, STRING, UNKNOWN,END,STRING_LIT,END_EX,
 struct Token {
   TTYPE KEY;
   string VAL;
+  size_t LINE;
+  size_t COL;
 };
 enum ASTTAB { ST_ASSIGNMENT, ST_NUMBER , ST_OPERATOR, ST_VARIABLE, ST_SEPARATOR, ST_PRINT, ST_STRING, 
 ST_NOP, ST_INDEX, ST_ARRAY,ST_INPUT,ST_BLOCK,ST_IF,ST_LOGIC_OPERATOR,ST_STOD,ST_BOOLEA_OPERATOR,ST_BOOL,
@@ -21,18 +23,20 @@ ST_FUNC,ST_CALL,ST_RETURN,ST_WAIT,ST_DICTIONARY};
 struct Node {
   ASTTAB KEY;
   string VAL;
-  Node* left_index;
-  Node* right_index;
-  vector<Node*> children;
-  Node* if_index;
-  Node* else_index;
-  Node* block_while;
-  vector<Node*> right_children;
-  ~Node();
+  unique_ptr<Node>left_index = nullptr;
+  unique_ptr<Node>right_index = nullptr;
+  unique_ptr<Node>if_index = nullptr;
+  unique_ptr<Node>else_index = nullptr;
+  unique_ptr<Node>block_while = nullptr;
+  vector<unique_ptr<Node>> children;
+  vector<unique_ptr<Node>> right_children;
+  size_t line; size_t col;
+  Node(Token tok) : line(tok.LINE),col(tok.COL) {};
 };
 struct ForFunction {
     vector<string>par_names;
-    Node* body;
+    shared_ptr<Node> body;
+    bool is_system = false;
     bool operator==(const ForFunction& other) const = default;
 };
 struct ErrorValue {
@@ -57,7 +61,7 @@ ErrorValue,
 AcceptValue,
 Continuer,
 Breaker,
-ForFunction>; 
+ForFunction>;
 struct ReturnFunc {
     Value value;
     bool operator==(const ReturnFunc& other) const {
@@ -78,8 +82,8 @@ struct DictValue {
 };
 struct ArrayValue {
     vector<Value>elements;
-    void push(const Value& val) {
-        elements.push_back(val);
+    void push(Value& val) {
+        elements.push_back(std::move(val));
     }
     bool operator==(const ArrayValue& other) const {
         return elements == other.elements;
@@ -88,5 +92,5 @@ struct ArrayValue {
         return !(*this == other);
     }
 };
-void print_tree(Node* node,unsigned int level = 0);
+void print_tree(const Node* node,unsigned int level = 0);
 void print_array(const Value& val);

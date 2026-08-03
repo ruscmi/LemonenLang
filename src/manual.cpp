@@ -12,12 +12,12 @@
 moved the manual here because it grows and interferes in the parser, 
 otherwise it can simply be inserted and called in recursion descent inside the parser
 */
-Node* Parser::parse_manual() {
+unique_ptr<Node> Parser::parse_manual() {
 	setup_utf8();
 	Token current = peer();
 	const char* bluec = "\033[34m";
 	const char* resbc = "\033[0m";
-	Node* node = new Node();
+	auto node = make_unique<Node>(peer());
 	node->KEY = ST_NOP;
 	node->VAL = "nop";
 	if(is_runner) {
@@ -501,7 +501,7 @@ In general, that's all, the use is very simple,
 everything will depend on your fantasies.)"<<resbc<<endl;
         }
 		else {
-			cout<<"\033[1;33mW: use man <arg> and <list> to see args\033[0m"<<endl;
+			error("use man + <arg> or write 'man list'");
 			advanced();
 		}
 	}
