@@ -2,26 +2,19 @@
 	lmnlang - GPL v2.0 - see LICENSE or main.cpp file for details
 */
 #include "../include/interpreter.hpp"
-#include "../include/utf8_win.hpp"
 #include "../include/lexer.hpp"
 #include "../include/parser.hpp"
-#if defined(_WIN32) || defined(_WIN64)
-#include <windows.h>
-#endif
 #include <fstream>
 #include <format>
 #include <iostream>
-#if defined(__linux__) || defined(__APPLE__)
 #include <readline/readline.h>
-#include <unistd.h>
-#endif
 #include <cmath>
 #include <filesystem>
 #include <thread>
 #include <cstdlib>
-#include <cstdlib>
 #include <cstdio>
 #include <chrono>
+#include <unistd.h>
 using namespace std;
 void interpreter::execute_error(const string& msg,Node* node) {
     cerr<<"\033[1;31m[Run e]: "<<msg<<"\033[0m"<<endl;
@@ -34,7 +27,6 @@ void interpreter::execute_error(const string& msg,Node* node) {
     }
 }
 Value interpreter::evaluate(Node* node) {
-	setup_utf8();
 	if(!node) { return AcceptValue{}; }
 	if(node->KEY == ST_NUMBER) {
 		return stod(node->VAL);
@@ -56,6 +48,39 @@ Value interpreter::evaluate(Node* node) {
 	    Value val = evaluate(node->right_index.get());
 	    if(holds_alternative<ErrorValue>(val)) { return val; }
 	    return make_shared<ReturnFunc>(ReturnFunc{move(val)});
+	}
+	else if(node->KEY == ST_FOR) {
+	    if(node->children.size() < 4) {
+            execute_error("for_node arguments return null value",node);
+	        return ErrorValue{};
+	    }
+	    Value init_res = evaluate(node->children[0].get());
+	    if(holds_alternative<ErrorValue>(init_res)) { return init_res; }
+	    while(true) {
+    	    bool is_true = false;
+    	    Value cond_val = evaluate(node->children[1].get());
+    	    if(holds_alternative<ErrorValue>(cond_val)) { return cond_val; }
+    	    if(holds_alternative<double>(cond_val)) {
+    	        double num = get<double>(cond_val);
+    	        is_true = (num != 0.0);
+    	    }
+    	    else if(holds_alternative<bool>(cond_val)) {
+    	        bool boolea = get<bool>(cond_val);
+    	        is_true = boolea;
+    	    }
+    	    else {
+    	        execute_error("unknown argument in for->arguments[1]",node);
+    	        return ErrorValue{};
+    	    }
+    	    if(!is_true) {
+    	        break;
+    	    }
+    	    Value body_res = evaluate(node->children[3].get());
+    	    if(holds_alternative<ErrorValue>(body_res)) { return body_res; }
+    	    Value step = evaluate(node->children[2].get());
+    	    if(holds_alternative<ErrorValue>(step)) { return step; }
+	    }
+	    return AcceptValue{};
 	}
 	else if(node->KEY == ST_BLOCK) {
 	    for(const auto& child : node->children) {
@@ -115,22 +140,6 @@ Value interpreter::evaluate(Node* node) {
 	        execute_error("dont have function",node);
             return ErrorValue{};
 	    };
-	    if(name == "__builtin_getlast_inputinfo") {
-	    #if defined(_WIN32) || defined(_WIN64)
-	        LASTINPUTINFO lii;
-	        lii.cbSize = sizeof(LASTINPUTINFO);
-	        if(GetLastInputInfo(&lii)) {
-	            DWORD current_tick = GetTickCount();
-	            DWORD idle_ms = current_tick - lii.dwTime;
-	            return(double)(idle_ms/1000);
-	        }
-	        execute_error("failed to get last input info",node);
-	        return ErrorValue{};
-        #else
-            execute_error("this function only support windows",node);
-            return ErrorValue{};
-        #endif
-	    }
 	    if(name == "__builtin_exec") {
 	        if(ev_args.size() == 1) {
 	            if(!holds_alternative<string>(ev_args[0])) { 
@@ -155,7 +164,6 @@ Value interpreter::evaluate(Node* node) {
 	        }
 	    }
 	    if(name == "__builtin_read") {
-	    #if defined(__linux__) || defined(__APPLE__)
 	        if(ev_args.size() == 1) {
 	            if(!holds_alternative<string>(ev_args[0])) { 
                     execute_error("current type != STRING",node);
@@ -178,13 +186,8 @@ Value interpreter::evaluate(Node* node) {
  	            execute_error("expected exactly one argument",node);
       	        return ErrorValue{};
  	        }
-	    #else
-	        execute_error("this func support only for unix systems",node);
-	        return ErrorValue{};
-	    #endif
 	    }
 	    if(name == "__builtin_chdir") {
-	    #if defined(__linux__) || defined(__APPLE__)
 	        if(ev_args.size() == 1) {
 	            if(!holds_alternative<string>(ev_args[0])) { 
                     execute_error("current type != STRING",node);
@@ -201,15 +204,9 @@ Value interpreter::evaluate(Node* node) {
 	            execute_error("expected exactly one argument",node);
      	        return ErrorValue{};
             }
-	    #else
-	    execute_error("delete fucking windows stupid dog",node);
-	    return ErrorValue{};
-	    #endif
 	    }
 	    if(name == "__builtin_os") {
-	        #if defined(_WIN32) || defined(_WIN64)
-	            return string("windows");
-	        #elif defined(__APPLE__) || defined(__MACH__)
+	        #if defined(__APPLE__) || defined(__MACH__) // fuck windows support only like unix systems
 	            return string("macos");
 	        #elif defined(__linux__)
 	            return string("linux");
@@ -283,11 +280,7 @@ Value interpreter::evaluate(Node* node) {
     else if(node->KEY == ST_INCLUDE_LIBS) {
         string filename = node->VAL;
         string home = "";
-        #if defined(_WIN32) || defined(_WIN64)
-        if(const char* win_home = getenv("USERPROFILE")) home = win_home;
-        #else
-        if(const char* unix_home = getenv("HOME")) home = unix_home; 
-        #endif
+        if(const char* unix_home = getenv("HOME")) home = unix_home;
         string full_path = home + "/LemonenLang/libs/" + node->VAL;
         if(filename.empty()) {
           cout<<"\033[1;31mE: file is empty()\033[0m"<<endl;
@@ -680,9 +673,7 @@ Value interpreter::evaluate(Node* node) {
         }
         if(node->children.size() == 1 && right_values.size() > 1) {
             string res = "";
-            for(const auto& chil : node->right_children) {
-                Value ev = evaluate(chil.get());
-                if(holds_alternative<ErrorValue>(ev)) { return ev; }
+            for(const Value& ev : right_values) {
                 if(holds_alternative<string>(ev)) {
                     res += get<string>(ev);
                 }
@@ -836,14 +827,6 @@ Value interpreter::evaluate(Node* node) {
         }
         cout << flush;
         fflush(stdout);
-        #if defined(_WIN32) || defined(_WIN64)
-        cout << prompt;
-        string input;
-        if(!getline(cin,input)) {
-            execute_error("lmout getline for noobs returning feces",node);
-            return ErrorValue{};
-        }
-        #else
         char* input_ptr = readline(prompt.c_str());
         if(input_ptr == nullptr) {
             execute_error("input interrupted",node);
@@ -851,7 +834,6 @@ Value interpreter::evaluate(Node* node) {
         }
         string input = input_ptr;
         free(input_ptr);
-        #endif
         return input; 
     }
 	else if(node->KEY == ST_PRINT) {
