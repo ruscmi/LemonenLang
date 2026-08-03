@@ -276,7 +276,12 @@ Value interpreter::evaluate(Node* node) {
     }
     else if(node->KEY == ST_INCLUDE_LIBS) {
         string filename = node->VAL;
-        string home = getenv("HOME") ? getenv("HOME") : "";
+        string home = "";
+        #if defined(_WIN32) || defined(_WIN64)
+        if(const char* win_home = getenv("USERPROFILE")) home = win_home;
+        #else
+        if(const char* unix_home = getenv("HOME")) home = unix_home; 
+        #endif
         string full_path = home + "/LemonenLang/libs/" + node->VAL;
         if(filename.empty()) {
           cout<<"\033[1;31mE: file is empty()\033[0m"<<endl;
@@ -826,6 +831,8 @@ Value interpreter::evaluate(Node* node) {
         cout << flush;
         fflush(stdout);
         #if defined(_WIN32) || defined(_WIN64)
+        cout << prompt;
+        string input;
         if(!getline(cin,input)) {
             execute_error("lmout getline for noobs returning feces",node);
             return ErrorValue{};
