@@ -4,6 +4,7 @@
 #include <iostream>
 #include "../include/ast.hpp"
 #include "../include/utf8_win.hpp"
+using namespace std;
 void print_tree(const Node* node, unsigned int level) {
 	setup_utf8();
 	if(node == nullptr) { return; }

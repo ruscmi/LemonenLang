@@ -5,13 +5,12 @@
 #include <vector>
 #include <string>
 #include "ast.hpp"
-using namespace std;
 class LEX {
 private:
-    vector<Token> tokens;
+    std::vector<Token> tokens;
     Token T;
 public:
-    vector<Token>& tokenize(const string &code);
+    std::vector<Token>& tokenize(const std::string &code);
     size_t get_utf8(unsigned char c);
 };
   

@@ -6,9 +6,9 @@
 #include "../include/ast.hpp"
 #include "../src/manual.cpp"
 #include "../include/interpreter.hpp"
-#include <readline/readline.h>
 #include <format>
 #include <iostream>
+using namespace std;
 bool is_runner = false;
 void Parser::setTokens(const vector<Token>& tokenize) {
 	this->tokenize = tokenize;

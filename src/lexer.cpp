@@ -5,6 +5,7 @@
 #include "../include/utf8_win.hpp"
 #include <cctype>
 #include <iostream>
+using namespace std;
 size_t LEX::get_utf8(unsigned char c) {
     if((c & 0x80) == 0) return 1;
     if((c & 0xE0) == 0xC0) return 2;
