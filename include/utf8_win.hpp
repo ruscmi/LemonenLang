@@ -7,7 +7,12 @@
 #include <clocale>
 
 #ifdef _WIN32
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
+    #define byte win_gunk_byte
 	#include <windows.h>
+	#undef byte
 	inline void setup_utf8() {
 		SetConsoleCP(65001);
 		SetConsoleOutputCP(65001);

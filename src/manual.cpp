@@ -4,6 +4,7 @@
 #include "../include/parser.hpp"
 #include <iostream>
 #include "../include/utf8_win.hpp"
+using namespace std;
 /*
 //ru//
 перенес мануал сюда потому что он разрастается и мешает в парсере,

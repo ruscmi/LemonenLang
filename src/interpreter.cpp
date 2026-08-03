@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <chrono>
+using namespace std;
 void interpreter::execute_error(const string& msg,Node* node) {
     cerr<<"\033[1;31m[Run e]: "<<msg<<"\033[0m"<<endl;
     if(node && !node->VAL.empty()) {
@@ -177,12 +178,13 @@ Value interpreter::evaluate(Node* node) {
  	            execute_error("expected exactly one argument",node);
       	        return ErrorValue{};
  	        }
-	    }
 	    #else
 	        execute_error("this func support only for unix systems",node);
 	        return ErrorValue{};
 	    #endif
+	    }
 	    if(name == "__builtin_chdir") {
+	    #if defined(__linux__) || defined(__APPLE__)
 	        if(ev_args.size() == 1) {
 	            if(!holds_alternative<string>(ev_args[0])) { 
                     execute_error("current type != STRING",node);
@@ -198,7 +200,11 @@ Value interpreter::evaluate(Node* node) {
 	        }else {
 	            execute_error("expected exactly one argument",node);
      	        return ErrorValue{};
-	        }
+            }
+	    #else
+	    execute_error("delete fucking windows stupid dog",node);
+	    return ErrorValue{};
+	    #endif
 	    }
 	    if(name == "__builtin_os") {
 	        #if defined(_WIN32) || defined(_WIN64)

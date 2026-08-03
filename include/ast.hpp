@@ -7,12 +7,11 @@
 #include <memory>
 #include <variant>
 #include <unordered_map>
-using namespace std;
 extern bool is_runner;
 enum TTYPE { OPERATOR, SEPARATOR, NUMBER, STRING, UNKNOWN,END,STRING_LIT,END_EX,LOGIC_OPERATOR,BOOLEA_OPERATOR,NOT};
 struct Token {
   TTYPE KEY;
-  string VAL;
+  std::string VAL;
   size_t LINE;
   size_t COL;
 };
@@ -22,25 +21,25 @@ ST_PROGRAM,ST_NOT,ST_WHILE,ST_CONTINUE,ST_BREAK,ST_TYPEOF,ST_LEN,ST_ARRAY_PUSH,S
 ST_FUNC,ST_CALL,ST_RETURN,ST_WAIT,ST_DICTIONARY};
 struct Node {
   ASTTAB KEY;
-  string VAL;
-  unique_ptr<Node>left_index = nullptr;
-  unique_ptr<Node>right_index = nullptr;
-  unique_ptr<Node>if_index = nullptr;
-  unique_ptr<Node>else_index = nullptr;
-  unique_ptr<Node>block_while = nullptr;
-  vector<unique_ptr<Node>> children;
-  vector<unique_ptr<Node>> right_children;
+  std::string VAL;
+  std::unique_ptr<Node>left_index = nullptr;
+  std::unique_ptr<Node>right_index = nullptr;
+  std::unique_ptr<Node>if_index = nullptr;
+  std::unique_ptr<Node>else_index = nullptr;
+  std::unique_ptr<Node>block_while = nullptr;
+  std::vector<std::unique_ptr<Node>> children;
+  std::vector<std::unique_ptr<Node>> right_children;
   size_t line; size_t col;
   Node(Token tok) : line(tok.LINE),col(tok.COL) {};
 };
 struct ForFunction {
-    vector<string>par_names;
-    shared_ptr<Node> body;
+    std::vector<std::string>par_names;
+    std::shared_ptr<Node> body;
     bool is_system = false;
     bool operator==(const ForFunction& other) const = default;
 };
 struct ErrorValue {
-    string message;
+    std::string message;
     bool operator==(const ErrorValue& other) const = default;
 };
 struct ReturnFunc;
@@ -50,13 +49,13 @@ struct AcceptValue { bool operator==(const AcceptValue& other) const = default; 
 struct ArrayValue;
 struct DictValue;
 using Value = 
-variant<
+std::variant<
 double,
 bool,
-string,
-shared_ptr<DictValue>,
-shared_ptr<ArrayValue>,
-shared_ptr<ReturnFunc>,
+std::string,
+std::shared_ptr<DictValue>,
+std::shared_ptr<ArrayValue>,
+std::shared_ptr<ReturnFunc>,
 ErrorValue,
 AcceptValue,
 Continuer,
@@ -72,7 +71,7 @@ struct ReturnFunc {
     }
 };
 struct DictValue {
-    unordered_map<string,Value>dict_val;
+    std::unordered_map<std::string,Value>dict_val;
     bool operator==(const DictValue& other) const {
         return dict_val == other.dict_val;
     }
@@ -81,7 +80,7 @@ struct DictValue {
     }    
 };
 struct ArrayValue {
-    vector<Value>elements;
+    std::vector<Value>elements;
     void push(Value& val) {
         elements.push_back(std::move(val));
     }

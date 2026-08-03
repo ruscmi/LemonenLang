@@ -45,6 +45,7 @@
 #include <fstream>
 #include <iostream>
 extern bool is_runner;
+using namespace std;
 int main(int argc, char *argv[]) {
   setup_utf8();
   const char *big_txt = "\033[1;34m";

@@ -5,37 +5,36 @@
 #include <vector>
 #include <string>
 #include "ast.hpp"
-using namespace std;
 class Parser {
 private:
     unsigned int position = 0;
-    vector<Token> tokenize;
+    std::vector<Token> tokenize;
 public:
-	void setTokens(const vector<Token>& tokenize);
+	void setTokens(const std::vector<Token>& tokenize);
 	Token peer();
 	Token advanced();
-	void error(const string& msg);
-	unique_ptr<Node> parse_program();
-	unique_ptr<Node> parse_wait();
-    unique_ptr<Node> parse_func();
-    unique_ptr<Node> parse_return();
-    unique_ptr<Node> parse_len();
-    unique_ptr<Node> parse_typeof();
-    unique_ptr<Node> parse_include();
-	unique_ptr<Node> parse_break();
-	unique_ptr<Node> parse_continue();
-    unique_ptr<Node> parse_while();
-	unique_ptr<Node> parse_bool();
-    unique_ptr<Node> parse_manual();
-    unique_ptr<Node> parse_if();
-    unique_ptr<Node> parse_print();
-    unique_ptr<Node> parse_stod();
-    unique_ptr<Node> parse_input();
-	unique_ptr<Node> parse_statement();
-	unique_ptr<Node> parse_assignment();
-	unique_ptr<Node> parse_factor();
-	unique_ptr<Node> parse_boolea_expression();
-	unique_ptr<Node> parse_logic_expression();
-	unique_ptr<Node> parse_term();
-	unique_ptr<Node> parse_expression();
+	void error(const std::string& msg);
+	std::unique_ptr<Node> parse_program();
+	std::unique_ptr<Node> parse_wait();
+    std::unique_ptr<Node> parse_func();
+    std::unique_ptr<Node> parse_return();
+    std::unique_ptr<Node> parse_len();
+    std::unique_ptr<Node> parse_typeof();
+    std::unique_ptr<Node> parse_include();
+	std::unique_ptr<Node> parse_break();
+	std::unique_ptr<Node> parse_continue();
+    std::unique_ptr<Node> parse_while();
+	std::unique_ptr<Node> parse_bool();
+    std::unique_ptr<Node> parse_manual();
+    std::unique_ptr<Node> parse_if();
+    std::unique_ptr<Node> parse_print();
+    std::unique_ptr<Node> parse_stod();
+    std::unique_ptr<Node> parse_input();
+	std::unique_ptr<Node> parse_statement();
+	std::unique_ptr<Node> parse_assignment();
+	std::unique_ptr<Node> parse_factor();
+	std::unique_ptr<Node> parse_boolea_expression();
+	std::unique_ptr<Node> parse_logic_expression();
+	std::unique_ptr<Node> parse_term();
+	std::unique_ptr<Node> parse_expression();
 };
