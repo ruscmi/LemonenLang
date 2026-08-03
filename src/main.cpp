@@ -36,18 +36,14 @@
 #include "../include/ast.hpp"
 #include "../include/lexer.hpp"
 #include "../include/parser.hpp"
-#include "../include/utf8_win.hpp"
 #include "../include/interpreter.hpp"
-#if defined(__linux__) || defined(__APPLE__)
 #include <readline/readline.h>
 #include <readline/history.h>
-#endif
 #include <fstream>
 #include <iostream>
 extern bool is_runner;
 using namespace std;
 int main(int argc, char *argv[]) {
-  setup_utf8();
   const char *big_txt = "\033[1;34m";
   const char *end = "\033[0m";
   interpreter inter;
@@ -66,7 +62,7 @@ int main(int argc, char *argv[]) {
         vector<Token> tokenize = lexing.tokenize(code);
         pa.setTokens(tokenize);
         unique_ptr<Node> tree = pa.parse_program();
-//        print_tree(tree,1);
+//      print_tree(tree,1);
 		if (tree != nullptr && is_runner == true) {
 			inter.evaluate(tree.get());
 		}
@@ -77,7 +73,6 @@ int main(int argc, char *argv[]) {
     }
   }
    else if (argc == 1) {
-    setup_utf8();
     bool ActiveRequest = true;
     cout << big_txt << R"(    lmnlang REPL mode 
   Read Eval Print Loop mode
@@ -88,7 +83,6 @@ int main(int argc, char *argv[]) {
       string inpline;
       Parser p;
       LEX lexing;
-      #if defined(__linux__) || defined(__APPLE__)
       char* prompt = readline("#> ");
       if(!prompt) {
         cout<<"\033[1;34mGoodbye lemon!\033[0m"<<endl;
@@ -97,10 +91,6 @@ int main(int argc, char *argv[]) {
       inpline = prompt;
       free(prompt);
       add_history(inpline.c_str());
-      #else
-      cout<<"#> ";
-      if(!getline(cin,inpline)) break;
-      #endif
       if (inpline.empty()) {
         continue;
       }
@@ -110,7 +100,7 @@ int main(int argc, char *argv[]) {
       vector<Token> tokenize = lexing.tokenize(inpline);
       p.setTokens(tokenize);
       unique_ptr<Node>tree = p.parse_program();
-      print_tree(tree.get(),1);
+//    print_tree(tree.get(),1);
       if(tree != nullptr) {
         Value res = inter.evaluate(tree.get());
         if(!holds_alternative<AcceptValue>(res)) {
@@ -119,9 +109,7 @@ int main(int argc, char *argv[]) {
         }
       }
     }
-    #if defined(__linux__) || defined(__APPLE__)
     clear_history();
-    #endif
   }else {
     cout << "\033[1;34mE: just not open file\033[0m" << endl;
     return 1;

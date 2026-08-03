@@ -51,21 +51,7 @@ chmod +x builder.sh
 ```
 == **FOR WINDOWS** ==
 
-For Windows, you will have to sweat. 
-
-best way to install [MSYS2](https://www.msys2.org/)
-
-in terminal `MSYS2 UCRT64` :
-
-```bash
-pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-readline
-```
-
-Assemble the project:
-
-```bash
-cmake -B build && cmake --build build
-```
+`ONLY WSL2 SUPPORT.`
 
 **Executing files and REPL**
 

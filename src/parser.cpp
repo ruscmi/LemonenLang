@@ -2,7 +2,6 @@
 	lmnlang - GPL v2.0 - see LICENSE or main.cpp file for details
 */
 #include "../include/parser.hpp"
-#include "../include/utf8_win.hpp"
 #include "../include/ast.hpp"
 #include "../src/manual.cpp"
 #include "../include/interpreter.hpp"
@@ -40,7 +39,6 @@ void Parser::error(const string& msg) {
     }
 }
 unique_ptr<Node> Parser::parse_program() {
-	setup_utf8();
 	for(const auto& token : tokenize ) {
 		if(token.KEY == TTYPE::UNKNOWN ) {
 			error("Deer,my parser doesn't understand this shit");
@@ -66,8 +64,84 @@ unique_ptr<Node> Parser::parse_program() {
     }
     return end;
 }
+unique_ptr<Node> Parser::parse_for() {
+    advanced();
+    auto for_node = make_unique<Node>(peer());
+    for_node->KEY = ST_FOR;
+    if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
+        advanced();
+    }else {
+        error("expected '(' in for cycle");
+        return nullptr;
+    }
+    unique_ptr<Node> one_ex = parse_assignment();
+    if(!one_ex) {
+        error("expected one argument in for cycle");
+        return nullptr;
+    }
+    if(peer().KEY == TTYPE::END_EX) {
+        advanced();
+    }else {
+        error("expected ';' in for arguments");
+        return nullptr;
+    }
+    unique_ptr<Node> two_ex = parse_boolea_expression();
+    if(!two_ex) {
+        error("expected two argument in for cycle");
+        return nullptr;
+    }
+    if(peer().KEY == TTYPE::END_EX) {
+        advanced();
+    }else {
+        error("expected ';' in for arguments");
+        return nullptr;
+    }
+    unique_ptr<Node> three_ex = parse_assignment();
+    if(!three_ex) {
+        error("expected three argument in for cycle");
+    }
+    if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+        advanced();
+    }else {
+        error("expected ')' in for cycle");
+        return nullptr;
+    }
+    unique_ptr<Node> then_node;
+    if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "{") {
+        advanced();
+        then_node = make_unique<Node>(peer());
+        then_node->KEY = ST_BLOCK;
+        while(peer().KEY != TTYPE::SEPARATOR && peer().VAL != "}") {
+            unique_ptr<Node>expr = parse_statement();
+            if(expr) {
+                then_node->children.push_back(move(expr));
+            }else {
+                error("expected statement logic in ST_BLOCK");
+                return nullptr;
+            }
+            if(peer().KEY == TTYPE::END_EX) {
+                advanced();
+            }
+            if(peer().KEY == TTYPE::END) {
+                error("expected TTYPE::END in ST_BLOCK");
+                return nullptr;
+            }
+        }
+        advanced();
+    }else {
+        then_node = parse_statement();
+        if(!then_node) {
+            error("expected UNKNOWN in for cycle block");
+            return nullptr;
+        }
+    }
+    for_node->children.push_back(move(one_ex));
+    for_node->children.push_back(move(two_ex));
+    for_node->children.push_back(move(three_ex));
+    for_node->children.push_back(move(then_node));
+    return for_node;
+}
 unique_ptr<Node> Parser::parse_wait() {
-    setup_utf8();
     auto lmit = make_unique<Node>(peer());
     lmit->KEY = ST_WAIT;
     lmit->VAL = "lmit";
@@ -95,7 +169,6 @@ unique_ptr<Node> Parser::parse_wait() {
     return nullptr;
 }
 unique_ptr<Node> Parser::parse_func() {
-    setup_utf8();
     unique_ptr<Node> expr = nullptr;
     unique_ptr<Node>then_node = nullptr;
     vector<unique_ptr<Node>>args;
@@ -174,7 +247,6 @@ unique_ptr<Node> Parser::parse_func() {
     return nullptr;
 }
 unique_ptr<Node> Parser::parse_return() {
-    setup_utf8();
     advanced();
     auto returner = make_unique<Node>(peer());
     returner->KEY = ST_RETURN;
@@ -189,7 +261,6 @@ unique_ptr<Node> Parser::parse_return() {
     return returner;
 }
 unique_ptr<Node> Parser::parse_len() {
-    setup_utf8();
     auto lmlen = make_unique<Node>(peer());
     lmlen->KEY = ST_LEN;
     lmlen->VAL = "lmlen";
@@ -217,7 +288,6 @@ unique_ptr<Node> Parser::parse_len() {
     return nullptr;
 }
 unique_ptr<Node> Parser::parse_typeof() {
-    setup_utf8();
     auto lmtype = make_unique<Node>(peer());
     lmtype->KEY = ST_TYPEOF;
     lmtype->VAL = "lmtype";
@@ -245,7 +315,6 @@ unique_ptr<Node> Parser::parse_typeof() {
     return nullptr;    
 }
 unique_ptr<Node> Parser::parse_include() {
-    setup_utf8();
     advanced();
     if(peer().KEY == TTYPE::STRING_LIT) {
         string val = peer().VAL;
@@ -304,7 +373,6 @@ unique_ptr<Node> Parser::parse_include() {
 }
 unique_ptr<Node> Parser::parse_break() {
     if(peer().KEY == TTYPE::STRING && peer().VAL == "break") {
-        setup_utf8();
         advanced();
         auto node = make_unique<Node>(peer());
         node->KEY = ST_BREAK;
@@ -314,7 +382,6 @@ unique_ptr<Node> Parser::parse_break() {
     return nullptr;
 }
 unique_ptr<Node> Parser::parse_continue() {
-    setup_utf8();
     if(peer().KEY == TTYPE::STRING && peer().VAL == "continue") {
         advanced();
         auto node = make_unique<Node>(peer());
@@ -325,7 +392,6 @@ unique_ptr<Node> Parser::parse_continue() {
     return nullptr;
 }
 unique_ptr<Node> Parser::parse_while() {
-    setup_utf8();
     advanced();
     Token current = peer();
     unique_ptr<Node> then_node = nullptr;
@@ -357,9 +423,11 @@ unique_ptr<Node> Parser::parse_while() {
                 }
                 advanced();
             }else {
-                    then_node = parse_statement();
+                then_node = parse_statement();
+                if(!then_node) {
                     error("expected TTYPE::UNKNOWN in term");
                     return nullptr;
+                }
             }
         }else {
             error("expected sucked ')' or detected extra neurons");
@@ -377,7 +445,6 @@ unique_ptr<Node> Parser::parse_while() {
     return while_node;
 }
 unique_ptr<Node> Parser::parse_bool() {
-    setup_utf8();
     Token current = peer();
     if(current.KEY == TTYPE::STRING && current.VAL == "true") {
         auto true_f = make_unique<Node>(peer());
@@ -396,7 +463,6 @@ unique_ptr<Node> Parser::parse_bool() {
     return nullptr;
 }
 unique_ptr<Node> Parser::parse_if() {
-    setup_utf8();
     advanced();
     Token current = peer();
     unique_ptr<Node> then_node = nullptr;
@@ -483,7 +549,6 @@ unique_ptr<Node> Parser::parse_if() {
     return if_node;
 }
 unique_ptr<Node> Parser::parse_print() {
-	setup_utf8();
 	advanced();
 	auto print_node = make_unique<Node>(peer());
 	print_node->KEY = ST_PRINT;
@@ -594,6 +659,9 @@ unique_ptr<Node> Parser::parse_statement() {
 	else if (current.KEY == TTYPE::STRING && current.VAL == "while") {
 	    return parse_while();
 	}
+	else if (current.KEY == TTYPE::STRING && current.VAL == "for") {
+	    return parse_for();
+	}
 	else if (current.KEY == TTYPE::STRING && current.VAL == "break") {
 	    return parse_break();
 	}
@@ -680,7 +748,6 @@ unique_ptr<Node> Parser::parse_assignment() {
     return assign;
 }
 unique_ptr<Node> Parser::parse_factor() {
-	setup_utf8();
 	Token current = peer();
 	unique_ptr<Node>left = nullptr;
     if(current.KEY == TTYPE::NUMBER) {

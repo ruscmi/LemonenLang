@@ -3,10 +3,8 @@
 */
 #include <iostream>
 #include "../include/ast.hpp"
-#include "../include/utf8_win.hpp"
 using namespace std;
 void print_tree(const Node* node, unsigned int level) {
-	setup_utf8();
 	if(node == nullptr) { return; }
 	for(unsigned int i = 0; i < level; i++ ) { cout<<"   "; }
 	cout<<node->VAL;
@@ -41,6 +39,8 @@ void print_tree(const Node* node, unsigned int level) {
 	else if(node->KEY == ST_RETURN) { cout<<"[RETURN]\n"; }
 	else if(node->KEY == ST_WAIT) { cout<<"[WAIT]\n"; }
 	else if(node->KEY == ST_DICTIONARY) { cout<<"[DICTIONARY]\n"; }
+	else if(node->KEY == ST_NOP) { cout<<"[NOP]\n"; }
+	else if(node->KEY == ST_FOR) { cout<<"[FOR]\n"; }
 	else { cout<<" [UNKNOWN]"; }
 	for(const auto& child : node->children) {
 	    print_tree(child.get(),level + 1);

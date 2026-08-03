@@ -3,7 +3,6 @@
 */
 #include "../include/parser.hpp"
 #include <iostream>
-#include "../include/utf8_win.hpp"
 using namespace std;
 /*
 //ru//
@@ -14,7 +13,6 @@ moved the manual here because it grows and interferes in the parser,
 otherwise it can simply be inserted and called in recursion descent inside the parser
 */
 unique_ptr<Node> Parser::parse_manual() {
-	setup_utf8();
 	Token current = peer();
 	const char* bluec = "\033[34m";
 	const char* resbc = "\033[0m";

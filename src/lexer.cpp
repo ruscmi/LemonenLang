@@ -2,7 +2,6 @@
 	lmnlang - GPL v2.0 - see LICENSE or main.cpp file for details
 */
 #include "../include/lexer.hpp"
-#include "../include/utf8_win.hpp"
 #include <cctype>
 #include <iostream>
 using namespace std;
@@ -14,7 +13,6 @@ size_t LEX::get_utf8(unsigned char c) {
     return 1;
 }
 vector<Token>& LEX::tokenize(const string &code) {
-	setup_utf8();
 	tokens.clear();
 	unsigned int i = 0;
 	unsigned int len = code.length();
