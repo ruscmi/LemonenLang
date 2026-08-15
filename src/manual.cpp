@@ -179,7 +179,7 @@ sys_read() - expression command in parentheses but freeze procession
 sys_sleep() - suspend your system
 sys_getcwd() - get current directory
 example:
-    exec("micro")
+    sys_exec("micro")
 open micro redactor
 this is all thx for reading)"<<resbc<<endl;
             }		    
