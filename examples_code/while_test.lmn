@@ -1,9 +1,0 @@
-/- just a test -/
-x = 0;
-while(x < 6) {
-    lmuck("current pos: ",x)
-    if( x == 3 ) {
-        lmuck("seven: ",x + 4)
-    }
-    x = x + 1
-}

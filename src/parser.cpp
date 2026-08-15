@@ -3,7 +3,6 @@
 */
 #include "../include/parser.hpp"
 #include "../include/ast.hpp"
-#include "../src/manual.cpp"
 #include "../include/interpreter.hpp"
 #include <format>
 #include <iostream>

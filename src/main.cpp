@@ -37,8 +37,10 @@
 #include "../include/lexer.hpp"
 #include "../include/parser.hpp"
 #include "../include/interpreter.hpp"
+#if defined(__linux__) || defined(__APPLE__)
 #include <readline/readline.h>
 #include <readline/history.h>
+#endif
 #include <fstream>
 #include <iostream>
 extern bool is_runner;
@@ -83,6 +85,7 @@ int main(int argc, char *argv[]) {
       string inpline;
       Parser p;
       LEX lexing;
+      #if defined(__linux__) || defined(__APPLE__) 
       char* prompt = readline("#> ");
       if(!prompt) {
         cout<<"\033[1;34mGoodbye lemon!\033[0m"<<endl;
@@ -91,6 +94,12 @@ int main(int argc, char *argv[]) {
       inpline = prompt;
       free(prompt);
       add_history(inpline.c_str());
+      #elif defined(_WIN32) || defined(_WIN64)
+      cout<<"#>";
+      getline(cin,inpline);
+      #else
+      #error "unknown platform"
+      #endif
       if (inpline.empty()) {
         continue;
       }
@@ -109,7 +118,9 @@ int main(int argc, char *argv[]) {
         }
       }
     }
+    #if defined(__linux__) || defined(__APPLE__)
     clear_history();
+    #endif
   }else {
     cout << "\033[1;34mE: just not open file\033[0m" << endl;
     return 1;

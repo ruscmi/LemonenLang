@@ -62,11 +62,13 @@ chmod +x builder.sh
 pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-readline 
 ``` 
 
-Соберите проект: 
+далее вам необходимо зайти в директорию с исходниками LemonenLang и запустить билд через скрипт builder.sh
 
-```bash 
-cmake -B build && cmake --build build 
-```
+**ЛИБО** 
+
+запустите файл lemonen.exe
+
+лол.
 
 **Выполнение файлов и REPL** 
 
@@ -117,6 +119,8 @@ man list
 ```
 
 Но после обновления версии 0.2 вы можете просто запустить его командой в терминале:
+
+ПРЕДУПРЕЖДЕНИЕ: это работает только если у вас unix подобная система.
 
 ```bash 
 lmnlang 

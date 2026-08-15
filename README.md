@@ -51,7 +51,29 @@ chmod +x builder.sh
 ```
 == **FOR WINDOWS** ==
 
-`ONLY WSL2 SUPPORT.`
+1.Download a installator [MSYS2](https://www.msys2.org/) 
+
+2.Run MSYS2 UCRT64
+
+3.Execute in terminal:
+
+```bash
+pacman -Syu
+```
+
+4.Download dev tools:
+
+```bash
+pacman -S --needed base-devel mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-readline
+```
+
+5.Move to the directory with LemonenLang and compile the language there using the builder.sh script
+
+**OR**
+
+run lemonen.exe
+
+lol.
 
 **Executing files and REPL**
 
@@ -96,6 +118,8 @@ ON WINDOWS
 ```
 
 But since the v0.2 update, you can run it simply with the command in the terminal:
+
+WARNING: this work but your system is unix-like 
 
 ```bash
 lmnlang

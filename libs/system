@@ -2,23 +2,37 @@
 	lmnlib - GPL v2.0 - see LICENSE or main.cpp file for details
                    system sequences by ruscmi
 -/
-func get_os() { 
+func sys_getos() { 
     return __builtin_os();
 };
-func exec(cmd) {
+func sys_cd(dir) {
+    return __builtin_chdir(dir);
+};
+func sys_exec(cmd) {
     return __builtin_exec(cmd);
 };
-func read(msg) {
+func sys_read(msg) {
     return __builtin_read(msg);
 };
-func sleep() {
+func sys_sleep() {
     current_os = get_os();
     if(current_os == "linux") {
-        exec("systemctl suspend");
-    }else {
-        exec("echo i dont know this system")
+        exec("systemctl poweroff");
+    }
+    else if(current_os == "windows") {
+        exec("shutdown /s /t 0");
+    }
+    else if(current_os == "android") {
+        exec("echo shutdown android only on root");
+        exec("su -c reboot -p");
+    }
+    else if(current_os == "macos") {
+        exec("sudo shutdown -h now");
+    }
+    else {
+        exec("echo i dont know this system");
     }
 };
-func getcwd() {
+func sys_getcwd() {
     return __builtin_getcwd();
 };
