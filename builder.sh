@@ -43,7 +43,7 @@ else
         echo ""
         echo -e "\033[1;33mWarn: $HOME/.local/bin os not in your fucking PATH\033[0m"
         echo "Run this command to fix it: "
-        echo " echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc && source ~/.bashrc"
+        echo " echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc && source ~/.bashrc or if you use zsh: ~/.zshrc"
     fi
 fi
 echo "succefull"
