@@ -15,22 +15,22 @@ func sys_read(msg) {
     return __builtin_read(msg);
 };
 func sys_sleep() {
-    current_os = get_os();
+    current_os = sys_getos();
     if(current_os == "linux") {
-        exec("systemctl poweroff");
+        sys_exec("systemctl poweroff");
     }
     else if(current_os == "windows") {
-        exec("shutdown /s /t 0");
+        sys_exec("shutdown /s /t 0");
     }
     else if(current_os == "android") {
-        exec("echo shutdown android only on root");
-        exec("su -c reboot -p");
+        sys_exec("echo shutdown android only on root");
+        sys_exec("su -c reboot -p");
     }
     else if(current_os == "macos") {
-        exec("sudo shutdown -h now");
+        sys_exec("sudo shutdown -h now");
     }
     else {
-        exec("echo i dont know this system");
+        sys_exec("echo i dont know this system");
     }
 };
 func sys_getcwd() {
