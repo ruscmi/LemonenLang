@@ -116,6 +116,7 @@ all libs written on the lmn itself
 ansi - see manual for ansi lib
 string - see manual for string lib
 random - see manual for random lib
+system - see manual for system lib
 for load libs or file use:
     lmport(lib)
 or for file:
@@ -167,7 +168,22 @@ this all thx for reading manual)"<<resbc<<endl;
     execute '[hello, world, !]'
   thank you all for that.)"<<resbc<<endl;
 		    }
-		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "ansi") {
+		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "system") {
+		        advanced();
+                cout<<bluec<<R"(    system lib manual
+all functions: getos(),cd(),exec(),read(),sleep(),getcwd()
+sys_getos() - get name your os
+sys_cd() - go to directory in parentheses
+sys_exec() - expression command in parentheses
+sys_read() - expression command in parentheses but freeze procession
+sys_sleep() - suspend your system
+sys_getcwd() - get current directory
+example:
+    exec("micro")
+open micro redactor
+this is all thx for reading)"<<resbc<<endl;
+            }		    
+            else if(peer().KEY == TTYPE::STRING && peer().VAL == "ansi") {
 		        advanced();
 		        cout<<bluec<<R"(      all ansi commands
     paint_<color>("line") - paint line;

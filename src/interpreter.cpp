@@ -7,14 +7,20 @@
 #include <fstream>
 #include <format>
 #include <iostream>
+#if defined(__linux__) || defined(__APPLE__)
 #include <readline/readline.h>
+#endif
 #include <cmath>
 #include <filesystem>
 #include <thread>
 #include <cstdlib>
 #include <cstdio>
 #include <chrono>
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#elif defined(__linux__) || defined(__APPLE__)
 #include <unistd.h>
+#endif
 using namespace std;
 void interpreter::execute_error(const string& msg,Node* node) {
     cerr<<"\033[1;31m[Run e]: "<<msg<<"\033[0m"<<endl;
@@ -170,7 +176,13 @@ Value interpreter::evaluate(Node* node) {
 	                return ErrorValue{};
 	            }
 	            string cmd = get<string>(ev_args[0]);
+	            #if defined(__linux__) || defined(__APPLE__)
 	            FILE* pipe = popen(cmd.c_str(),"r");
+	            #elif defined(_WIN32) || defined(_WIN64)
+	            FILE* pipe = _popen(cmd.c_str(),"r");
+	            #else
+	            #error "unknown platform"
+	            #endif
 	            if(!pipe) {
 	                execute_error("popen failed",node);
 	                return ErrorValue{};
@@ -180,7 +192,13 @@ Value interpreter::evaluate(Node* node) {
 	            while(fgets(buffer,sizeof(buffer),pipe) != nullptr) {
 	                result += buffer;
 	            }
+                #if defined(__linux__) || defined(__APPLE__)
 	            pclose(pipe);
+	            #elif defined(_WIN32) || defined(_WIN64)
+	            _pclose(pipe);
+	            #else
+	            #error "unknown platform"
+	            #endif
 	            return result;
 	        }else {
  	            execute_error("expected exactly one argument",node);
@@ -194,22 +212,33 @@ Value interpreter::evaluate(Node* node) {
 	                return ErrorValue{};
 	            }
 	            string path = get<string>(ev_args[0]);
-	            int cd = chdir(path.c_str());
+	            int cd = -1;
+	            #if defined(__linux__) || defined(__APPLE__)
+	            cd = chdir(path.c_str());
+	            #elif defined(_WIN32) || defined(_WIN64)
+                cd = SetCurrentDirectoryA(path.c_str()) ? 0 : -1;
+	            #else
+	            #error "unknown platform to chdir"
+	            #endif
 	            if(cd != 0) {
 	                execute_error("chdir failed",node);
 	                return ErrorValue{};
 	            }
-	            return (double)cd;	            
+	            return (double)cd;
 	        }else {
 	            execute_error("expected exactly one argument",node);
      	        return ErrorValue{};
             }
 	    }
 	    if(name == "__builtin_os") {
-	        #if defined(__APPLE__) || defined(__MACH__) // fuck windows support only like unix systems
+	        #if defined(__APPLE__) && defined(__MACH__)
 	            return string("macos");
+	        #elif defined(__ANDROID__)
+	            return string("android");
 	        #elif defined(__linux__)
 	            return string("linux");
+	        #elif defined(_WIN32) || defined(_WIN64)
+                return string("windows");
 	        #else
 	            return string("unknown");
 	        #endif
@@ -279,15 +308,25 @@ Value interpreter::evaluate(Node* node) {
     }
     else if(node->KEY == ST_INCLUDE_LIBS) {
         string filename = node->VAL;
-        string home = "";
-        if(const char* unix_home = getenv("HOME")) home = unix_home;
-        string full_path = home + "/LemonenLang/libs/" + node->VAL;
         if(filename.empty()) {
           cout<<"\033[1;31mE: file is empty()\033[0m"<<endl;
           return ErrorValue{};
         }
-        if(!filesystem::exists(full_path) && filesystem::exists(node->VAL)) { full_path = node->VAL; }
-        ifstream file(full_path);
+        string home = "";
+        #if defined(_WIN32) || defined(_WIN64)
+        if(const char* win_home = getenv("USERPROFILE")) home = win_home;
+        #else
+        if(const char* unix_home = getenv("HOME")) home = unix_home;
+        #endif
+        filesystem::path sys_dir = filesystem::path(home) / "LemonenLang" / "libs" / filename;
+        filesystem::path local_dir = filename;
+        filesystem::path local_libs = filesystem::path("libs") / filename;
+        filesystem::path target_path;
+        if(filesystem::exists(sys_dir)) { target_path = sys_dir; }
+        else if(filesystem::exists(local_dir)) { target_path = local_dir; }
+        else if(filesystem::exists(local_libs)) { target_path = local_libs; }
+        else { execute_error("file not found " + filename,node); return ErrorValue{}; }
+        ifstream file(target_path);
         if(!file.is_open()) {
             execute_error("file dont open",node);
             return ErrorValue{};
@@ -658,7 +697,14 @@ Value interpreter::evaluate(Node* node) {
 			}
 		}				
 		else if(op == "*") { double mo = left * right;  return mo;  }
-		else if(op == "%") { double mo = fmod(left,right); return mo; }
+		else if(op == "%") { 
+		    if(right != 0) {
+		        double mo = fmod(left,right); return mo; 
+		    }else {
+		        execute_error("cannot be divided by fucked zero",node);
+  				return ErrorValue{"E: cannot be divided by fucked zero"};    
+		    }
+		}
 	}
 	else if(node->KEY == ST_ASSIGNMENT) {
         if(node->right_children.empty()) {
@@ -815,6 +861,7 @@ Value interpreter::evaluate(Node* node) {
     }    
     else if(node->KEY == ST_INPUT) {
         string prompt = "";
+        string input;
         if(node->right_index != nullptr) {
             Value prompt_val = evaluate(node->right_index.get());
             if(holds_alternative<ErrorValue>(prompt_val)) { return prompt_val; }
@@ -826,14 +873,26 @@ Value interpreter::evaluate(Node* node) {
             }
         }
         cout << flush;
+        #if defined(__linux__) || defined(__APPLE__)
         fflush(stdout);
         char* input_ptr = readline(prompt.c_str());
         if(input_ptr == nullptr) {
             execute_error("input interrupted",node);
             return ErrorValue{"E: input interrupted"};
         }
-        string input = input_ptr;
+        input = input_ptr;
         free(input_ptr);
+        #elif defined(_WIN32) || defined(_WIN64)
+        if(!prompt.empty()) {
+            cout<<prompt<<flush;
+        }
+        if(!getline(cin,input)) {
+            execute_error("input interrupted",node); 
+            return ErrorValue{};
+        };
+        #else
+        #error "unknown platform"
+        #endif
         return input; 
     }
 	else if(node->KEY == ST_PRINT) {

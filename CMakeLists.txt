@@ -18,6 +18,7 @@ add_executable(lmnlang
     src/parser.cpp
     src/ast.cpp
     src/interpreter.cpp
+    src/manual.cpp
 )
 target_link_libraries(lmnlang PRIVATE ${READLINE_LIBRARY})
 include(GNUInstallDirs)

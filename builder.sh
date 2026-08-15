@@ -3,18 +3,20 @@ set -e
 BUILD_DIR="build"
 INSTALL_PREFIX="$HOME/.local"
 SYSTEM_INSTALL=false
-for arg in "$@"
-do
-    case $arg in
+while [ $# -gt 0 ]; do
+    case "$1" in
         --system)
-        SYSTEM_INSTALL=true
-        shift
-        ;;
+            SYSTEM_INSTALL-true
+            shift
+            ;;
         --clean)
-        echo "clean old builder"
-        rm -rf "$BUILD_DIR"
-        shift
-        ;;
+            echo "clean old builder"
+            rm -rf "$BUILD_DIR"
+            shift
+            ;;
+        *)
+            shift
+            ;;
     esac
 done
 echo "
@@ -37,5 +39,11 @@ if [ "$SYSTEM_INSTALL" = true ]; then
     sudo cmake --install "$BUILD_DIR"
 else
     cmake --install "$BUILD_DIR"
+    if [[ ":$PATH" != *":$HOME/.local/bin:"* ]]; then
+        echo ""
+        echo -e "\033[1;33mWarn: $HOME/.local/bin os not in your fucking PATH\033[0m"
+        echo "Run this command to fix it: "
+        echo " echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc && source ~/.bashrc"
+    fi
 fi
 echo "succefull"
