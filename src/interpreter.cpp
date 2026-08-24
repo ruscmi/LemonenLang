@@ -55,6 +55,41 @@ Value interpreter::evaluate(Node* node) {
 	    if(holds_alternative<ErrorValue>(val)) { return val; }
 	    return make_shared<ReturnFunc>(ReturnFunc{move(val)});
 	}
+	else if(node->KEY == ST_EMPTY) {
+		Value left = evaluate(node->left_index.get());
+		if(holds_alternative<ErrorValue>(left)) {
+			return left;
+		}
+		if(holds_alternative<bool>(left)) {
+			execute_error("boolean value dont have lmpty method",node);
+			return ErrorValue{};
+		}
+		if(holds_alternative<string>(left)) {
+			execute_error("string value dont have lmpty method",node);
+			return ErrorValue{};
+		}
+		if(holds_alternative<double>(left)) {
+			execute_error("double value dont have lmpty method",node);
+			return ErrorValue{};
+		}
+		if(holds_alternative<shared_ptr<ArrayValue>>(left)) {
+			auto arr = get<shared_ptr<ArrayValue>>(left);
+			if(!arr) {
+				execute_error("dont find array lmpty returned ErrorValue",node);
+				return ErrorValue{};
+			}
+			return Value(arr->elements.empty() ? "yes" : "no" );
+		}
+		if(holds_alternative<shared_ptr<DictValue>>(left)) {
+			auto dict = get<shared_ptr<DictValue>>(left);
+			if(!dict) {
+				execute_error("dont find dictionary lmpty returned ErrorValue",node);
+				return ErrorValue{};
+			}
+			return Value(dict->dict_val.empty() ? "yes" : "no" );
+		}
+		return AcceptValue{};
+	}
 	else if(node->KEY == ST_FOR) {
 	    if(node->children.size() < 4) {
             execute_error("for_node arguments return null value",node);

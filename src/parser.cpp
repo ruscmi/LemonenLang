@@ -1024,6 +1024,22 @@ unique_ptr<Node> Parser::parse_factor() {
 	                return nullptr;
 	            }
 	        }
+	    }else if(peer().KEY == TTYPE::STRING && peer().VAL == "lmpty") {
+	    	advanced();
+    		if(peer().KEY == TTYPE::SPECSYMB && peer().VAL == "@") {
+    			advanced();
+		   		auto empusher = make_unique<Node>(peer());
+		   		empusher->KEY = ST_EMPTY;
+		   		empusher->VAL = peer().VAL;
+		   		empusher->left_index = move(left);
+		   		left = move(empusher);
+    		}else {
+    			error("expected '@' in lmpty method");
+    			return nullptr;
+    		}
+	    }else {
+	    	error("unknown method before the dot");
+	    	return nullptr;
 	    }
 	}
 	return left;

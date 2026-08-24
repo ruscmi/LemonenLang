@@ -53,6 +53,16 @@ vector<Token>& LEX::tokenize(const string &code) {
 	    tokens.push_back(T);
 	    continue;
 	  }
+	  if (current == '$' || current == '@') {
+	  	string val(1,current);
+	  	T.KEY = TTYPE::SPECSYMB;
+	  	T.VAL = val; 
+	  	T.LINE = start_line;
+	  	T.COL = start_col;
+	  	tokens.push_back(T);
+	  	step();
+	  	continue;
+	  }
 	  if (char_len > 1 || isalpha(current) || current == '_') {
         string val = "";
         while(i < len) {
