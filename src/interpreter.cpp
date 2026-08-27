@@ -148,27 +148,6 @@ Value interpreter::evaluate(Node* node) {
 	    };
 	    return AcceptValue{};
 	}
-	else if(node->KEY == ST_WAIT) {
-	    Value val = evaluate(node->right_index.get());
-	    if(holds_alternative<ErrorValue>(val)) { return val; }
-	    if(holds_alternative<string>(val)) {
-	        execute_error("are you faggot? why string? here you need numbers",node);
-	        return ErrorValue{"E: are you faggot? why string? here you need numbers"};
-	    }
-	    if(holds_alternative<bool>(val)) {
-	        execute_error("are you faggot? why bool? here you need numbers",node);
-	        return ErrorValue{"E: are you faggot? why bool? here you need numbers"};      
-	    }
-	    if(holds_alternative<shared_ptr<ArrayValue>>(val)) {
-	        execute_error("are you faggot? why array? here you need numbers",node);
-	        return ErrorValue{"E: are you faggot? why array? here you need numbers"};	        
-	    }
-	    if(holds_alternative<double>(val)) {
-	        double seconds = get<double>(val);
-	        this_thread::sleep_for(chrono::milliseconds(static_cast<long long>(seconds * 1000)));
-	    }
-	    return AcceptValue{};
-	}
 	else if(node->KEY == ST_CALL) {
 	    const string name = node->VAL;
 	    vector<Value> ev_args;
@@ -181,29 +160,90 @@ Value interpreter::evaluate(Node* node) {
 	        execute_error("dont have function",node);
             return ErrorValue{};
 	    };
+	    /* TIME __builtin for devs */
+	    if(name == "__builtin_wait") {
+	    	if(ev_args.size() < 1) {
+	    		execute_error("less than fucking 2 arguments passed",node);
+	    		return ErrorValue{};
+	    	}
+		    if(holds_alternative<ErrorValue>(ev_args[0])) { return ev_args[0]; }
+		    if(holds_alternative<string>(ev_args[0])) {
+		        execute_error("are you faggot? why string? here you need numbers",node);
+		        return ErrorValue{"E: are you faggot? why string? here you need numbers"};
+		    }
+		    if(holds_alternative<bool>(ev_args[0])) {
+		        execute_error("are you faggot? why bool? here you need numbers",node);
+		        return ErrorValue{"E: are you faggot? why bool? here you need numbers"};      
+		    }
+		    if(holds_alternative<shared_ptr<ArrayValue>>(ev_args[0])) {
+		        execute_error("are you faggot? why array? here you need numbers",node);
+		        return ErrorValue{"E: are you faggot? why array? here you need numbers"};	        
+		    }
+		    if(holds_alternative<double>(ev_args[0])) {
+		        double seconds = get<double>(ev_args[0]);
+		        this_thread::sleep_for(chrono::milliseconds(static_cast<long long>(seconds * 1000)));
+		    }
+		    return AcceptValue{};
+	    }
+	    if(name == "__builtin_gettime") {
+	    	if(ev_args.size() == 0) {
+		    	auto nowtime = chrono::system_clock::now();
+		    	std::time_t currenttm = chrono::system_clock::to_time_t(nowtime);
+		    	cout<<ctime(&currenttm);
+	    	}
+	    	return AcceptValue{};
+	    }
+	    if(name == "__builtin_zonetime") {
+	    	if(ev_args.empty()) {
+	    		execute_error("less args is empty",node);
+	    		return ErrorValue{};
+	    	}
+	    	if(holds_alternative<ErrorValue>(ev_args[0])) { return ev_args[1]; }
+	    	if(ev_args.size() != 1) {
+	    		execute_error("less than two fucking args",node);
+	    		return ErrorValue{};
+	    	}
+	    	if(!holds_alternative<string>(ev_args[0])) {
+	    		execute_error("The arguments passed in should look like this: continent/city",node);
+	    		return ErrorValue{};
+	    	}
+	    	try {
+		    	auto now = chrono::system_clock::now();
+		    	string get_st = get<string>(ev_args[0]);
+		    	auto local_zone = chrono::locate_zone(get_st);
+		    	auto time_zone = local_zone->to_local(now);
+		    	cout<<std::format("{:%Y-%m-%d %H:%M:%S}\n",time_zone);
+	    	}
+	    	catch(const runtime_error& error) {
+	    		execute_error("unknown timezone name",node);
+	    		return ErrorValue{};
+	    	}
+	    	return AcceptValue{};
+	    }
+	    /* SYSTEM __builtin for devs */
 	    if(name == "__builtin_exec") {
-	        if(ev_args.size() == 1) {
-	            if(!holds_alternative<string>(ev_args[0])) { 
-                    execute_error("current type != STRING",node);
-	                return ErrorValue{};
-	            } 
-	            string cmd = get<string>(ev_args[0]);
-	            int code = system(cmd.c_str());
-	            return (double)code;
-	        }else {
- 	            execute_error("expected exactly one argument",node);
-      	        return ErrorValue{};
- 	        }
-	    }
-	    if(name == "__builtin_getcwd") {
-	        try {
-	            return filesystem::current_path().string();
-	        }
-	        catch(...) {
-	            execute_error("failed to get current directory",node);
-	            return ErrorValue{};
-	        }
-	    }
+   	        if(ev_args.size() == 1) {
+   	            if(!holds_alternative<string>(ev_args[0])) { 
+                   	execute_error("current type != STRING",node);
+   	                return ErrorValue{};
+   	            } 
+   	            string cmd = get<string>(ev_args[0]);
+   	            int code = system(cmd.c_str());
+   	            return (double)code;
+   	        }else {
+   	            execute_error("expected exactly one argument",node);
+   	        	return ErrorValue{};
+   	        }
+   	    }
+   	    if(name == "__builtin_getcwd") {
+   	        try {
+   	            return filesystem::current_path().string();
+   	        }
+   	        catch(...) {
+   	            execute_error("failed to get current directory",node);
+   	            return ErrorValue{};
+   	        }
+   	    }
 	    if(name == "__builtin_read") {
 	        if(ev_args.size() == 1) {
 	            if(!holds_alternative<string>(ev_args[0])) { 

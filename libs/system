@@ -3,36 +3,36 @@
                    system sequences by ruscmi
 -/
 func sys_getos() { 
-    return __builtin_os();
+    return __builtin_os()
 };
 func sys_cd(dir) {
-    return __builtin_chdir(dir);
+    return __builtin_chdir(dir)
 };
 func sys_exec(cmd) {
-    return __builtin_exec(cmd);
+    return __builtin_exec(cmd)
 };
 func sys_read(msg) {
-    return __builtin_read(msg);
+    return __builtin_read(msg)
 };
 func sys_sleep() {
-    current_os = sys_getos();
+    current_os = sys_getos()
     if(current_os == "linux") {
-        sys_exec("systemctl poweroff");
+        sys_exec("systemctl poweroff")
     }
     else if(current_os == "windows") {
-        sys_exec("shutdown /s /t 0");
+        sys_exec("shutdown /s /t 0")
     }
     else if(current_os == "android") {
-        sys_exec("echo shutdown android only on root");
-        sys_exec("su -c reboot -p");
+        sys_exec("echo shutdown android only on root")
+        sys_exec("su -c reboot -p")
     }
     else if(current_os == "macos") {
-        sys_exec("sudo shutdown -h now");
+        sys_exec("sudo shutdown -h now")
     }
     else {
-        sys_exec("echo i dont know this system");
+        sys_exec("echo i dont know this system")
     }
 };
 func sys_getcwd() {
-    return __builtin_getcwd();
+    return __builtin_getcwd()
 };

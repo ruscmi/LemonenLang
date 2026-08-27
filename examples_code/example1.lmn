@@ -1,0 +1,9 @@
+// lmnlang
+
+// prints,constants and more
+lmuck("hello,world!");
+ex1 = 5 + 5; ex2 = 5 - 5;
+func value() {
+	lmuck( ex1 - ex2 )
+};
+value()

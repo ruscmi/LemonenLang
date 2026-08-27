@@ -1,0 +1,16 @@
+/-
+	lmnlib - GPL v2.0 - see LICENSE or main.cpp file for details
+                   time sequences by ruscmi
+-/
+
+func time_lmit(time) {
+	__builtin_wait(time)
+};
+
+func time_current() {
+	__builtin_gettime()
+};
+
+func time_zone(time) {
+	__builtin_zonetime(time)
+};

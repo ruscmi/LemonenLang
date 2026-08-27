@@ -16,7 +16,6 @@ public:
 	void error(const std::string& msg);
 	std::unique_ptr<Node> parse_program();
 	std::unique_ptr<Node> parse_for();
-	std::unique_ptr<Node> parse_wait();
     std::unique_ptr<Node> parse_func();
     std::unique_ptr<Node> parse_return();
     std::unique_ptr<Node> parse_len();

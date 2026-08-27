@@ -4,137 +4,137 @@
 -/
 
 func str_invertion(string) {
-    len_string = lmlen(string);
-    str_comp = "";
-    i = len_string - 1;
+    len_string = lmlen(string)
+    str_comp = ""
+    i = len_string - 1
     while(i >= 0) {
-        str_comp = str_comp,string[i];
-        i = i - 1;
-    };
-    return str_comp;
+        str_comp = str_comp,string[i]
+        i = i - 1
+    }
+    return str_comp
 };
 func str_repeat(string,count) {
     if(count <= 0 ) {
-        return "";
-    };
-    if(count == 1) {
-        return string;
-    };
-    res = "";
-    i = 0;
-    while(i < count) {
-        res = res,string;
-        i = i + 1;
+        return ""
     }
-    return res;
+    if(count == 1) {
+        return string
+    }
+    res = ""
+    i = 0
+    while(i < count) {
+        res = res,string
+        i = i + 1
+    }
+    return res
 };
 func str_substring(string,start,length) {
     if(start < 0 || start >= lmlen(string)) {
-        return "";
-    };
+        return ""
+    }
     if(length <= 0) {
-        return "";
-    };
+        return ""
+    }
     if(start + length > lmlen(string)) {
-        length = lmlen(string) - start;
-    };
-    res = "";
-    i = start;
-    finish = start + length;
+        length = lmlen(string) - start
+    }
+    res = ""
+    i = start
+    finish = start + length
     while(i < finish) {
-        res = res,string[i];
-        i = i + 1;
-    };
-    return res;
+        res = res,string[i]
+        i = i + 1
+    }
+    return res
 };
 func str_trim(string) {
     if(lmlen(string) == 0) {
-        return "";
+        return ""
     }
-    len = lmlen(string);
-    start = 0;
-    str = string[start];
+    len = lmlen(string)
+    start = 0
+    str = string[start]
     while(str == "\t" || str == "\n" || str == "\r" || str == " ") {
-        start = start + 1;
+        start = start + 1
         if(start == len) {
-            return "";
+            return ""
         }
-        str = string[start];
+        str = string[start]
     }
-    end = len - 1;
-    end_str = string[end];
+    end = len - 1
+    end_str = string[end]
     while(end >= start) {
         if(end_str != "\t" || end_str != "\n" || end_str != "\r" || end_str != " ") {
-            break;
-        };
-        end = end - 1;
-        end_str = string[end];
-    };
-    accept_str = (end - start) + 1;
-    res = str_substring(string,start,accept_str);
-    return res;
-};
-func str_join(array,delim) {
-    len = lmlen(array);
-    if(len == 0) {
-        return "";
-    }else {
-        res = array[0];
-        i = 1;
-        while(i < len) {
-            res = res,delim,array[i];
-            i = i + 1
-        };
-    };
-    return res;
+            break
+        }
+        end = end - 1
+        end_str = string[end]
+    }
+    accept_str = (end - start) + 1
+    res = str_substring(string,start,accept_str)
+    return res
 };
 func str_split(string) {
-    null_word = "";
-    result = [];
-    i = 0;
-    len = lmlen(string);
-    in_quotes = false;
-    quote_char = "";
+    null_word = ""
+    result = []
+    i = 0
+    len = lmlen(string)
+    in_quotes = false
+    quote_char = ""
     while(i < len) {
-        c = string[i];
+        c = string[i]
         if(in_quotes) {
             if(c == quote_char) {
-                in_quotes = false;
-                quote_char = "";
+                in_quotes = false
+                quote_char = ""
             } else {
-                null_word = null_word, c;
-            };
+                null_word = null_word, c
+            }
         } 
         else {
             if(c == "\"") {
-                in_quotes = true;
-                quote_char = c;
+                in_quotes = true
+                quote_char = c
             } else if(c == "'") {
-                in_quotes = true;
-                quote_char = c;
+                in_quotes = true
+                quote_char = c
             } else if(c == " ") {
                 if(lmlen(null_word) > 0) {
                     result.lmpush(null_word);
-                    null_word = "";
-                };
+                    null_word = ""
+                }
             } else if(c == "\t") {
                 if(lmlen(null_word) > 0) {
                     result.lmpush(null_word);
-                    null_word = "";
-                };
+                    null_word = ""
+                }
             } else if(c == "\n") {
                 if(lmlen(null_word) > 0) {
                     result.lmpush(null_word);
-                    null_word = "";
-                };
+                    null_word = ""
+                }
             } else {
-                null_word = null_word, c;
-            };
-        };
-        i = i + 1;
-    };
+                null_word = null_word, c
+            }
+        }
+        i = i + 1
+    }
     if(lmlen(null_word) > 0) {
-        result.lmpush(null_word);
-    };
-    return result;
-}
+        result.lmpush(null_word)
+    }
+    return result
+};
+func str_join(array,delim) {
+    len = lmlen(array)
+    if(len == 0) {
+        return ""
+    }else {
+        res = array[0]
+        i = 1
+        while(i < len) {
+            res = res,delim,array[i]
+            i = i + 1
+        }
+    }
+    return res
+};

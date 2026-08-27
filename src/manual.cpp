@@ -43,6 +43,7 @@ unique_ptr<Node> Parser::parse_manual() {
  types - see all data types
  func - see examples using functions
  wait - see lmit command manual
+ empty - see empty func manual
  lib - use lib + <arg> or lib list
  dictionaries - see manual to use dictionares)"<<resbc<<endl;
 		}
@@ -62,16 +63,6 @@ unique_ptr<Node> Parser::parse_manual() {
     example:
         dict["age"] = 15;
  that's all for big dick)"<<resbc<<endl;
-		}
-		else if(peer().KEY == TTYPE::STRING && peer().VAL == "wait") {
-		    advanced();
-		    cout<<bluec<<R"(   for use wait command
-		    it makes the program fall asleep for a certain amount of time
-Use the 'lmit' keyword.
-    example:
-        lmuck("L",lmit(1),"M",lmit(1),"N");
-it's all thx for huge tits.
-		    )"<<resbc<<endl;
 		}
 		else if(peer().KEY == TTYPE::STRING && peer().VAL == "func") {
 		    advanced();
@@ -117,6 +108,7 @@ ansi - see manual for ansi lib
 string - see manual for string lib
 random - see manual for random lib
 system - see manual for system lib
+time - see manual for time lib
 for load libs or file use:
     lmport(lib)
 or for file:
@@ -132,6 +124,18 @@ example:
     rnd_randint(1,10);
 execute a number from 1 to 10
 this all thx for reading manual)"<<resbc<<endl;
+		    }
+		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "time") {
+		    	advanced();
+		    	cout<<bluec<<R"(wait lib have:
+time_lmit(time),time_current() and time_zone(timezone)
+format:
+	time_lmit(1) - wait a 1 seconds and again work
+
+	time_current() - get current time on your OS
+
+	time_zone("Europe/Moscow") - get time zone in Moscow
+thx for reading man)"<<resbc<<endl;
 		    }
 		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "string") {
 		        advanced();
@@ -206,6 +210,20 @@ this is all thx for reading)"<<resbc<<endl;
 		        advanced();
 		        cout<<bluec<<R"(use: lib + <arg> see lib list)"<<resbc<<endl;
 		    }
+		}
+		else if (peer().KEY == TTYPE::STRING && peer().VAL == "empty") {
+			advanced();
+			cout<<bluec<<R"(empty checks an array or dictionary 
+for its voidness by returning "yes" or "no" and using keyword "lmpty"
+example arr:
+	x = [];
+	x.lmpty@
+execute "yes"
+example dict:
+	x = { "name":"ruscmi" };
+	x.lmpty@
+execute "no"
+thx for reading)"<<resbc<<endl;
 		}
 		else if (peer().KEY == TTYPE::STRING && peer().VAL == "operators") {
             advanced();

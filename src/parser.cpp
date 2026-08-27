@@ -119,7 +119,7 @@ unique_ptr<Node> Parser::parse_for() {
                 return nullptr;
             }
             if(peer().KEY == TTYPE::END_EX) {
-                advanced();
+				advanced();
             }
             if(peer().KEY == TTYPE::END) {
                 error("expected TTYPE::END in ST_BLOCK");
@@ -139,33 +139,6 @@ unique_ptr<Node> Parser::parse_for() {
     for_node->children.push_back(move(three_ex));
     for_node->children.push_back(move(then_node));
     return for_node;
-}
-unique_ptr<Node> Parser::parse_wait() {
-    auto lmit = make_unique<Node>(peer());
-    lmit->KEY = ST_WAIT;
-    lmit->VAL = "lmit";
-    lmit->left_index = nullptr;
-    lmit->right_index = nullptr;
-    if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
-        advanced();
-        if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
-            advanced();   
-        }else {
-            unique_ptr<Node>expr = parse_expression();
-            lmit->right_index = move(expr);
-            if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
-                advanced();
-            }else {
-                error("expected ')' in lmit");
-                return nullptr;
-            }    
-        }
-        return lmit; 
-    }else {
-        error("expected '(' in lmit");
-        return nullptr;
-    }
-    return nullptr;
 }
 unique_ptr<Node> Parser::parse_func() {
     unique_ptr<Node> expr = nullptr;
@@ -221,9 +194,9 @@ unique_ptr<Node> Parser::parse_func() {
                     error("TTYPE::END in block return null");
                     return nullptr;
                 }
-                if(peer().KEY == TTYPE::END_EX) {
-                    advanced();
-                }
+				if(peer().KEY == TTYPE::END_EX) {
+					advanced();
+	            }
                 expr = parse_statement();
                 if(expr) {
                     then_node->children.push_back(move(expr));
@@ -413,11 +386,10 @@ unique_ptr<Node> Parser::parse_while() {
                         return nullptr;
                     }
                     if(peer().KEY == TTYPE::END_EX) {
-                        advanced();
+						advanced();
                     }
                     if(peer().KEY == TTYPE::END) {
-                        error("expected TTYPE::END in ST_BLOCK");
-                        return nullptr;
+						advanced();
                     }
                 }
                 advanced();
@@ -483,9 +455,9 @@ unique_ptr<Node> Parser::parse_if() {
                         error("expected statement logic in ST_BLOCK");
                         return nullptr;
                     }
-                    if(peer().KEY == TTYPE::END_EX) {
-                        advanced();
-                    }
+					if(peer().KEY == TTYPE::END_EX) {
+						advanced();
+		            }
                     if(peer().KEY == TTYPE::END) {
                         error("expected TTYPE::END in ST_BLOCK");
                         return nullptr;
@@ -523,7 +495,7 @@ unique_ptr<Node> Parser::parse_if() {
                     return nullptr;
                 }
                 if(peer().KEY == TTYPE::END_EX) {
-                    advanced();
+					advanced();
                 }
                 if(peer().KEY == TTYPE::END) {
                     error("expected '}' in ST_BLOCK");
@@ -764,10 +736,6 @@ unique_ptr<Node> Parser::parse_factor() {
 	    else if(current.VAL == "lmtod") {
 	        advanced();
 	        left = parse_stod();
-	    }
-	    else if(current.VAL == "lmit") {
-	        advanced();
-	        left = parse_wait();
 	    }
         else if(current.VAL == "lmtype") {
             advanced();
