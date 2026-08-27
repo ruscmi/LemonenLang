@@ -476,6 +476,9 @@ Value interpreter::evaluate(Node* node) {
 	    if(holds_alternative<shared_ptr<ArrayValue>>(right)) {
 	        return string("ARR");
 	    }
+	    if(holds_alternative<shared_ptr<DictValue>>(right)) {
+	    	return string("DICT");
+	    }
 	    return AcceptValue{};
 	}
 	else if(node->KEY == ST_BREAK) {

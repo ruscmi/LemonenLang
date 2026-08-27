@@ -6,9 +6,9 @@ lmport(ansi);
 
 RAND = { 
     "seed" : 123456789,
-    "a" : 1103515245,
-    "c" : 12345,
-    "m" : 2147483648 
+    "a" : 16807,
+    "c" : 0,
+    "m" : 2147483647 
 };
 func next_raw() {
     RAND["seed"] = (RAND["a"] * RAND["seed"] + RAND["c"]) % RAND["m"]
