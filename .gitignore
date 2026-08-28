@@ -2,3 +2,4 @@
 *.out
 build/
 .DS_Store
+ruscmi_f/
