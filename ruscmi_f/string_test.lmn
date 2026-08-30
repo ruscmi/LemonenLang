@@ -1,0 +1,9 @@
+/-
+    Test 3: String realloc & Concat
+-/
+big_str = "";
+for (k = 0; k < 500000; k = k + 1) {
+    big_str = big_str,"A"
+};
+
+lmuck("String length:", lmlen(big_str))

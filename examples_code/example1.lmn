@@ -1,9 +1,15 @@
 // lmnlang
-
 // prints,constants and more
+x = lmtype(true);
+if(x == "BOOL") {
+	lmuck(5)
+};
 lmuck("hello,world!");
 ex1 = 5 + 5; ex2 = 5 - 5;
 func value() {
 	lmuck( ex1 - ex2 )
+	lmport(random)
+	rnd_randint(1,21)
+	lmport(system) sys_exec("echo хуй")
 };
 value()

@@ -1,0 +1,33 @@
+/- test interpreter complete -/
+
+// by ruscmi
+
+lmport(time);
+lmport(random);
+lmport(ansi);
+
+cont = lmout("continue?('y'/'n'): ");
+if(lmtype(cont) == "STR" && cont == "n") lmuck(bye);
+if(lmtype(cont) == "STR" && cont == "y") {
+
+	lmuck("okay")
+	for(i = 1; i < 6; i = i + 1) {
+		lmuck(i,"..")
+		time_lmit(1);
+	}
+	time_current();
+	lmuck("load 1 sec")
+	time_lmit(1);
+	arr = []
+    for(k = 1; k < 1000001; k = k + 1) {
+		arr.lmpush(rnd_randint(1,10001))    	
+    }
+    clear_screen();
+    lmuck("load 1 sec")
+    time_lmit(1);
+    time_current();
+    lmuck(lmlen(arr))
+    lmuck("test succeful")
+}else {
+	lmuck("unknown govno")
+} 

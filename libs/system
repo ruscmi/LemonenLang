@@ -36,3 +36,6 @@ func sys_sleep() {
 func sys_getcwd() {
     return __builtin_getcwd()
 };
+func sys_keypressed(key) {
+	return __builtin_keypressed(key)
+};

@@ -46,4 +46,14 @@ else
         echo " echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc && source ~/.bashrc or if you use zsh: ~/.zshrc"
     fi
 fi
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+	if ! id -nG "$USER" | grep -qw "input"; then
+	echo -e "\033[1;33mWarn: For keypressed func on system lib give rights"
+	echo "Run this command: "
+	echo "sudo usermod -aG input $USER"
+	fi
+fi
+if [ "$NEED_SETCAP" = "1" ] || ! id -nG "$USER" | grep -qw "input"; then
+    sudo setcap cap_dac_read_search=+ep ./lmnlang >/dev/null 2>&1
+fi
 echo "succefull"
