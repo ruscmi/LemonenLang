@@ -1,0 +1,29 @@
+// test keypress lmnlang
+lmport(system);
+lmport(time);
+while(true){
+	if(sys_keypressed("left")) {
+		lmuck("left");
+	}
+	else if(sys_keypressed("up")) {
+		lmuck("up");
+	} 
+	else if(sys_keypressed("down")) {
+		lmuck("down");
+	}
+	else if(sys_keypressed("right")) {
+		lmuck("right");
+	}
+	else if(sys_keypressed("a")) {
+		lmuck("a");
+	}
+	else if(sys_keypressed("b")) {
+		lmuck("b");
+	}
+	else if(sys_keypressed("c")) {
+		lmuck("c");
+	} 
+	else if(sys_keypressed("c") && sys_keypressed("up")) {
+		lmuck("c + up")
+	}
+}

@@ -1,0 +1,18 @@
+/-
+    Test 2: Memory & Garbage Collection (100k objects)
+-/
+lmport(ansi);
+
+matrix = [];
+for (i = 0; i < 100000; i = i + 1) {
+    // Каждую итерацию аллоцируем словарь с массивом внутри
+    obj = {
+        "id": i,
+        "payload": [i, i + 1, i + 2],
+        "active": true
+    }
+    matrix.lmpush(obj)
+};
+
+lmuck("Matrix len:", lmlen(matrix));
+lmuck("Sample element payload:", matrix[99999]["payload"]);

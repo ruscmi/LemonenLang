@@ -8,7 +8,11 @@
 #include <format>
 #include <iostream>
 #if defined(__linux__) || defined(__APPLE__)
+#include <linux/input-event-codes.h>
 #include <readline/readline.h>
+#include <fcntl.h>
+#include <linux/input.h>
+#include <termios.h>
 #endif
 #include <cmath>
 #include <filesystem>
@@ -221,6 +225,121 @@ Value interpreter::evaluate(Node* node) {
 	    	return AcceptValue{};
 	    }
 	    /* SYSTEM __builtin for devs */
+	    if(name == "__builtin_keypressed") {
+		    if(ev_args.size() != 1) {
+		    	execute_error("expected arguments < 1",node);
+		    	return ErrorValue{};
+		    }
+		    if(!holds_alternative<string>(ev_args[0])) {
+		    	execute_error("zero arg is not string",node);
+		    	return ErrorValue{};
+		    }
+	    	#if defined(__linux__)
+	    		static const unordered_map<string,int>KEY_MAP = {
+	    			{"up",KEY_UP},{"down",KEY_DOWN},
+	    			{"left",KEY_LEFT},{"right",KEY_RIGHT},
+	    			{"a",KEY_A},{"b",KEY_B},{"c",KEY_C},
+	    			{"d",KEY_D},{"s",KEY_S},{"v",KEY_V},
+	    			{"q",KEY_Q},{"e",KEY_E},{"r",KEY_R},
+	    			{"x",KEY_X},{"n",KEY_N},{"h",KEY_H},
+	    			{"y",KEY_Y},{"w",KEY_W},{"j",KEY_J},
+	    			{"z",KEY_Z},{"m",KEY_M},{"l",KEY_L},
+	    			{"p",KEY_P},{"f",KEY_F},{"k",KEY_K},
+	    			{"t",KEY_T},{"g",KEY_G},{"o",KEY_O},
+	    			{"u",KEY_U},{"i",KEY_I},{"space",KEY_SPACE},
+	    			{"right_shift",KEY_RIGHTSHIFT},{"left_shift",KEY_LEFTSHIFT},
+	    			{"enter",KEY_ENTER},{"backspace",KEY_BACKSPACE},
+	    			{"tab",KEY_TAB},{"caps",KEY_CAPSLOCK},{"left_ctrl",KEY_LEFTCTRL},
+	    			{"right_ctrl",KEY_RIGHTCTRL},{"left_alt",KEY_LEFTALT},{"right_alt",KEY_RIGHTALT},
+	    			{"1",KEY_1},{"2",KEY_2},{"3",KEY_3},{"4",KEY_4},
+	    			{"5",KEY_5},{"6",KEY_6},{"7",KEY_7},{"8",KEY_8},{"9",KEY_9},{"0",KEY_0},
+	    			{"-",KEY_MINUS},{"_",KEY_MINUS},{"+",KEY_EQUAL},{"=",KEY_EQUAL},{"[",KEY_LEFTBRACE},
+	    			{"]",KEY_RIGHTBRACE},{"<",KEY_COMMA},{">",KEY_DOT},{",",KEY_COMMA},{".",KEY_DOT},
+	    			{"/",KEY_SLASH},{"\\",KEY_BACKSLASH},{"`",KEY_GRAVE},{"ctrl",KEY_LEFTCTRL},{"shift",KEY_LEFTSHIFT},
+	    			{"alt",KEY_LEFTALT},{";",KEY_SEMICOLON},{":",KEY_SEMICOLON},{"'",KEY_APOSTROPHE},{"\"",KEY_APOSTROPHE},
+	    			{"~",KEY_GRAVE},{"?",KEY_SLASH},{"esc",KEY_ESC},{"delete",KEY_DELETE},{"insert",KEY_INSERT},{"home",KEY_HOME},
+	    			{"end",KEY_END},{"pageup",KEY_PAGEUP},{"pagedown",KEY_PAGEDOWN},{"f1",KEY_F1},{"f2",KEY_F2},{"f3",KEY_F3},{"f4",KEY_F4},
+	    			{"f5",KEY_F5},{"f6",KEY_F6},{"f7",KEY_F7},{"f8",KEY_F8},{"f9",KEY_F9},{"f10",KEY_F10},{"f11",KEY_F11},{"f12",KEY_F12},
+	    			{"win",KEY_LEFTMETA},{"super",KEY_LEFTMETA},{"meta",KEY_LEFTMETA},{"right_win",KEY_RIGHTMETA},{"right_super",KEY_RIGHTMETA},
+	    			{"num_0",KEY_KP0},{"num_1",KEY_KP1},{"num_2",KEY_KP2},{"num_3",KEY_KP3},{"num_4",KEY_KP4},{"num_5",KEY_KP5},{"num_6",KEY_KP6},
+	    			{"num_7",KEY_KP7},{"num_8",KEY_KP8},{"num_9",KEY_KP9},{"num_enter",KEY_KPENTER},{"num_plus",KEY_KPPLUS},{"num_minus",KEY_KPMINUS},
+	    			{"num_mul",KEY_KPASTERISK},{"num_div",KEY_KPSLASH},{"num_dot",KEY_KPDOT},{"num_lock",KEY_NUMLOCK}
+	    		};
+	    	#elif defined(_WIN32) || defined(_WIN64)
+	    		static const unordered_map<string,int>KEY_MAP = {
+	    			{"up",VK_UP},{"down",VK_DOWN},
+	    			{"left",VK_LEFT},{"right",VK_RIGHT},
+	    			{"a",'A'},{"b",'B'},{"c",'C'},{"d",'D'},
+	    			{"q",'Q'},{"w",'W'},{"e",'E'},{"r",'R'},
+	    			{"t",'T'},{"y",'Y'},{"u",'U'},{"i",'I'},
+	    			{"p",'P'},{"o",'O'},{"s",'S'},{"f",'F'},
+	    			{"g",'G'},{"h",'H'},{"j",'J'},{"k",'K'},
+	    			{"l",'L'},{"z",'Z'},{"x",'X'},{"v",'V'},
+	    			{"n",'N'},{"m",'M'},{"1",'1'},{"2",'2'},
+	    			{"3",'3'},{"4",'4'},{"5",'5'},{"6",'6'},
+	    			{"7",'7'},{"8",'8'},{"9",'9'},{"0",'0'},
+	    			{"space",VK_SPACE},{"enter",VK_RETURN},
+	    			{"backspace",VK_BACK},{"tab",VK_TAB},
+	    			{"caps",VK_CAPITAL},{"ctrl",VK_CONTROL},
+	    			{"left_ctrl",VK_LCONTROL},{"right_ctrl",VK_RCONTROL},
+	    			{"shift",VK_SHIFT},{"right_shift",VK_RSHIFT},{"left_shift",VK_LSHIFT},
+	    			{"alt",VK_MENU},{"left_alt",VK_LMENU},{"right_alt",VK_RMENU},
+	    			{"win",VK_LWIN},{"super",VK_LWIN},{"right_win",VK_RWIN},
+	  				{"-",VK_OEM_MINUS},{"_",VK_OEM_MINUS},{"+",VK_OEM_PLUS},{"=",VK_OEM_PLUS},
+	  				{"[",VK_OEM_4},{"]",VK_OEM_6},{",",VK_OEM_COMMA},{"<",VK_OEM_COMMA},{".",VK_OEM_PERIOD},
+	  				{">",VK_OEM_PERIOD},{"/",VK_OEM_2},{"?",VK_OEM_2},{"\\",VK_OEM_5},{"`",VK_OEM_3},{"~",VK_OEM_3},
+	  				{";",VK_OEM_1},{":",VK_OEM_1},{"'",VK_OEM_7},{"\"",VK_OEM_7},
+	  				{"f1",VK_F1},{"f2",VK_F2},{"f3",VK_F3},{"f4",VK_F4},{"f5",VK_F5},{"f6",VK_F6},{"f7",VK_F7},{"f8",VK_F8},
+	  				{"f9",VK_F9},{"f10",VK_F10},{"f11",VK_F11},{"f12",VK_F12},{"num_0",VK_NUMPAD0},{"num_1",VK_NUMPAD1},
+	  				{"num_2",VK_NUMPAD2},{"num_3",VK_NUMPAD3},{"num_4",VK_NUMPAD4},{"num_5",VK_NUMPAD5},{"num_6",VK_NUMPAD6},
+	  				{"num_7",VK_NUMPAD7},{"num_8",VK_NUMPAD8},{"num_9",VK_NUMPAD9},{"num_enter",VK_RETURN},{"num_plus",VK_ADD},
+	  				{"num_minus",VK_SUBTRACT},{"num_div",VK_DIVIDE},{"num_dot",VK_DECIMAL},{"num_lock",VK_NUMLOCK},{"num_mul",VK_MULTIPLY},
+	  				{"esc",VK_ESCAPE},{"delete",VK_DELETE},{"home",VK_HOME},{"pageup",VK_PRIOR},{"pagedown",VK_NEXT},{"insert",VK_INSERT},{"end",VK_END}
+	    		};
+	    	#else
+	    		#error "expected unknown fucking OS"
+	    	#endif
+	    	string key_name = get<string>(ev_args[0]);
+    		auto it = KEY_MAP.find(key_name);
+    		if(it == KEY_MAP.end()) {
+    			return (double)0;
+    		}
+    		int ac_code = it->second;
+    		#if defined(_WIN32) || defined(_WIN64)
+    			SHORT state = GetAsyncKeyState(ac_code);
+    			bool is_pressed = (state & 0x8000) != 0;
+    			return (double)(is_pressed ? 1 : 0);
+    		#elif defined(__linux__)
+    		    static unordered_map<int, bool> glob_k_stat;
+    		    static bool initialized = false;
+    		    static vector<int> fds;
+    		    if (!initialized) {
+    		        for(int i = 0; i < 32; ++i) {
+    		            string dev_path = "/dev/input/event" + to_string(i);
+    		            int fd = open(dev_path.c_str(), O_RDONLY | O_NONBLOCK);
+    		            if (fd >= 0) {
+    		                fds.push_back(fd);
+    		            }
+    		        }
+    		        initialized = true;
+    		    }
+    		    struct input_event ev;
+    		    for (int fd : fds) {
+    		        while(read(fd, &ev, sizeof(struct input_event)) > 0) {
+    		            if(ev.type == EV_KEY) {
+    		                if(ev.value == 1 || ev.value == 2) {
+    		                    glob_k_stat[ev.code] = true;
+    		                } else if(ev.value == 0) {
+    		                    glob_k_stat[ev.code] = false;
+    		                }
+    		            }
+    		        }
+    		    }
+    		    return (double)(glob_k_stat[ac_code] ? 1 : 0);
+    		#else
+    			#error "expected unknown fucking OS"
+    		#endif
+	    }
 	    if(name == "__builtin_exec") {
    	        if(ev_args.size() == 1) {
    	            if(!holds_alternative<string>(ev_args[0])) { 
