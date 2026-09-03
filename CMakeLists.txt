@@ -12,6 +12,7 @@ find_library(READLINE_LIBRARY NAMES readline)
 if(NOT READLINE_LIBRARY)
     message(FATAL_ERROR "libreadline not found! Please install readline development files.")
 endif()
+add_compile_definitions(NO_FONT_AWESOME)
 add_executable(lmnlang
     src/main.cpp
     src/lexer.cpp
@@ -19,6 +20,12 @@ add_executable(lmnlang
     src/ast.cpp
     src/interpreter.cpp
     src/manual.cpp
+    # imguilib/imgui/imgui.cpp
+    # imguilib/imgui/imgui_draw.cpp
+    # imguilib/imgui/imgui_widgets.cpp
+    # imguilib/imgui/imgui_tables.cpp
+    # imguilib/imgui/imgui_demo.cpp
+    # imguilib/rlImGui/rlImGui.cpp
 )
 target_link_libraries(lmnlang PRIVATE ${READLINE_LIBRARY})
 include(GNUInstallDirs)

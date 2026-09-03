@@ -1,0 +1,55 @@
+/-
+	lmnlib - GPL v2.0 - see LICENSE or main.cpp file for details
+                   math sequences by ruscmi
+-/
+
+// FUNCTIONS
+
+func math_iseven(num) {
+	if(lmtype(num) == "NUM") {
+		if(num % 2 == 0) {
+			return "yes"
+		}
+		else if(num % 2 != 0) {
+			return "no"
+		}
+	}else {
+		return "unknown datatype"
+	}
+};
+func math_degree(num,deg) {
+	if(deg == 0) {
+		return 1;
+	}
+	if(deg < 0) {
+		num = 1 / num
+		deg = -deg
+	}
+	res = 1
+	while(deg > 0) {
+		if(deg % 2 != 0) {
+			res = res * num
+		}
+		num = num * num
+		deg = (deg - (deg % 2)) / 2 
+	}
+	return res
+};
+func math_floor(num) {
+	if( num >= 0) {
+		return num - ( num % 1 )
+	}else {
+		rem = num % 1
+		if(rem == 0) {
+			return num
+		}
+		return num - rem - 1
+	}
+};
+
+// CONSTANTS
+
+math_constPI = 3.14159265;
+math_constE = 2.71828182;
+math_inf = math_degree(10,309);
+math_nan = math_floor(math_inf);

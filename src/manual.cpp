@@ -109,6 +109,7 @@ string - see manual for string lib
 random - see manual for random lib
 system - see manual for system lib
 time - see manual for time lib
+math - see manual for math lib
 for load libs or file use:
     lmport(lib)
 or for file:
@@ -125,6 +126,29 @@ example:
 execute a number from 1 to 10
 this all thx for reading manual)"<<resbc<<endl;
 		    }
+		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "math") {
+		    	advanced();
+		    	cout<<bluec<<R"(math lib has constants 
+and functions:
+
+functions:
+	math_iseven(10) - determines whether a number is even
+
+	math_degree(10,10) - raises a number to a power
+
+	math_floor(10.10) - converts a double to an int
+
+constants:
+
+	math_constPI - The value of pi is approximately 3.14159265.
+
+	math_constE - Euler's number is approximately 2.71828182. 
+
+	math_inf - it exceeds the limit of 308 zeros for the double type and creates an infinite value
+
+    math_nan - is indeterminate (for example, if you subtract infinity from infinity)
+this all thx for reading manual)"<<resbc<<endl;
+		    }
 		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "time") {
 		    	advanced();
 		    	cout<<bluec<<R"(wait lib have:
@@ -135,6 +159,10 @@ format:
 	time_current() - get current time on your OS
 
 	time_zone("Europe/Moscow") - get time zone in Moscow
+
+	time_gettime() - provides the time starting from 1970 (the creation of Unix)
+
+	time_format(10) - formats the time elapsed since January 1, 1970 (the value must be in seconds)
 thx for reading man)"<<resbc<<endl;
 		    }
 		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "string") {

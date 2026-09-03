@@ -167,21 +167,21 @@ Value interpreter::evaluate(Node* node) {
 	    /* TIME __builtin for devs */
 	    if(name == "__builtin_wait") {
 	    	if(ev_args.size() < 1) {
-	    		execute_error("less than fucking 2 arguments passed",node);
+	    		execute_error("less than two arguments passed",node);
 	    		return ErrorValue{};
 	    	}
 		    if(holds_alternative<ErrorValue>(ev_args[0])) { return ev_args[0]; }
 		    if(holds_alternative<string>(ev_args[0])) {
-		        execute_error("are you faggot? why string? here you need numbers",node);
-		        return ErrorValue{"E: are you faggot? why string? here you need numbers"};
+		        execute_error("why string? here you need numbers",node);
+		        return ErrorValue{"why string? here you need numbers"};
 		    }
 		    if(holds_alternative<bool>(ev_args[0])) {
-		        execute_error("are you faggot? why bool? here you need numbers",node);
-		        return ErrorValue{"E: are you faggot? why bool? here you need numbers"};      
+		        execute_error("why bool? here you need numbers",node);
+		        return ErrorValue{"why bool? here you need numbers"};      
 		    }
 		    if(holds_alternative<shared_ptr<ArrayValue>>(ev_args[0])) {
-		        execute_error("are you faggot? why array? here you need numbers",node);
-		        return ErrorValue{"E: are you faggot? why array? here you need numbers"};	        
+		        execute_error("why array? here you need numbers",node);
+		        return ErrorValue{"why array? here you need numbers"};	        
 		    }
 		    if(holds_alternative<double>(ev_args[0])) {
 		        double seconds = get<double>(ev_args[0]);
@@ -197,6 +197,24 @@ Value interpreter::evaluate(Node* node) {
 	    	}
 	    	return AcceptValue{};
 	    }
+	    if(name == "__builtin_spectime") {
+			if(ev_args.size() == 0) {
+				auto nowtime = chrono::system_clock::now();
+				auto seconds = chrono::duration_cast<chrono::seconds>(nowtime.time_since_epoch()).count();
+				return Value(static_cast<double>(seconds));
+			}
+	    }
+	    if(name == "__builtin_consttime") {
+	    	if(ev_args.size() == 1) {
+				double raw_sec = get<double>(ev_args[0]);
+				time_t tm_sec = static_cast<time_t>(raw_sec);
+				string time_str = ctime(&tm_sec);
+				if(!time_str.empty() && time_str.back() == '\n') {
+					time_str.pop_back();
+				}
+				return Value(time_str);
+	    	}
+	    }
 	    if(name == "__builtin_zonetime") {
 	    	if(ev_args.empty()) {
 	    		execute_error("less args is empty",node);
@@ -204,7 +222,7 @@ Value interpreter::evaluate(Node* node) {
 	    	}
 	    	if(holds_alternative<ErrorValue>(ev_args[0])) { return ev_args[1]; }
 	    	if(ev_args.size() != 1) {
-	    		execute_error("less than two fucking args",node);
+	    		execute_error("less than two args",node);
 	    		return ErrorValue{};
 	    	}
 	    	if(!holds_alternative<string>(ev_args[0])) {
@@ -297,7 +315,7 @@ Value interpreter::evaluate(Node* node) {
 	  				{"esc",VK_ESCAPE},{"delete",VK_DELETE},{"home",VK_HOME},{"pageup",VK_PRIOR},{"pagedown",VK_NEXT},{"insert",VK_INSERT},{"end",VK_END}
 	    		};
 	    	#else
-	    		#error "expected unknown fucking OS"
+	    		#error "expected unknown OS"
 	    	#endif
 	    	string key_name = get<string>(ev_args[0]);
     		auto it = KEY_MAP.find(key_name);
@@ -327,7 +345,7 @@ Value interpreter::evaluate(Node* node) {
     		    for (int fd : fds) {
     		        while(read(fd, &ev, sizeof(struct input_event)) > 0) {
     		            if(ev.type == EV_KEY) {
-    		                if(ev.value == 1 || ev.value == 2) {
+    		                if(ev.value == 1) {
     		                    glob_k_stat[ev.code] = true;
     		                } else if(ev.value == 0) {
     		                    glob_k_stat[ev.code] = false;
@@ -335,9 +353,11 @@ Value interpreter::evaluate(Node* node) {
     		            }
     		        }
     		    }
-    		    return (double)(glob_k_stat[ac_code] ? 1 : 0);
+    		    bool is_pressed = glob_k_stat[ac_code];
+    		    glob_k_stat[ac_code] = false;
+    		    return (double)(is_pressed ? 1 : 0);
     		#else
-    			#error "expected unknown fucking OS"
+    			#error "expected unknown OS"
     		#endif
 	    }
 	    if(name == "__builtin_exec") {
@@ -450,7 +470,7 @@ Value interpreter::evaluate(Node* node) {
 	        }
 	    }
 	    if(!found_func) {
-	        execute_error("not found fucked function",node);
+	        execute_error("not found function",node);
 	        return ErrorValue{};
 	    }
 	    vector<Value>evaluated_args;
@@ -563,12 +583,12 @@ Value interpreter::evaluate(Node* node) {
 	        return (double)val_expr.length();
 	    }
 	    if(holds_alternative<double>(val)) {
-	        execute_error("you can't measure the length of numbers fucked dude",node);
-	        return ErrorValue{"E: you can't measure the length of numbers fucked dude"};
+	        execute_error("you can't measure the length of numbers ",node);
+	        return ErrorValue{"E: you can't measure the length of numbers"};
 	    }
 	    if(holds_alternative<bool>(val)) {
-	        execute_error("you can't measure the length of bools fucked dude",node);
-	        return ErrorValue{"E: you can't measure the length of bools fucked dude"};
+	        execute_error("you can't measure the length of bools",node);
+	        return ErrorValue{"E: you can't measure the length of bools"};
 	    }
 	    if(holds_alternative<shared_ptr<ArrayValue>>(val)) {
 	        auto expr = get<shared_ptr<ArrayValue>>(val);
@@ -723,15 +743,15 @@ Value interpreter::evaluate(Node* node) {
             auto& left = get<shared_ptr<ArrayValue>>(left_val);
             double index_double = get<double>(right_val);
             if(index_double != (int)index_double) {
-                execute_error("array index must be integer fucked kid",node);
-                return ErrorValue{"E: array index must be integer fucked kid"};
+                execute_error("array index must be integer",node);
+                return ErrorValue{"E: array index must be integer"};
             }
             int right = (int)index_double;
             if(right < 0 || (size_t)right >= left->elements.size()) {
                 execute_error("ST_INDEX < 0 || ST_INDEX > ST_ARRAY.size()",node);
                 return ErrorValue {"E: ST_INDEX < 0 || ST_INDEX > ST_ARRAY.size()"};
             }
-            return move(left->elements[right]);
+            return left->elements[right];
         }
         if(holds_alternative<string>(left_val)) {
             if(!holds_alternative<double>(right_val)) {
@@ -741,8 +761,8 @@ Value interpreter::evaluate(Node* node) {
             string left = get<string>(left_val);
             double index_double = get<double>(right_val);
             if(index_double != (int)index_double) {
-                execute_error("string index must be integer fucked kid",node);
-                return ErrorValue{"E: string index must be integer fucked kid"};
+                execute_error("string index must be integer",node);
+                return ErrorValue{"E: string index must be integer"};
             }
             int right = (int)index_double;
             if(right < 0 || (size_t)right >= left.length()) {
@@ -760,7 +780,7 @@ Value interpreter::evaluate(Node* node) {
             string key = get<string>(right_val);
             auto finder = value->dict_val.find(key);
             if(finder != value->dict_val.end()) {
-                return move(finder->second);
+                return finder->second;
             }else {
                 execute_error("ST_INDEX returning nullptr",node);
                 return ErrorValue{"E: ST_INDEX returning nullptr"};
@@ -876,8 +896,8 @@ Value interpreter::evaluate(Node* node) {
 		if(holds_alternative<ErrorValue>(left_val)) { return left_val; }
 		if(holds_alternative<ErrorValue>(right_val)) { return right_val; }
 		if(!holds_alternative<double>(left_val) || !holds_alternative<double>(right_val)) {
-		    execute_error("operator requires numbers stupid people",node);
-		    return ErrorValue {"E: operator requires numbers stupid people"};
+		    execute_error("operator requires numbers",node);
+		    return ErrorValue {"E: operator requires numbers"};
 		}
         double left = get<double>(left_val);
         double right = get<double>(right_val);
@@ -889,8 +909,8 @@ Value interpreter::evaluate(Node* node) {
 				double mo = left / right;  return mo; 
 			}
 			else {
-			    execute_error("cannot be divided by fucked zero",node);
-				return ErrorValue{"E: cannot be divided by fucked zero"};
+			    execute_error("cannot be divided by zero",node);
+				return ErrorValue{"E: cannot be divided by zero"};
 			}
 		}				
 		else if(op == "*") { double mo = left * right;  return mo;  }
@@ -898,14 +918,14 @@ Value interpreter::evaluate(Node* node) {
 		    if(right != 0) {
 		        double mo = fmod(left,right); return mo; 
 		    }else {
-		        execute_error("cannot be divided by fucked zero",node);
-  				return ErrorValue{"E: cannot be divided by fucked zero"};    
+		        execute_error("cannot be divided by zero",node);
+  				return ErrorValue{"E: cannot be divided by zero"};    
 		    }
 		}
 	}
 	else if(node->KEY == ST_ASSIGNMENT) {
         if(node->right_children.empty()) {
-            execute_error("right_elements is empty(), open your eyes asshole",node);
+            execute_error("right_elements is empty()",node);
             return ErrorValue{};
         }
         vector<Value>right_values;
@@ -935,7 +955,7 @@ Value interpreter::evaluate(Node* node) {
                     string arr = "[";
                     auto getter = get<shared_ptr<ArrayValue>>(ev);
                     for(unsigned i = 0; i < getter->elements.size(); ++i) {
-                        Value item = move(getter->elements[i]);
+                        Value item = getter->elements[i];
                         if(holds_alternative<string>(item)) {
                             arr += get<string>(item);
                         }
@@ -1009,8 +1029,8 @@ Value interpreter::evaluate(Node* node) {
             }
         }
         else {
-            execute_error("node->children is empty() fucking mudda",node);
-            return ErrorValue {"E: node->children is empty() fucking mudda"};
+            execute_error("node->children is empty()",node);
+            return ErrorValue {"E: node->children is empty()"};
         }
         return AcceptValue{};
     }

@@ -4,13 +4,19 @@
 -/
 
 func time_lmit(time) {
-	__builtin_wait(time)
+	return __builtin_wait(time)
 };
 
 func time_current() {
-	__builtin_gettime()
+	return __builtin_gettime()
 };
 
 func time_zone(time) {
-	__builtin_zonetime(time)
+	return __builtin_zonetime(time)
+};
+func time_format(sec) {
+	return __builtin_consttime(sec)
+};
+func time_gettime() {
+	return __builtin_spectime()
 };
