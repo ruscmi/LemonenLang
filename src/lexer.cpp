@@ -232,7 +232,7 @@ vector<Token>& LEX::tokenize(const string &code) {
 		  	tokens.push_back(T);
 		}
 		else {
-			cout<<"\033[1;31mE: small dick on the quotes, expected (\033[0m"<<quote<<"\033[1;31m)\033[0m"<<endl;
+			cout<<"\033[1;31mE: expected (\033[0m"<<quote<<"\033[1;31m)\033[0m"<<endl;
 			tokens.clear();
 			return tokens;
 		}

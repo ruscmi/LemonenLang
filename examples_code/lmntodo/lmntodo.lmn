@@ -1,0 +1,74 @@
+#!/usr/bin/env lmnlang
+/-
+	lmntodo - GPL v2.0 - see LICENSE or main.cpp file for details
+                 lmntodo sequences by ruscmi
+-/
+lmport "config.lmn";
+lmport(time);
+lmport(system);
+lmport(ansi);
+add_arr = [];
+lmuck("lmntodo v0.1 by ruscmi");
+time_lmit(1);
+clear_screen();
+func write_arr() {
+	size = lmlen(add_arr)
+	for(kdx = 0; kdx < size; kdx = kdx + 1) {
+		lmuck("   │ ",add_arr[kdx])
+	}
+	lmuck("   └─────────────────────────────┘")
+	return add_arr
+};
+write_menu = true;
+while(true) {
+	if(write_menu == true) {
+		clear_screen();
+		lmuck(menu)
+		write_arr();
+		write_menu = false
+	}
+	if(sys_keypressed("a")) {
+		while(true) {
+			clear_screen();
+			lmuck(menu_phaseadd)
+			write_arr();
+			lmput = lmout("inp a new todo or 'stop': ")
+			if(lmput == "stop" || lmput == "") {
+				break
+			}
+			add_arr.lmpush(lmput);
+		}
+		write_menu = true
+	}
+	if(sys_keypressed("d")) {
+		clear_screen();
+		lmuck(menu_phasedel);
+		write_arr();
+		size = lmlen(add_arr)
+		if(size > 0) {
+			lmput = lmtod(lmout("inp a index todo to del: "))
+			if(lmtype(lmput) == "NUM") {
+				new_arr = []
+				for(i = 0; i < size; i = i + 1) {
+					if(i != lmput) {
+						new_arr.lmpush(add_arr[i])
+					}
+				}
+				add_arr = new_arr
+			}else {
+				lmuck("[E]: this not index(NUM type)")
+				time_lmit(1)
+			}
+		}else {
+			lmuck("[E]: arr.size < index")
+			time_lmit(1)
+		}
+		write_menu = true
+	}
+	if(sys_keypressed("e")) {
+		clear_screen()
+		lmuck("Goodbye!")
+		break
+	}
+	time_lmit(0.1)
+};

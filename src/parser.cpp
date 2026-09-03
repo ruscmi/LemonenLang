@@ -40,7 +40,7 @@ void Parser::error(const string& msg) {
 unique_ptr<Node> Parser::parse_program() {
 	for(const auto& token : tokenize ) {
 		if(token.KEY == TTYPE::UNKNOWN ) {
-			error("Deer,my parser doesn't understand this shit");
+			error("unknown token in parser");
 			return nullptr;
 		}
 	}
@@ -155,7 +155,7 @@ unique_ptr<Node> Parser::parse_func() {
             advanced();
             while(peer().VAL != ")") {
                 if(peer().KEY != TTYPE::STRING) {
-                    error("unknown pussy in the conditions");
+                    error("unknown token in the conditions");
                     return nullptr;
                 }
                 auto arg = make_unique<Node>(peer());
@@ -176,7 +176,7 @@ unique_ptr<Node> Parser::parse_func() {
                 if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
                     advanced();
                 }else if(peer().VAL != ")") {
-                    error("unclosed Fuck Bracket");
+                    error("unclosed bracket");
                     return nullptr;    
                 }
             }
@@ -291,11 +291,11 @@ unique_ptr<Node> Parser::parse_include() {
     if(peer().KEY == TTYPE::STRING_LIT) {
         string val = peer().VAL;
         if(val.empty()) {
-            error("this file returning null you stupid man?");
+            error("filename returning nullvalue");
             return nullptr;
         }
         if(peer().KEY == TTYPE::END) {
-            error("returning TTYPE::END fucked shiting man");
+            error("returning TTYPE::END in filename");
             return nullptr;
         }
         advanced();
@@ -313,7 +313,7 @@ unique_ptr<Node> Parser::parse_include() {
             return nullptr;
         }
         if(peer().KEY == TTYPE::END) {
-            error("returning TTYPE::END fucked shiting man");
+            error("returning TTYPE::END in libname");
             return nullptr;
         }
         if(peer().KEY == TTYPE::SEPARATOR) {
@@ -321,7 +321,7 @@ unique_ptr<Node> Parser::parse_include() {
         }
         string val = peer().VAL;
         if(val.empty()) {
-            error("this library there is no bitch");
+            error("libname return EmptyValue");
             return nullptr;
         }
         advanced();
@@ -334,11 +334,11 @@ unique_ptr<Node> Parser::parse_include() {
             lib->left_index = nullptr;
             return lib;
         }else {
-            error("not closed fucking parentheses");
+            error("not closed parentheses");
             return nullptr;
         }
     }else {
-        error("only support quotes(for stupid mans quotes - '\"') and parentheses");
+        error("only support quotes('\"') and parentheses");
         return nullptr;
     }
     return nullptr;
@@ -401,11 +401,11 @@ unique_ptr<Node> Parser::parse_while() {
                 }
             }
         }else {
-            error("expected sucked ')' or detected extra neurons");
+            error("expected ')' in while");
             return nullptr;
         }
     }else {
-        error("expected sucked '(' or detected extra chromosomes");
+        error("expected '(' in while");
         return nullptr;
     }
     auto while_node = make_unique<Node>(peer());
@@ -472,11 +472,11 @@ unique_ptr<Node> Parser::parse_if() {
                 }
             }
         }else {
-            error("expected sucked ')' or detected extra neurons");
+            error("expected ')' in if");
             return nullptr;
         }
     }else {
-        error("expected sucked '(' or detected extra chromosomes");
+        error("expected '(' in if");
         return nullptr;
     }
     unique_ptr<Node> else_node = nullptr;
@@ -491,14 +491,14 @@ unique_ptr<Node> Parser::parse_if() {
                 if(expr) {
                     else_node->children.push_back(move(expr));
                 }else {
-                    error("expected statement logic in ST_BLOCK");
+                    error("expected statement logic in else");
                     return nullptr;
                 }
                 if(peer().KEY == TTYPE::END_EX) {
 					advanced();
                 }
                 if(peer().KEY == TTYPE::END) {
-                    error("expected '}' in ST_BLOCK");
+                    error("expected '}' in else");
                     return nullptr;
                 }
             }
@@ -534,7 +534,7 @@ unique_ptr<Node> Parser::parse_print() {
 	    }
     	unique_ptr<Node> expr = parse_expression();
     	if(expr == nullptr) {
-    		error("you didn't add the arguments fucked mudda");
+    		error("you didn't add the arguments");
     		return nullptr;
     	}
     	print_node->children.push_back(move(expr));
@@ -834,7 +834,7 @@ unique_ptr<Node> Parser::parse_factor() {
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
                 advanced();
                 if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
-                    error("you shit it, the next comma in the array is forbidden");
+                    error("the next comma in the array is forbidden");
                     return nullptr;
                 }
                 continue;
@@ -842,7 +842,7 @@ unique_ptr<Node> Parser::parse_factor() {
             else if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "]") {
                 break;
             }else {
-                error("expected stupid parenthesis in fucked ST_ARRAY");
+                error("expected parenthesis in ST_ARRAY");
                 return nullptr;
             }
         }
@@ -866,18 +866,18 @@ unique_ptr<Node> Parser::parse_factor() {
         while(true) {
             unique_ptr<Node> element = parse_expression();
             if(!element) {
-                error("fucked muddaeb get out of lmnlang,expected left_element");
+                error("expected left_element in dictionary");
                 return nullptr;
             }
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ":") {
                 advanced();
             }else {
-                error("fucked muddaeb get out of lmnlang, expected ':'");
+                error("expected ':' in dictionary");
                 return nullptr; 
             }
             unique_ptr<Node> s_element = parse_expression();
             if(!s_element) {
-                error("fucked muddaeb get out of lmnlang,expected right_element");
+                error("expected right_element in dictionary");
                 return nullptr;                    
             }
             dickes.push_back(move(element));
@@ -885,7 +885,7 @@ unique_ptr<Node> Parser::parse_factor() {
             if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ",") {
                 advanced();
                 if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "}") {
-                    error("E: dont parsing fucked '}' sucked pidoras");
+                    error("dont parsing '}' in dictionary");
                     return nullptr;
                 }
                 continue;
@@ -894,7 +894,7 @@ unique_ptr<Node> Parser::parse_factor() {
                 advanced();
                 break;
             }else {
-                error("EBLAN where is the parenthesis fucking?");
+                error("where is the parenthesis?");
                 return nullptr;
             }
         }
@@ -943,7 +943,7 @@ unique_ptr<Node> Parser::parse_factor() {
 			return inner;
 		}
 		else {
-			error("small tits on the brackets, expected ')'");
+			error("expected ')' in priorities");
 			return nullptr;
 		}
 	}
@@ -964,7 +964,7 @@ unique_ptr<Node> Parser::parse_factor() {
      	    node->right_index = move(expr);
      	    left = move(node);
 	    }else {
-	        error("expected your brain or ']' in index");
+	        error("expected ']' in index");
 	        return nullptr;
 	    }
 	}
