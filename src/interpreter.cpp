@@ -893,34 +893,198 @@ Value interpreter::evaluate(Node* node) {
 	else if(node->KEY == ST_OPERATOR) {
 		Value left_val = evaluate(node->left_index.get());
 		Value right_val = evaluate(node->right_index.get());
+		string op = node->VAL;
 		if(holds_alternative<ErrorValue>(left_val)) { return left_val; }
 		if(holds_alternative<ErrorValue>(right_val)) { return right_val; }
-		if(!holds_alternative<double>(left_val) || !holds_alternative<double>(right_val)) {
-		    execute_error("operator requires numbers",node);
-		    return ErrorValue {"E: operator requires numbers"};
+		if(holds_alternative<double>(left_val) && holds_alternative<double>(right_val)) {
+	        double left = get<double>(left_val);
+	        double right = get<double>(right_val);
+			if(op == "+") { double mo = left + right; return mo; }
+			else if(op == "-") { double mo = left - right; return mo; }
+			else if(op == "/") {
+				if(right != 0) {
+					double mo = left / right;  return mo; 
+				}
+				else {
+				    execute_error("cannot be divided by zero",node);
+					return ErrorValue{"E: cannot be divided by zero"};
+				}
+			}				
+			else if(op == "*") { double mo = left * right;  return mo;  }
+			else if(op == "%") { 
+			    if(right != 0) {
+			        double mo = fmod(left,right); return mo; 
+			    }else {
+			        execute_error("cannot be divided by zero",node);
+	  				return ErrorValue{"E: cannot be divided by zero"};    
+			    }
+			}
 		}
-        double left = get<double>(left_val);
-        double right = get<double>(right_val);
-		string op = node->VAL;
-		if(op == "+") { double mo = left + right; return mo; }
-		else if(op == "-") { double mo = left - right; return mo; }
-		else if(op == "/") {
-			if(right != 0) {
-				double mo = left / right;  return mo; 
+		if(holds_alternative<shared_ptr<DictValue>>(left_val) || holds_alternative<shared_ptr<DictValue>>(right_val)) {
+			if(op == "+") {
+				auto left = get<shared_ptr<DictValue>>(left_val);
+				auto right = get<shared_ptr<DictValue>>(right_val);
+				auto res = make_shared<DictValue>();
+				res->dict_val = left->dict_val;
+				for(const auto& pair : right->dict_val) {
+					res->dict_val[pair.first] = pair.second;
+				}
+				return res;
 			}
 			else {
-			    execute_error("cannot be divided by zero",node);
-				return ErrorValue{"E: cannot be divided by zero"};
+				execute_error("unknown operator for dictionary",node);
+				return ErrorValue{};
 			}
-		}				
-		else if(op == "*") { double mo = left * right;  return mo;  }
-		else if(op == "%") { 
-		    if(right != 0) {
-		        double mo = fmod(left,right); return mo; 
-		    }else {
-		        execute_error("cannot be divided by zero",node);
-  				return ErrorValue{"E: cannot be divided by zero"};    
-		    }
+		}
+		if(holds_alternative<shared_ptr<ArrayValue>>(left_val) || holds_alternative<shared_ptr<ArrayValue>>(right_val)) {
+			if(op == "+") {
+				auto left = get<shared_ptr<ArrayValue>>(left_val);
+				auto right = get<shared_ptr<ArrayValue>>(right_val);
+				auto res = make_shared<ArrayValue>();
+				res->elements.reserve(left->elements.size() + right->elements.size());
+				res->elements.insert(res->elements.end(),left->elements.begin(),left->elements.end());
+				res->elements.insert(res->elements.end(),right->elements.begin(),right->elements.end());
+				return res;
+			}
+			else if(op == "*") {
+				if(holds_alternative<double>(left_val) && holds_alternative<shared_ptr<ArrayValue>>(right_val)) {
+					auto right = get<shared_ptr<ArrayValue>>(right_val);
+					double left = get<double>(left_val);
+					if(isnan(left)) {
+						execute_error("left element is NaN",node);
+						return ErrorValue{};
+					}
+					if(isinf(left)) {
+						execute_error("left element is inf",node);
+						return ErrorValue{};
+					}
+					if(left <= 0) {
+						return make_shared<ArrayValue>();
+					}
+					if(left == 1) {
+						return right;
+					}
+					size_t count = static_cast<size_t>(left);
+					if(count * right->elements.size() > 1000000) {
+						execute_error("right->elements.size() > 1000000",node);
+						return ErrorValue{};
+					}
+					auto res = make_shared<ArrayValue>();
+					unsigned int i = 0;
+					res->elements.reserve(right->elements.size() * count);
+					while(i < count) {
+						res->elements.insert(res->elements.end(),right->elements.begin(),right->elements.end());
+						i++;
+					}
+					return res;
+				}
+				if(holds_alternative<shared_ptr<ArrayValue>>(left_val) && holds_alternative<double>(right_val)) {
+					double right = get<double>(right_val);
+					auto left = get<shared_ptr<ArrayValue>>(left_val);
+					if(isnan(right)) {
+						execute_error("left element is NaN",node);
+						return ErrorValue{};
+					}
+					if(isinf(right)) {
+						execute_error("left element is inf",node);
+						return ErrorValue{};
+					}
+					if(right <= 0) {
+						return make_shared<ArrayValue>();
+					}
+					if(right == 1) {
+						return left;
+					}
+					size_t count = static_cast<size_t>(right);
+					if(count * left->elements.size() > 1000000) {
+						execute_error("left->elements.size() > 1000000",node);
+						return ErrorValue{};
+					}
+					auto res = make_shared<ArrayValue>();
+					unsigned int i = 0;
+					res->elements.reserve(left->elements.size() * count);
+					while(i < count) {
+						res->elements.insert(res->elements.end(),left->elements.begin(),left->elements.end());
+						i++;
+					}
+					return res;
+				}
+			}else {
+				execute_error("unknown operator for array",node);
+				return ErrorValue{};
+			}
+		}
+		if(holds_alternative<string>(left_val) || holds_alternative<string>(right_val)) {
+			if(op == "+") {
+				string left = get<string>(left_val);
+				string right = get<string>(right_val);
+				string res = left + right; return res;
+			}
+			else if(op == "*") {
+				if(holds_alternative<double>(left_val) && holds_alternative<string>(right_val)) {
+					string right = get<string>(right_val);
+					double left = get<double>(left_val);
+					if(isnan(left)) {
+						execute_error("left element is NaN",node);
+						return ErrorValue{};
+					}
+					if(isinf(left)) {
+						execute_error("left element is inf",node);
+						return ErrorValue{};
+					}
+					if(left > 1000000) {
+						execute_error("expected limit violation,max: 1.000.000",node);
+						return ErrorValue{};
+					}
+					if(left <= 0) {
+						return "";
+					}
+					if(left == 1) {
+						return right;
+					}
+					size_t count = static_cast<size_t>(left); 
+					string res = "";
+					unsigned int i = 0;
+					while(i < count) {
+						res = res + right;
+						i++; 
+					}
+					return res;
+				}
+				if(holds_alternative<string>(left_val) && holds_alternative<double>(right_val)) {
+					string left = get<string>(left_val);
+					double right = get<double>(right_val);
+					if(isnan(right)) {
+						execute_error("right element is NaN",node);
+						return ErrorValue{};
+					}
+					if(isinf(right)) {
+						execute_error("right element is inf",node);
+						return ErrorValue{};
+					}
+					if(right > 1000000) {
+						execute_error("expected limit violation,max: 1.000.000",node);
+						return ErrorValue{};
+					}
+					if(right <= 0) {
+						return "";
+					}
+					if(right == 1) {
+						return left;
+					}
+					size_t count = static_cast<size_t>(right); 
+					string res = "";
+					unsigned int i = 0;
+					while(i < count) {
+						res = res + left;
+						i++; 
+					}
+					return res;
+				}
+			}else {
+				execute_error("unknown operation for string",node);
+				return ErrorValue{};
+			}
 		}
 	}
 	else if(node->KEY == ST_ASSIGNMENT) {
