@@ -63,6 +63,30 @@ unique_ptr<Node> Parser::parse_program() {
     }
     return end;
 }
+unique_ptr<Node> Parser::parse_tostr() {
+	auto tostr = make_unique<Node>(peer());
+	tostr->KEY = ST_TOSTR;
+	tostr->VAL = "lmtos";
+	if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "(") {
+		advanced();
+		if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+			advanced();
+		}else {
+			unique_ptr<Node> expr = parse_expression();
+			tostr->right_index = move(expr);
+			if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+				advanced();
+			}else {
+				error("expected ')' in lmtos function");
+				return nullptr;
+			}
+		}
+	}else {
+		error("expected '(' in lmtos func()");
+		return nullptr;
+	}
+	return tostr;
+}
 unique_ptr<Node> Parser::parse_for() {
     advanced();
     auto for_node = make_unique<Node>(peer());
@@ -736,6 +760,10 @@ unique_ptr<Node> Parser::parse_factor() {
 	    else if(current.VAL == "lmtod") {
 	        advanced();
 	        left = parse_stod();
+	    }
+	    else if(current.VAL == "lmtos") {
+	    	advanced();
+	    	left = parse_tostr();
 	    }
         else if(current.VAL == "lmtype") {
             advanced();
