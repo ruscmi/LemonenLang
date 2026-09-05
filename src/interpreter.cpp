@@ -54,6 +54,11 @@ Value interpreter::evaluate(Node* node) {
             return ErrorValue{"E: unary minus requires a number"};
         }
 	}
+	else if(node->KEY == ST_TOSTR) {
+		Value val = evaluate(node->right_index.get());
+		if(holds_alternative<ErrorValue>(val)) return val;
+		return to_string_val(val);
+	}
 	else if(node->KEY == ST_RETURN) {
 	    Value val = evaluate(node->right_index.get());
 	    if(holds_alternative<ErrorValue>(val)) { return val; }
@@ -899,7 +904,9 @@ Value interpreter::evaluate(Node* node) {
 		if(holds_alternative<double>(left_val) && holds_alternative<double>(right_val)) {
 	        double left = get<double>(left_val);
 	        double right = get<double>(right_val);
-			if(op == "+") { double mo = left + right; return mo; }
+			if(op == "+") {
+        		double mo = left + right; return mo; 
+			}
 			else if(op == "-") { double mo = left - right; return mo; }
 			else if(op == "/") {
 				if(right != 0) {
@@ -922,14 +929,19 @@ Value interpreter::evaluate(Node* node) {
 		}
 		if(holds_alternative<shared_ptr<DictValue>>(left_val) || holds_alternative<shared_ptr<DictValue>>(right_val)) {
 			if(op == "+") {
-				auto left = get<shared_ptr<DictValue>>(left_val);
-				auto right = get<shared_ptr<DictValue>>(right_val);
-				auto res = make_shared<DictValue>();
-				res->dict_val = left->dict_val;
-				for(const auto& pair : right->dict_val) {
-					res->dict_val[pair.first] = pair.second;
+				if(holds_alternative<shared_ptr<DictValue>>(left_val) && holds_alternative<shared_ptr<DictValue>>(right_val)) {
+					auto left = get<shared_ptr<DictValue>>(left_val);
+					auto right = get<shared_ptr<DictValue>>(right_val);
+					auto res = make_shared<DictValue>();
+					res->dict_val = left->dict_val;
+					for(const auto& pair : right->dict_val) {
+						res->dict_val[pair.first] = pair.second;
+					}
+					return res;
+				}else {
+					execute_error("unknown data-type for dictionary concatenation",node);
+					return ErrorValue{};
 				}
-				return res;
 			}
 			else {
 				execute_error("unknown operator for dictionary",node);
@@ -938,13 +950,18 @@ Value interpreter::evaluate(Node* node) {
 		}
 		if(holds_alternative<shared_ptr<ArrayValue>>(left_val) || holds_alternative<shared_ptr<ArrayValue>>(right_val)) {
 			if(op == "+") {
-				auto left = get<shared_ptr<ArrayValue>>(left_val);
-				auto right = get<shared_ptr<ArrayValue>>(right_val);
-				auto res = make_shared<ArrayValue>();
-				res->elements.reserve(left->elements.size() + right->elements.size());
-				res->elements.insert(res->elements.end(),left->elements.begin(),left->elements.end());
-				res->elements.insert(res->elements.end(),right->elements.begin(),right->elements.end());
-				return res;
+				if(holds_alternative<shared_ptr<ArrayValue>>(left_val) && holds_alternative<shared_ptr<ArrayValue>>(right_val)) {
+					auto left = get<shared_ptr<ArrayValue>>(left_val);
+					auto right = get<shared_ptr<ArrayValue>>(right_val);
+					auto res = make_shared<ArrayValue>();
+					res->elements.reserve(left->elements.size() + right->elements.size());
+					res->elements.insert(res->elements.end(),left->elements.begin(),left->elements.end());
+					res->elements.insert(res->elements.end(),right->elements.begin(),right->elements.end());
+					return res;
+				}else {
+					execute_error("expected unknown data-type for arrays concatenation",node);
+					return ErrorValue{};
+				}
 			}
 			else if(op == "*") {
 				if(holds_alternative<double>(left_val) && holds_alternative<shared_ptr<ArrayValue>>(right_val)) {
@@ -1008,6 +1025,9 @@ Value interpreter::evaluate(Node* node) {
 						i++;
 					}
 					return res;
+				}else {
+					execute_error("unknown data-type for arrays multiplication",node);
+					return ErrorValue{};
 				}
 			}else {
 				execute_error("unknown operator for array",node);
@@ -1016,9 +1036,14 @@ Value interpreter::evaluate(Node* node) {
 		}
 		if(holds_alternative<string>(left_val) || holds_alternative<string>(right_val)) {
 			if(op == "+") {
-				string left = get<string>(left_val);
-				string right = get<string>(right_val);
-				string res = left + right; return res;
+				if(holds_alternative<string>(left_val) && holds_alternative<string>(right_val)) {
+					string left = get<string>(left_val);
+					string right = get<string>(right_val);
+					string res = left + right; return res;
+				}else {
+					execute_error("expected unknown data-type for string concatenation",node);
+					return ErrorValue{};
+				}
 			}
 			else if(op == "*") {
 				if(holds_alternative<double>(left_val) && holds_alternative<string>(right_val)) {
@@ -1051,7 +1076,7 @@ Value interpreter::evaluate(Node* node) {
 					}
 					return res;
 				}
-				if(holds_alternative<string>(left_val) && holds_alternative<double>(right_val)) {
+				else if(holds_alternative<string>(left_val) && holds_alternative<double>(right_val)) {
 					string left = get<string>(left_val);
 					double right = get<double>(right_val);
 					if(isnan(right)) {
@@ -1080,6 +1105,9 @@ Value interpreter::evaluate(Node* node) {
 						i++; 
 					}
 					return res;
+				}else {
+					execute_error("unknown data-type for string multiplication",node);
+					return ErrorValue{};
 				}
 			}else {
 				execute_error("unknown operation for string",node);
@@ -1290,4 +1318,43 @@ Value interpreter::evaluate(Node* node) {
 		return ErrorValue{"E: unknown Value Parser::evaluate() type"};
 	} 
 	return ErrorValue{"C.E: evaluate() return critical error"};
+}
+string interpreter::to_string_val(const Value& right) {
+	if(holds_alternative<string>(right)) {
+		string getter = get<string>(right);
+		return getter;
+	}
+	if(holds_alternative<bool>(right)) {
+		bool getter = get<bool>(right);
+		return getter ? "true" : "false";
+	}
+	if(holds_alternative<double>(right)) {
+		double getter = get<double>(right);
+		if(getter ==  static_cast<long long>(getter)) {
+			return to_string(static_cast<long long>(getter));
+		}
+		return to_string(getter);
+	}
+	if(holds_alternative<shared_ptr<ArrayValue>>(right)) {
+		auto getter = get<shared_ptr<ArrayValue>>(right);
+		if(!getter) return "[]";
+		string res = "[";
+		for(size_t i = 0; i < getter->elements.size(); ++i) {
+			res += to_string_val(getter->elements[i]);
+			if(i + 1 < getter->elements.size()) res += ", ";
+		}
+		return res + "]";
+	}
+	if(holds_alternative<shared_ptr<DictValue>>(right)) {
+		auto dict = get<shared_ptr<DictValue>>(right);
+		if(!dict) return "{}";
+		string res = "{";
+		size_t i = 0;
+		for(const auto& [k,v] : dict->dict_val) {
+			res += "\"" + k + "\": " + to_string_val(v);
+			if(++i < dict->dict_val.size()) res += ", ";
+		}
+		return res + "}";
+	}
+	return "unknown data-type in lmtos func";
 }

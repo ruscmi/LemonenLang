@@ -13,4 +13,5 @@ public:
         vars.push_back({});
     }
     Value evaluate(Node* node);
+    std::string to_string_val(const Value& right);
 };
