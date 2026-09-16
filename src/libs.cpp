@@ -160,12 +160,22 @@ optional<Value>builtin_exec(const string& name,const vector<Value>& ev_args,Node
 				if(bytes_read <= 0) {
 					return (double)0;
 				}
-				string ac_code;
-				if(bytes_read > 0) {
-					if(key_name == "w") {
-						if(bytes_read == 1 && buf[0]  == 'w') return (double)1;
-					}
-				}
+				string input_seq(buf,bytes_read);
+				static const unordered_map<string, string> LINUX_KEY_MAP = {
+			        {"w", "w"}, {"e", "e"}, {"q", "q"}, {"r", "r"}, {"t", "t"},
+			        {"y", "y"}, {"u", "u"}, {"i", "i"}, {"o", "o"}, {"p", "p"},
+			        {"a", "a"}, {"s", "s"}, {"d", "d"}, {"f", "f"}, {"g", "g"},
+			        {"h", "h"}, {"j", "j"}, {"k", "k"}, {"l", "l"}, {"z", "z"},
+			        {"x", "x"}, {"c", "c"}, {"v", "v"}, {"b", "b"}, {"n", "n"},
+			        {"m", "m"}, {"space", " "}, {"enter", "\n"}, {"tab", "\t"},
+			        {"backspace", "\b"}, {"esc", "\033"},
+			        {"up", "\033[A"}, {"down", "\033[B"}, 
+			        {"right", "\033[C"}, {"left", "\033[D"}
+			    };
+			    auto it = LINUX_KEY_MAP.find(key_name);
+		        if (it != LINUX_KEY_MAP.end() && input_seq == it->second) {
+		            return (double)1;
+		        }
 				return (double)0;
    		#else
    			#error "expected unknown OS"
