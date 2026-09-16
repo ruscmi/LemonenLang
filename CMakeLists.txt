@@ -8,6 +8,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -flto=auto")
 find_package(PkgConfig REQUIRED)
+find_package(raylib REQUIRED)
 find_library(READLINE_LIBRARY NAMES readline)
 if(NOT READLINE_LIBRARY)
     message(FATAL_ERROR "libreadline not found! Please install readline development files.")
@@ -20,14 +21,9 @@ add_executable(lmnlang
     src/ast.cpp
     src/interpreter.cpp
     src/manual.cpp
-    # imguilib/imgui/imgui.cpp
-    # imguilib/imgui/imgui_draw.cpp
-    # imguilib/imgui/imgui_widgets.cpp
-    # imguilib/imgui/imgui_tables.cpp
-    # imguilib/imgui/imgui_demo.cpp
-    # imguilib/rlImGui/rlImGui.cpp
+    src/libs.cpp
 )
-target_link_libraries(lmnlang PRIVATE ${READLINE_LIBRARY})
+target_link_libraries(lmnlang PRIVATE ${READLINE_LIBRARY} raylib)
 include(GNUInstallDirs)
 install(TARGETS lmnlang
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

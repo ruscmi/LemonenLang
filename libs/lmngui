@@ -1,0 +1,24 @@
+func lgui_initwindow(x,y,name) {
+	__builtin_initw(x,y,name)
+};
+func lgui_windowshutdown() {
+	__builtin_winshoclose()
+};
+func lgui_colordrawing(r,g,b) {
+	__builtin_colordraw(r,g,b)
+};
+func lgui_enddrawing() {
+	__builtin_enddraw()
+};
+func lgui_closewindow() {
+	__builtin_closewindow()
+};
+func lgui_textdrawing(text,pos1,pos2,size,r,g,b,a) {
+	__builtin_drawtext(text,pos1,pos2,size,r,g,b,a)	
+};
+func lgui_setfps(count) {
+	__builtin_setfps(count)
+};
+func lgui_begdrawing() {
+	__builtin_begdrawing()
+};

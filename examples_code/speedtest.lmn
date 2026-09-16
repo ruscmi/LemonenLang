@@ -1,3 +1,4 @@
+#!/usr/bin/env lmnlang
 /- test interpreter complete -/
 
 // by ruscmi
@@ -16,15 +17,18 @@ if(lmtype(cont) == "STR" && cont == "y") {
 		time_lmit(1);
 	}
 	time_current();
+	currt = time_gettime()
 	lmuck("load 1 sec")
 	time_lmit(1);
 	arr = []
-    for(k = 1; k < 1000001; k = k + 1) {
-		arr.lmpush(rnd_randint(1,10001))    	
+    for(k = 1; k < 1000000; k = k + 1) {
+		arr.lmpush(rnd_randint(1,10001))   
     }
     clear_screen();
     lmuck("load 1 sec")
     time_lmit(1);
+    res = time_gettime() - currt - 2
+    lmuck(res)
     time_current();
     lmuck(lmlen(arr))
     lmuck("test succeful")
