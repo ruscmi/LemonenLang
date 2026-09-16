@@ -1,6 +1,6 @@
 #include "../include/libs.hpp"
 // for android recommended '//' this define
-//#define ENABLE_GUI
+#define ENABLE_GUI
 #ifdef ENABLE_GUI
 #define RAYLIB_IMPLEMENTATION
 #include "../include/raylib.h"
