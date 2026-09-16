@@ -1,0 +1,9 @@
+lmport(random);
+lmport(time);
+while(true) {
+	randomizer = rnd_randint(1,7)
+	randomer = rnd_randint(10,50)
+	left = "\033[3" + lmtos(randomizer) + "m" + "-" * randomer + "\033[0m"
+	lmuck(left," " * randomer,left)
+	time_lmit(0.1)
+}

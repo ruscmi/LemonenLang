@@ -138,6 +138,8 @@ functions:
 
 	math_floor(10.10) - converts a double to an int
 
+	math_fibonacci(5) - get number on fibonacci progression
+	
 constants:
 
 	math_constPI - The value of pi is approximately 3.14159265.
@@ -359,6 +361,9 @@ example: x = true;
 
   ARR - arrays
 example: x = [5,5];
+
+  DICT - dictionares
+example: x = { "key":"value" };
 
 that's all data types)"<<resbc<<endl;
 		}
