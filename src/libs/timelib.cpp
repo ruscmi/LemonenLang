@@ -1,3 +1,6 @@
+/*
+	lmnlang - GPL v2.0 - see LICENSE or main.cpp file for details
+*/
 #if defined(__ANDROID)
 #include <ctime>
 #endif
