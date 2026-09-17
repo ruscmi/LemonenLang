@@ -1,0 +1,11 @@
+lmport(lmngui);
+lmport(time);
+lgui_initwindow(300,300,"window");
+lgui_setfps(60);
+while(lgui_windowshutdown()) {
+	lgui_begdrawing();
+	lgui_bgdrawing("lmnlang_v2.png",300,300);
+	lgui_textdrawing("lmnlang",20,20,20,255,255,255,255);
+	lgui_enddrawing();
+};
+lgui_closewindow();
