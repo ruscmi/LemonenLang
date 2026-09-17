@@ -4,8 +4,8 @@ func lgui_initwindow(x,y,name) {
 func lgui_windowshutdown() {
 	__builtin_winshoclose()
 };
-func lgui_colordrawing(r,g,b) {
-	__builtin_colordraw(r,g,b)
+func lgui_bgdrawing(arg,arg2,arg3) {
+	__builtin_bgdraw(arg,arg2,arg3)	
 };
 func lgui_enddrawing() {
 	__builtin_enddraw()
