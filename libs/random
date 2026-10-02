@@ -3,9 +3,9 @@
                    random sequences by ruscmi
 -/
 lmport(ansi);
-
+lmport(time);
 RAND = { 
-    "seed" : 123456789,
+    "seed" : time_gettime(),
     "a" : 16807,
     "c" : 0,
     "m" : 2147483647 
@@ -27,4 +27,14 @@ func rnd_choice(arr) {
     if(len == 0) { return lmuck(paint_red("E: lmlen(arr) == 0")) }
     idx = rnd_randint(0,len - 1)
     return arr[idx] 
+};
+func rnd_choices(arr,num) {
+	res = ""
+	i = 0
+	while(i < num) {
+		item = rnd_choice(arr)
+		res = lmtos(res) + lmtos(" ") + lmtos(item)
+		i = i + 1
+	}
+	return res
 }

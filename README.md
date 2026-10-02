@@ -1,4 +1,4 @@
-# ⚠️ The project is under development,version v0.2
+# ⚠️ The project is under development,version v0.3
 
 == **Russian [README.ru](README.ru.md)** ==
 

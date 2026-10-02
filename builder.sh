@@ -48,7 +48,7 @@ else
 fi
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
 	if ! id -nG "$USER" | grep -qw "input"; then
-	echo -e "\033[1;33mWarn: For keypressed func on system lib give rights"
+	echo -e "\033[1;33mWarn: For keypressed func on system lib give rights\033[0m"
 	echo "Run this command: "
 	echo "sudo usermod -aG input $USER"
 	fi

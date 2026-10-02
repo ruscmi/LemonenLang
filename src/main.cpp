@@ -105,7 +105,7 @@ this is all LOL thx for reading)"<<endl;
   	bool ActiveRequest = true;
   	    cout << big_txt << R"(    lmnlang REPL mode 
   Read Eval Print Loop mode
-	 by ruscmi V 0.2
+	 by ruscmi V 0.3
   type 'man list' for manual
   		  )"<< end << endl;
   	    while (ActiveRequest) {
