@@ -1,2 +1,3 @@
 media/* linguist-vendored
 include/raygui.h linguist-vendored
+include/dejavu_font.h
