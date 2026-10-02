@@ -110,10 +110,22 @@ random - see manual for random lib
 system - see manual for system lib
 time - see manual for time lib
 math - see manual for math lib
+file - see manual for file lib
 for load libs or file use:
     lmport(lib)
 or for file:
     lmport "/path/to/file")"<<resbc<<endl;
+		    }
+		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "file") {
+		    	advanced();
+		    	cout<<bluec<<R"(file lib have a:
+file_write() 
+and
+file_read() functions.
+
+file_write(namefile,code-to-write) - write code to file
+file_read(file) - read a file 
+this is all lol.)"<<resbc<<endl;
 		    }
 		    else if(peer().KEY == TTYPE::STRING && peer().VAL == "random") {
 		        advanced();

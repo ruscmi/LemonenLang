@@ -41,7 +41,7 @@ vector<Token>& LEX::tokenize(const string &code) {
 	    while (i < len && isdigit(code[i])) {
 	      val += code[i];
 	      step();
-	      if(code[i] == '.') {
+	      if(code[i] == '.' && isdigit(code[i + 1])) {
 	      	val += code[i];
 	      	step();
 	      }

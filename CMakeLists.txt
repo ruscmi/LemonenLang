@@ -21,11 +21,11 @@ add_executable(lmnlang
     src/ast.cpp
     src/interpreter.cpp
     src/manual.cpp
-	src/libs/lmngui.cpp
-	src/libs/systemlib.cpp
+    src/libs/lmngui.cpp
 	src/libs/systemlib.cpp
 	src/libs/timelib.cpp
 	src/libs/libs_initr.cpp
+	src/libs/filelib.cpp
 	
 )
 target_link_libraries(lmnlang PRIVATE ${READLINE_LIBRARY} raylib)

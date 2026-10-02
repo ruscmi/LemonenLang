@@ -1,0 +1,11 @@
+lmport(lmngui);
+lmport(time);
+lgui_initwindow(300,300,"window");
+lgui_setfps(60);
+while(lgui_windowshutdown()) {
+	lgui_begdrawing();
+	lgui_bgdrawing("linus.png",300,300);
+	lgui_textdrawing("LINUS GOD",20,20,20,0,0,0,255)
+	lgui_enddrawing()
+};
+lgui_closewindow();

@@ -1033,7 +1033,26 @@ unique_ptr<Node> Parser::parse_factor() {
     			error("expected '@' in lmpty method");
     			return nullptr;
     		}
-	    }else {
+	    }else if(peer().KEY == TTYPE::STRING && (peer().VAL == "isstr" || peer().VAL == "isnum" || peer().VAL == "isspace")) {
+	    	string method_name = peer().VAL;
+	    	ASTTAB node_type;
+	    	if(method_name == "isstr") node_type = ST_ISSTR; 
+	    	else if(method_name == "isnum") node_type = ST_ISNUM;
+	    	else node_type = ST_ISSPACE;
+   	    	advanced();
+   	    	if(peer().KEY == TTYPE::SPECSYMB && peer().VAL == "@") {
+   	    		advanced();
+   	    		auto isnode = make_unique<Node>(peer());
+   	    		isnode->KEY = node_type;
+   	    		isnode->VAL = peer().VAL;
+   	    		isnode->left_index = move(left);
+   	    		left = move(isnode);
+   	    	}else {
+   	    		error("expected '@' in " + method_name + "method");
+   	    		return nullptr;
+   	    	}
+   	    }
+	    else {
 	    	error("unknown method before the dot");
 	    	return nullptr;
 	    }

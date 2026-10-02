@@ -1,0 +1,6 @@
+func file_read(filename) {
+	return __builtin_fileread(filename)
+};
+func file_write(filename,code) {
+	return __builtin_filewrite(filename,code)
+};

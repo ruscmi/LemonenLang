@@ -1,7 +1,7 @@
+
 /*
 	lmnlang - GPL v2.0 - see LICENSE or main.cpp file for details
 */
-#define RAYGUI_IMPLEMENTATION
 #include "../include/interpreter.hpp"
 #include "../include/lexer.hpp"
 #include "../include/parser.hpp"
@@ -17,7 +17,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <linux/input.h>
-#include <termios.h>
 #endif
 #include <cmath>
 #include <filesystem>
@@ -59,7 +58,45 @@ Value interpreter::evaluate(Node* node) {
 		if(holds_alternative<ErrorValue>(val)) return val;
 		return to_string_val(val);
 	}
-	else if(node->KEY == ST_RETURN) {
+	else if(node->KEY == ST_ISSTR) {
+		Value val = evaluate(node->left_index.get());
+		if(holds_alternative<ErrorValue>(val)) return val;
+		if(!holds_alternative<string>(val)) {
+			return false;
+		}
+		string str = get<string>(val);
+		if(str.empty()) return false;
+		for(unsigned char ch : str) {
+			if(!isalpha(ch)) return false;
+		}
+		return true;
+	}
+	else if(node->KEY == ST_ISSPACE) {
+		Value val = evaluate(node->left_index.get());
+		if(holds_alternative<ErrorValue>(val)) return val;
+		if(!holds_alternative<string>(val)) return false;
+		string getspace = get<string>(val);
+		if(getspace.empty()) return false;
+		for(unsigned char ch : getspace) {
+			if(!isspace(ch)) return false;
+		}
+		return true;
+	}
+	else if(node->KEY == ST_ISNUM) {
+		Value val = evaluate(node->left_index.get());
+		if(holds_alternative<ErrorValue>(val)) return val;
+		if(holds_alternative<string>(val)) {
+			string str = get<string>(val);
+			if(str.empty()) return false;
+			for(unsigned char ch : str) {
+				if(!isdigit(ch)) return false;
+			}
+			return true;
+		}
+		if(holds_alternative<double>(val)) return true;
+		return false;
+ 	}
+ 	else if(node->KEY == ST_RETURN) {
 	    Value val = evaluate(node->right_index.get());
 	    if(holds_alternative<ErrorValue>(val)) { return val; }
 	    return make_shared<ReturnFunc>(ReturnFunc{move(val)});
@@ -197,6 +234,7 @@ Value interpreter::evaluate(Node* node) {
 	    if(evaluated_args.size() != func_ref->par_names.size()) {
 	        execute_error("evaluated_args.size() != func.par_names.size()",node);
 	        return ErrorValue{};
+	        
 	    }
 	    vars.push_back({});
 	    for(size_t i = 0; i < func_ref->par_names.size(); ++i) {
@@ -286,7 +324,7 @@ Value interpreter::evaluate(Node* node) {
 	        return ErrorValue{"E: expected expression node->left_index in lmpush"};
 	    }
 	    Value right = evaluate(node->right_index.get());
-	    if(holds_alternative<ErrorValue>(left)) { return right; }
+	    if(holds_alternative<ErrorValue>(right)) { return right; }
 	    arr_pusher->push(right);
 	    return left;   
 	}
@@ -480,11 +518,30 @@ Value interpreter::evaluate(Node* node) {
                 return ErrorValue{"E: string index must be integer"};
             }
             int right = (int)index_double;
+            size_t byte_index = 0;
+            int current_char_index = 0;
+            size_t len = left.length();
+            while(byte_index < len && current_char_index < right) {
+            	unsigned char c = left[byte_index];
+            	size_t char_len = 1;
+            	if((c & 0x80) == 0) char_len =  1;
+            	if((c & 0xE0) == 0xC0) char_len = 2;
+            	if((c & 0xF0) == 0xE0) char_len = 3;
+            	if((c & 0xF8) == 0xF0) char_len = 4;
+            	byte_index += char_len;
+            	current_char_index++;
+            }
             if(right < 0 || (size_t)right >= left.length()) {
                 execute_error("ST_INDEX < 0 || ST_INDEX > ST_STRING.length()",node);
                 return ErrorValue {"E: ST_INDEX < 0 || ST_INDEX > ST_INDEX.length()"};
             }
-            return string(1,left[right]);
+            unsigned char c = left[byte_index];
+            size_t char_len = 1;
+            if((c & 0x80) == 0) char_len =  1;
+            if((c & 0xE0) == 0xC0) char_len = 2;
+            if((c & 0xF0) == 0xE0) char_len = 3;
+            if((c & 0xF8) == 0xF0) char_len = 4;
+            return left.substr(byte_index,char_len);
         }
         if(holds_alternative<shared_ptr<DictValue>>(left_val)) {
             if(!holds_alternative<string>(right_val)) {
@@ -497,7 +554,6 @@ Value interpreter::evaluate(Node* node) {
             if(finder != value->dict_val.end()) {
                 return finder->second;
             }else {
-                execute_error("ST_INDEX returning nullptr",node);
                 return ErrorValue{"E: ST_INDEX returning nullptr"};
             }
         }
@@ -520,23 +576,37 @@ Value interpreter::evaluate(Node* node) {
 	else if(node->KEY == ST_BOOLEA_OPERATOR) { 
         Value left_val = evaluate(node->left_index.get());
         if(holds_alternative<ErrorValue>(left_val)) {return left_val;}
+        if(!holds_alternative<double>(left_val)) {
+        	execute_error("left value != double",node);
+        	return ErrorValue{};
+        }
         double num = get<double>(left_val);
         bool l_bool = (num!=0.0);
         if(node->VAL =="&&") {
             if(!l_bool) {return 0.0;}
             Value right_val = evaluate(node->right_index.get());
             if(holds_alternative<ErrorValue>(right_val)) {return right_val; }
-            double num1 = get<double>(right_val);
-            bool r_bool = (num1 != 0.0);
-            return r_bool ? 1.0 : 0.0;
+            if(holds_alternative<double>(right_val)) {
+	            double num1 = get<double>(right_val);
+	            bool r_bool = (num1 != 0.0);
+                return r_bool ? 1.0 : 0.0;
+            }else {
+            	execute_error("right_val != double",node);
+            	return ErrorValue{};
+            }
         }
         else if(node->VAL =="||") {
             if(l_bool) { return 1.0; }
             Value right_val = evaluate(node->right_index.get()); 
             if(holds_alternative<ErrorValue>(right_val)) {return right_val; }
-            double num1 = get<double>(right_val);
-            bool r_bool = (num1 != 0.0);
-            return r_bool ? 1.0 : 0.0;
+            if(holds_alternative<double>(right_val)) { 
+	            double num1 = get<double>(right_val);
+	            bool r_bool = (num1 != 0.0);
+                return r_bool ? 1.0 : 0.0;
+            }else {
+            	execute_error("right_val != double",node);
+            	return ErrorValue{};
+            }
         }
 	}
 	else if(node->KEY == ST_LOGIC_OPERATOR) {
@@ -600,10 +670,15 @@ Value interpreter::evaluate(Node* node) {
              execute_error("unknown logic operator",node);           
              return ErrorValue {"E: unknown logic operator"};
         }
-	    if(!holds_alternative<double>(left_val) || !holds_alternative<double>(right_val)) {
-	        execute_error("logic operator return unknown TTYPE or comparison",node);
-	        return ErrorValue {"E: logic operator return unknown TTYPE or comparison"};
-	    }
+        string log_op = node->VAL;
+        if(log_op == "==") {
+        	return 0.0;
+        }
+        else if(log_op == "!=") {
+        	return 1.0;
+        }
+        execute_error("logic operator return unknown TTYPE or comparison",node);           
+        return ErrorValue {"logic operator return unknown TTYPE or comparison"};
 	}
 	else if(node->KEY == ST_OPERATOR) {
 		Value left_val = evaluate(node->left_index.get());
@@ -1015,6 +1090,7 @@ Value interpreter::evaluate(Node* node) {
         return input; 
     }
 	else if(node->KEY == ST_PRINT) {
+		
 	    for(size_t i = 0 ; i < node->children.size(); ++i) {
     	    Value val = evaluate(node->children[i].get());
             if(holds_alternative<ErrorValue>(val)) { return val ; }

@@ -1,0 +1,32 @@
+lmport(file);
+lmport(string);
+lmport(ansi);
+filename = "save.txt";
+saving_file = file_read(filename);
+if(saving_file == "") {
+	lmuck("dataset is null.");
+}else {
+	lmuck("dataset load complete.")
+};
+while(true) {
+	inpline = lmout("inp a text: ");
+	if(inpline == "exit") {
+		break;
+	}
+	splited = str_split(inpline);
+	if(lmlen(splited) == 2) {
+		if(splited[0] == "file" && splited[1] == "clear") {
+			file_write(filename,"");
+			saving_file = "";
+			lmuck(paint_green("continue"))
+			continue;
+		}
+	}
+	lmuck(file_read(filename));
+	if(saving_file == "") {
+		saving_file = inpline;
+	}else {
+		saving_file = saving_file + "\n" + inpline;
+	}
+	file_write(filename,saving_file);
+};

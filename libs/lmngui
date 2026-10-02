@@ -1,3 +1,7 @@
+/-
+	lmnlib - GPL v2.0 - see LICENSE or main.cpp file for details
+                   lmngui sequences by ruscmi
+-/
 func lgui_initwindow(x,y,name) {
 	__builtin_initw(x,y,name)
 };
@@ -6,6 +10,18 @@ func lgui_windowshutdown() {
 };
 func lgui_bgdrawing(arg,arg2,arg3) {
 	__builtin_bgdraw(arg,arg2,arg3)	
+};
+func lgui_draw_circle(x,y,radius,r,g,b,a) {
+	__builtin_drawcircle("basic",x,y,radius,r,g,b,a)
+};
+func lgui_draw_linecircle(x,y,radius,r,g,b,a) {
+	__builtin_drawcircle("line",x,y,radius,r,g,b,a)
+};
+func lgui_draw_sector(x,y,radius,sangle,eangle,segm,r,g,b,a) {
+	__builtin_drawcircle("sector",x,y,radius,sangle,eangle,segm,r,g,b,a)
+};
+func lgui_draw_linesector(x,y,radius,sangle,eangle,segm,r,g,b,a) {
+	__builtin_drawcircle("sector line",x,y,radius,sangle,eangle,segm,r,g,b,a)
 };
 func lgui_enddrawing() {
 	__builtin_enddraw()
@@ -22,3 +38,6 @@ func lgui_setfps(count) {
 func lgui_begdrawing() {
 	__builtin_begdrawing()
 };
+func lgui_inputdrawing(f,fl,flo,floa,txt,txtlen,bool) {
+	__builtin_inputbox(f,fl,flo,floa,txt,txtlen,bool)
+}
