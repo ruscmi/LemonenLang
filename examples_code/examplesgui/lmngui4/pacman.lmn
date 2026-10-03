@@ -1,0 +1,20 @@
+lmport(lmngui);
+lmport(time);
+lgui_initwindow(200,200,"PACMAN");
+lgui_setfps(60);
+i = 0;
+while(lgui_windowshutdown()) {
+	lgui_begdrawing();
+	lgui_bgdrawing(0,0,150);
+	if(i % 2 == 0) {
+		lgui_draw_circle(100,100,50,255,255,0,255);
+	}else {
+		lgui_draw_sector(100,100,50,370,50,100,255,255,0,255);
+	}
+	lgui_draw_circle(110,80,5,0,0,0,255);
+	lgui_textdrawing("PACMAN",100,20,25,200,200,0,255)
+	time_lmit(1);
+	i = i + 1;
+	lgui_enddrawing();
+};
+lgui_closewindow();

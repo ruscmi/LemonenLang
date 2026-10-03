@@ -1,0 +1,10 @@
+lmport(time);
+lmport(ansi);
+width = 30;
+for(i = 0;i < 101; i = i + 1) {
+	filled = lmtod(width * i / 100);
+	bar = "#" * filled + "-" * (width - filled);
+	lmuck("\n"*20+"\t"*6+paint_green("Load: "),bar,paint_green("["+lmtos(i)+"%"+"]"));
+	time_lmit(0.1);
+	clear_screen();
+}
