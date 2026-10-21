@@ -39,16 +39,16 @@ func math_iseven(num) {
 };
 func math_max(a,b) {
 	if(a<b) {
-		return a;
-	}else {
 		return b;
+	}else {
+		return a;
 	}
 };
 func math_min(a,b) {
 	if(a>b) {
-		return a
-	}else {
 		return b
+	}else {
+		return a
 	}
 };
 func math_degree(num,deg) {
