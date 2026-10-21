@@ -44,10 +44,16 @@ optional<Value>builtin_time(const string& name,const vector<Value>& ev_args,Node
     	return AcceptValue{};
     }
     if(name == "__builtin_spectime") {
-		if(ev_args.size() == 0) {
-			auto nowtime = chrono::system_clock::now();
-			auto seconds = chrono::duration_cast<chrono::seconds>(nowtime.time_since_epoch()).count();
-			return Value(static_cast<double>(seconds));
+		if(ev_args.size() == 1) {
+			if(holds_alternative<string>(ev_args[0])) {
+				string getstr = get<string>(ev_args[0]);
+				auto nowtime = chrono::system_clock::now();
+				auto seconds = chrono::duration_cast<chrono::seconds>(nowtime.time_since_epoch()).count();
+				if(getstr == "ns")seconds = chrono::duration_cast<chrono::nanoseconds>(nowtime.time_since_epoch()).count();
+				else if(getstr == "ms")seconds = chrono::duration_cast<chrono::milliseconds>(nowtime.time_since_epoch()).count();										
+				else if(getstr == "s")seconds = chrono::duration_cast<chrono::seconds>(nowtime.time_since_epoch()).count();
+				return Value(static_cast<double>(seconds));
+			}
 		}
     }
     if(name == "__builtin_consttime") {

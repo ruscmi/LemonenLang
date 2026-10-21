@@ -22,7 +22,7 @@ if(lmtype(cont) == "STR" && cont == "y") {
 	time_lmit(1);
 	arr = []
     for(k = 1; k < 1000000; k = k + 1) {
-		arr.lmpush(rnd_randint(1,10001))   
+		arr.lmpush(5)   
     }
     clear_screen();
     lmuck("load 1 sec")

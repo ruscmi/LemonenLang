@@ -14,6 +14,9 @@ func sys_exec(cmd) {
 func sys_read(msg) {
     return __builtin_read(msg)
 };
+func sys_gethome() {
+	return __builtin_gethome()
+};
 func sys_sleep() {
     current_os = sys_getos()
     if(current_os == "linux") {

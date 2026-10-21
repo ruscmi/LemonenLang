@@ -5,7 +5,7 @@
 lmport(ansi);
 lmport(time);
 RAND = { 
-    "seed" : time_gettime(),
+    "seed" : time_gettime("s"),
     "a" : 16807,
     "c" : 0,
     "m" : 2147483647 

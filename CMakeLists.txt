@@ -26,6 +26,7 @@ add_executable(lmnlang
 	src/libs/timelib.cpp
 	src/libs/libs_initr.cpp
 	src/libs/filelib.cpp
+	src/libs/math.cpp
 	
 )
 target_link_libraries(lmnlang PRIVATE ${READLINE_LIBRARY} raylib)

@@ -63,6 +63,29 @@ unique_ptr<Node> Parser::parse_program() {
     }
     return end;
 }
+unique_ptr<Node> Parser::parse_lmnlang() {
+	auto lmnlang = make_unique<Node>(peer());
+	lmnlang->KEY = ST_LMNLANG;
+	lmnlang->VAL = "lemonen";
+	if(peer().KEY == TTYPE::SEPARATOR&& peer().VAL == "(") {
+		advanced();
+		if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == ")") {
+			advanced();
+		}else {
+			unique_ptr<Node>lmnexp = parse_expression();
+			lmnlang->right_index = move(lmnexp);
+			if(peer().KEY != TTYPE::SEPARATOR && peer().VAL != ")") {
+				error("expected ')' in lemonen function");
+				return nullptr;
+			}
+			advanced();
+		}
+	}else {
+		error("expected '(' in lemonen function");
+		return nullptr;
+	}
+	return lmnlang;
+}
 unique_ptr<Node> Parser::parse_tostr() {
 	auto tostr = make_unique<Node>(peer());
 	tostr->KEY = ST_TOSTR;
@@ -209,10 +232,10 @@ unique_ptr<Node> Parser::parse_func() {
             error("expected parentheses '('");
             return nullptr;
         }
+        then_node = make_unique<Node>(peer());
+        then_node->KEY = ST_BLOCK;
         if(peer().KEY == TTYPE::SEPARATOR && peer().VAL == "{") {
             advanced();
-            then_node = make_unique<Node>(peer());
-            then_node->KEY = ST_BLOCK;
             while(peer().VAL != "}") {
                 if(peer().KEY == TTYPE::END) {
                     error("TTYPE::END in block return null");
@@ -229,16 +252,21 @@ unique_ptr<Node> Parser::parse_func() {
                     return nullptr;
                 }
             }
-            advanced();
-            auto func = make_unique<Node>(peer());
-            func->KEY = ST_FUNC;
-            func->VAL = val;
-            func->children = move(args);
-            func->right_index = move(then_node);
-            return func;
         }else {
-            return nullptr;
+            expr = parse_statement();
+            if(expr)then_node->children.push_back(move(expr));
+            else {
+				error("expected statement logic of function");
+            	return nullptr;
+            }
         }
+        advanced();
+        auto func = make_unique<Node>(peer());
+        func->KEY = ST_FUNC;
+        func->VAL = val;
+        func->children = move(args);
+        func->right_index = move(then_node);
+        return func;
     }
     return nullptr;
 }
@@ -772,6 +800,10 @@ unique_ptr<Node> Parser::parse_factor() {
         else if(current.VAL == "lmlen") {
             advanced();
             left = parse_len();
+        }
+        else if(current.VAL == "lemonen") {
+        	advanced();
+        	left = parse_lmnlang();
         }
         else if(current.VAL == "lmuck") {
             left = parse_print();

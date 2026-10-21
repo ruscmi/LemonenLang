@@ -5,6 +5,13 @@
 
 // FUNCTIONS
 
+func math_full(num) {
+	if(lmlen(lmtos(num)) > 6) {
+		return lmtos(num)
+	}else {
+		return num
+	}
+};
 func math_fibonacci(n) {
 	if( n <= 0) return 0;
 	if( n == 1) return 1;
@@ -30,6 +37,20 @@ func math_iseven(num) {
 		return "unknown datatype"
 	}
 };
+func math_max(a,b) {
+	if(a<b) {
+		return a;
+	}else {
+		return b;
+	}
+};
+func math_min(a,b) {
+	if(a>b) {
+		return a
+	}else {
+		return b
+	}
+};
 func math_degree(num,deg) {
 	if(deg == 0) {
 		return 1;
@@ -50,7 +71,7 @@ func math_degree(num,deg) {
 };
 func math_floor(num) {
 	if( num >= 0) {
-		return num - ( num % 1 )
+		return num - ( num % 1)
 	}else {
 		rem = num % 1
 		if(rem == 0) {
@@ -65,4 +86,4 @@ func math_floor(num) {
 math_constPI = 3.14159265;
 math_constE = 2.71828182;
 math_inf = math_degree(10,309);
-math_nan = math_floor(math_inf);
+math_nan = __builtin_nan();

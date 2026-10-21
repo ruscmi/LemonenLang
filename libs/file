@@ -4,3 +4,6 @@ func file_read(filename) {
 func file_write(filename,code) {
 	return __builtin_filewrite(filename,code)
 };
+func file_isopen(filename) {
+	return __builtin_fileisopen(filename)
+};

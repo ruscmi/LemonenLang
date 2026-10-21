@@ -17,6 +17,64 @@ func time_zone(time) {
 func time_format(sec) {
 	return __builtin_consttime(sec)
 };
-func time_gettime() {
-	return __builtin_spectime()
+func time_gettime(par="s") {
+	return __builtin_spectime(par);
 };
+func time_laterdays(first,second,leap) { 
+	if(lmtype(first) == "ARR" && lmtype(second) == "ARR" && lmtype(leap) == "BOOL") {
+		months = [
+			["january",31],
+			["february",31+28],
+			["march",59+31],
+			["april",90+30],
+			["may",120+31],
+			["june",151+30],
+			["july",181+31],
+			["august",212+31],
+			["september",243+30],
+			["octember",273+31],
+			["november",304+30],
+			["december",334+31]
+		]
+		fmonth,smonth,f_status,s_status,fres,sres =0,0,0,0,0,0;gmonth = "";
+		for(i=0;i<lmlen(months);i=i+1){
+			gmonth = months[i][0]
+			if(gmonth == first[1]){
+				fmonth = months[i][1]
+				f_status = 1;
+				break
+			}
+		}
+		for(i=0;i<lmlen(months);i=i+1) {
+			gmonth = months[i][0]
+			if(gmonth == second[1]) {
+				smonth = months[i][1]
+				s_status = 1;
+				break
+			}
+		}
+		if(lmtype(first[1]) == "STR" && lmtype(first[0]) == "NUM" && lmtype(second[1]) == "STR" && lmtype(second[0]) == "NUM") {
+			if(first[0] > 0 && second[0] > 0 && s_status == 1 && f_status == 1) {
+				if(first[0] <= 31 && second[0] <= 31) {
+					fres = first[0] + fmonth
+					sres = second[0] + smonth 
+				}
+			}
+		}
+		res = fres-sres
+		if(leap == true) {
+			if(gmonth != months[0][0]) {
+				real = res+1
+				return real
+			}else {
+				return 0;
+			}
+		}else {
+			return res
+		}
+	}
+	str = "\033[1;31m[Lib e]: unknown types,does not exist\033[0m
+	time_laterdays(",lmtos(first),lmtos(second),lmtos(leap),")
+\033[1;34m__unknown_dt_arguments\033[0m";
+	return str;
+}

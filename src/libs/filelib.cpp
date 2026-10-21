@@ -5,6 +5,20 @@
 using namespace std;
 #define execute_error(msg,node) interpreter::execute_error(msg,node)
 optional<Value>builtin_filereg(const string& name,const vector<Value>& ev_args,Node* node,bool is_sys) {
+	if(name == "__builtin_fileisopen") {
+		if(ev_args.size() == 1) {
+			if(holds_alternative<string>(ev_args[0])) {
+				string filename = get<string>(ev_args[0]);
+				ifstream file(filename);
+				if(file.is_open()) {
+					return true;
+				}else {
+					return false;
+				}
+			}
+		}
+		return AcceptValue{}; 
+	}
 	if(name == "__builtin_fileread") {
 		if(ev_args.size() == 1) {
 			if(!holds_alternative<string>(ev_args[0])) {

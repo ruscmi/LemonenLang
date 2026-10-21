@@ -6,7 +6,7 @@ SYSTEM_INSTALL=false
 while [ $# -gt 0 ]; do
     case "$1" in
         --system)
-            SYSTEM_INSTALL-true
+            SYSTEM_INSTALL=true
             shift
             ;;
         --clean)
