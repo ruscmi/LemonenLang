@@ -2,6 +2,15 @@
 	lmnlib - GPL v2.0 - see LICENSE or main.cpp file for details
                    lmngui sequences by ruscmi
 -/
+func lgui_getfps() {
+	return __builtin_getfps()
+};
+func lgui_drawtextbox(x,y,wid,hei,buff,texts,editmode) {
+	return __builtin_textbox(x,y,wid,hei,buff,texts,editmode)
+};
+func lgui_setwindowsize(w,h) {
+	__builtin_setsizewindow(w,h)
+};
 func lgui_initwindow(x,y,name) {
 	__builtin_initw(x,y,name)
 };
@@ -11,14 +20,32 @@ func lgui_windowshutdown() {
 func lgui_bgdrawing(arg,arg2,arg3) {
 	__builtin_bgdraw(arg,arg2,arg3)	
 };
+func lgui_drawbutton(x,y,width,height,text) {
+	return __builtin_drawbutton(x,y,width,height,text)
+};
 func lgui_draw_circle(x,y,radius,r,g,b,a) {
 	__builtin_drawcircle("basic",x,y,radius,r,g,b,a)
+};
+func lgui_settexture(texture,x,y,r,g,b,a,wt,ht) {
+	__builtin_settexture(texture,x,y,r,g,b,a,wt,ht)
 };
 func lgui_draw_linecircle(x,y,radius,r,g,b,a) {
 	__builtin_drawcircle("line",x,y,radius,r,g,b,a)
 };
+func lgui_mouseclick(button) {
+	return __builtin_mousepressed(button,"clicked");
+};
+func lgui_mousepressed(button) {
+	return __builtin_mousepressed(button,"pressed");
+};
 func lgui_draw_sector(x,y,radius,sangle,eangle,segm,r,g,b,a) {
 	__builtin_drawcircle("sector",x,y,radius,sangle,eangle,segm,r,g,b,a)
+};
+func lgui_keypressed(key) {
+	return __builtin_lguikeypress(key,"pressed")
+};
+func lgui_keydown(key) {
+	return __builtin_lguikeypress(key,"down")	
 };
 func lgui_draw_linesector(x,y,radius,sangle,eangle,segm,r,g,b,a) {
 	__builtin_drawcircle("sector line",x,y,radius,sangle,eangle,segm,r,g,b,a)
@@ -38,6 +65,195 @@ func lgui_setfps(count) {
 func lgui_begdrawing() {
 	__builtin_begdrawing()
 };
-func lgui_inputdrawing(f,fl,flo,floa,txt,txtlen,bool) {
-	__builtin_inputbox(f,fl,flo,floa,txt,txtlen,bool)
-}
+func lgui_draw_quad(x,y,width,height,roundness,segments,r,g,b,a) {
+	__builtin_drawquad("basic",x,y,width,height,roundness,segments,r,g,b,a)
+};
+if(__builtin_os() == "windows") {
+	func lgui_draw_quadline(x,y,width,height,roundness,segments,r,g,b,a) {
+		__builtin_drawquad("line",x,y,width,height,roundness,segments,r,g,b,a)
+	}
+}else {
+	func lgui_draw_quadline(x,y,width,height,roundness,segments,lineth,r,g,b,a) {
+		__builtin_drawquad("line",x,y,width,height,roundness,segments,lineth,r,g,b,a)
+	}
+};
+func lgui_getmousex() {
+	return __builtin_getmousecrd("x")
+};
+func lgui_getmousey() {
+	return __builtin_getmousecrd("y")
+};
+func lgui_drawbuttonlmn(x,y,size,figure,text,textsize,colorname,linecolor) {
+	if(colorname == 0) {
+		colorname = [160,160,160]
+	}
+	if(linecolor == 0) {
+		linecolor = [90,90,90]
+	}
+	if(lmlen(lmtos(x)) == 0 || lmlen(lmtos(y)) == 0 || lmlen(lmtos(size)) == 0 
+	|| lmlen(lmtos(colorname)) == 0 || lmlen(lmtos(linecolor)) == 0) {
+		lmuck("[E]: arguments in lgui_drawbuttonlmn,return null value");
+	}
+	if(lmtype(colorname) == "STR") {
+		if(lmtos(colorname) == "RED") {
+			r = 255;g = 0;b = 0;
+		}
+		else if(lmtos(colorname) == "BLUE") {
+			r = 0;g = 0;b = 255;
+		}
+		else if(lmtos(colorname) == "GREEN") {
+			r=0;g=255;b=0
+		}
+		else if(lmtos(colorname) == "BLACK") {
+			r=0;g=0;b=0
+		}
+		else if(lmtos(colorname) == "YELLOW") {
+			r=255;g=255;b=0
+		}
+		else if(lmtos(colorname) == "PURPLE") {
+			r=255;g=0;b=255
+		}
+		else if(lmtos(colorname) == "LIGHTBLUE") {
+			r=0;g=255;b=255
+		}
+		else if(lmtos(colorname) == "WHITE") {
+			r=255;g=255;b=255
+		}
+		else {
+			lmuck("[E]: unknown color in lgui_drawbuttonlmn(IN COLORNAME), return null value");
+		}
+	}
+	else if(lmtype(colorname) == "ARR") {
+		r = colorname[0]
+		g = colorname[1]
+		b = colorname[2]
+	}else {
+		lmuck("[E]: unknown data-type value in colorname parameter
+			lgui_drawbuttonlmn(x,y,size,figure,colorname,linecolor)
+												^
+												|
+											  this")
+	}
+	if(lmtype(linecolor) == "STR") {
+		if(lmtos(linecolor) == "RED") {
+			lr = 255;lg = 0;lb = 0;
+		}
+		else if(lmtos(linecolor) == "BLUE") {
+			lr = 0;lg = 0;lb = 255;
+		}
+		else if(lmtos(linecolor) == "GREEN") {
+			lr=0;lg=255;lb=0
+		}
+		else if(lmtos(linecolor) == "BLACK") {
+			lr=0;lg=0;lb=0
+		}
+		else if(lmtos(linecolor) == "YELLOW") {
+			lr=255;lg=255;lb=0
+		}
+		else if(lmtos(linecolor) == "PURPLE") {
+			lr=255;lg=0;lb=255
+		}
+		else if(lmtos(linecolor) == "LIGHTBLUE") {
+			lr=0;lg=255;lb=255
+		}
+		else if(lmtos(linecolor) == "WHITE") {
+			lr=255;lg=255;lb=255
+		}
+		else {
+			lmuck("[E]: unknown color in lgui_drawbuttonlmn(IN LINECOLOR), return null value");
+		}
+	}
+	else if(lmtype(linecolor) == "ARR") {
+		lr = linecolor[0]
+		lg = linecolor[1]
+		lb = linecolor[2]
+	}else {
+		lmuck("[E]: unknown data-type value in linecolor parameter
+					lgui_drawbuttonlmn(x,y,size,figure,colorname,linecolor)
+														            ^
+														            |
+													               this")
+	}
+	segm = 0;
+	if(lmtype(size) == "NUM") {
+		if(lmtod(size) > 100) {
+			segm = 70;	
+		}else {
+			segm = 20;
+		}
+	}
+	if(lmtype(size) == "ARR") {
+		if(lmlen(size) == 2) {
+			if(lmtod(size[0]) > 100 && lmtod(size[1]) > 100) {
+				segm = 70;
+			}else{
+				segm = 20;
+			}
+		}
+	}
+	sized = 0;
+	if(lmtype(size) == "NUM") {
+		sized = lmtod(size) + lmtod(size) / 10
+	}
+	if(lmtype(size) == "ARR") {
+		if(lmlen(size) == 2) {
+			sized = lmtod(size[0]);
+			size = lmtod(size[1])
+		}
+	}
+	text_w = __builtin_getmeasuretxt(lmtos(text),textsize);
+	if(figure == "quad") {
+		lgui_draw_quad(lmtod(x),lmtod(y),sized,size,0.5,segm,r,g,b,255);
+		lgui_draw_quadline(lmtod(x),lmtod(y),sized,size,0.5,segm,2.5,lr,lg,lb,255);
+		
+		cx = (lmtod(x) + (sized / 2)) - (text_w / 2)
+		cy = (lmtod(y) + (lmtod(size) / 2)) - (textsize / 2)
+		lgui_textdrawing(lmtos(text) + "\n",cx,cy,textsize,lr,lg,lb,255)
+	}
+	else if(figure == "circle") {
+		lgui_draw_circle(lmtod(x),lmtod(y),size,r,g,b,255);
+		for(i = 0; i < 2; i = i + 0.5) {
+			lgui_draw_linecircle(lmtod(x),lmtod(y),size + i,lr,lg,lb,255);
+		}
+		cx = lmtod(x) - (lmtod(text_w) / 2)
+		cy = lmtod(y) - (textsize / 2)
+		lgui_textdrawing(lmtos(text) + "\n",cx,cy,textsize,lr,lg,lb,255)
+	}else {
+		lmuck("[E]: unknown figure argument in lgui_drawbuttonlmn")
+	}
+	getx = lgui_getmousex();
+	gety = lgui_getmousey();
+	clicked = false
+	if(lmtos(figure) == "circle") {
+		radius = lmtod(size) / 1.25;
+		cx = lmtod(x)
+		cy = lmtod(y)
+		if(getx >= (cx - radius) && gety >= (cy - radius) &&
+		getx <= (cx + radius) && gety <= (cy + radius)) {
+			lgui_draw_circle(lmtod(x),lmtod(y),lmtod(size),0,240,240,100);
+			for(i = 0; i < 2; i = i + 0.5) {
+				lgui_draw_linecircle(lmtod(x),lmtod(y),size + i,0,170,170,180);
+			}
+			if(lgui_mouseclick("left")) {
+				lgui_draw_circle(lmtod(x),lmtod(y),lmtod(size) + 2,0,160,160,100);
+				clicked = true
+			}
+		}
+	}
+	else if(lmtos(figure) == "quad") {
+		qx = lmtod(x);
+		qy = lmtod(y);
+		qw = sized
+		qh = lmtod(size);
+		if(getx >= qx && getx <= qx + qw &&
+		gety >= qy && gety <= qy + qh) {
+			lgui_draw_quad(lmtod(x),lmtod(y),sized,lmtod(size),0.5,segm,0,240,240,100);
+			lgui_draw_quadline(lmtod(x),lmtod(y),sized,size,0.5,segm,2.5,0,170,170,180);
+			if(lgui_mouseclick("left")) {
+				lgui_draw_quad(lmtod(x)-2,lmtod(y)-2,sized + 4,lmtod(size) + 4,0.5,segm,0,170,180,100);
+				clicked = true
+			}
+		}
+	}
+	return clicked;
+};

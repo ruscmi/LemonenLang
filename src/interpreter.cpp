@@ -38,7 +38,25 @@ void interpreter::execute_error(const string& msg,Node* node) {
 Value interpreter::evaluate(Node* node) {
 	if(!node) { return AcceptValue{}; }
 	if(node->KEY == ST_NUMBER) {
-		return stod(node->VAL);
+		try {
+			double val = stod(node->VAL);
+			double powed = pow(10,309);
+			if(val < powed) {
+				return val;
+			}
+			else {
+				execute_error("number out of range",node);
+				return ErrorValue{};
+			}
+		}
+		catch(const std::out_of_range&) {
+			execute_error("number out of range",node);
+			return ErrorValue{};
+		}
+		catch(const std::invalid_argument&) {
+			execute_error("invalid number format",node);
+			return ErrorValue{};
+		}
 	}
 	else if(node->KEY == ST_NOP) {
 		return AcceptValue{};
@@ -53,6 +71,29 @@ Value interpreter::evaluate(Node* node) {
             return ErrorValue{"E: unary minus requires a number"};
         }
 	}
+	else if(node->KEY == ST_LMNLANG) {
+		Value val = evaluate(node->right_index.get());
+		if(holds_alternative<ErrorValue>(val)) return val;
+		if(!holds_alternative<string>(val)) {
+			execute_error("need a stringer value: lemonen(\"cmd to expression\")",node);
+			return ErrorValue{};
+		}
+		interpreter inter;
+		string code = get<string>(val);
+		Parser parser; 
+		LEX lexer;
+		vector<Token> tokenize = lexer.tokenize(code);
+		parser.setTokens(tokenize);
+		unique_ptr<Node>tree = parser.parse_program();
+		if(tree != nullptr) {
+			Value res = inter.evaluate(tree.get());
+			if(!holds_alternative<AcceptValue>(res)) {
+				print_array(res);
+				cout<<endl;
+			}
+		}
+		return AcceptValue{};
+	}
 	else if(node->KEY == ST_TOSTR) {
 		Value val = evaluate(node->right_index.get());
 		if(holds_alternative<ErrorValue>(val)) return val;
@@ -62,39 +103,39 @@ Value interpreter::evaluate(Node* node) {
 		Value val = evaluate(node->left_index.get());
 		if(holds_alternative<ErrorValue>(val)) return val;
 		if(!holds_alternative<string>(val)) {
-			return false;
+			return false ? 1.0 : 0.0;
 		}
 		string str = get<string>(val);
-		if(str.empty()) return false;
+		if(str.empty()) return false ? 1.0 : 0.0;
 		for(unsigned char ch : str) {
-			if(!isalpha(ch)) return false;
+			if(!isalpha(ch)) return false ? 1.0 : 0.0;
 		}
-		return true;
+		return false ? 1.0 : 0.0;
 	}
 	else if(node->KEY == ST_ISSPACE) {
 		Value val = evaluate(node->left_index.get());
 		if(holds_alternative<ErrorValue>(val)) return val;
-		if(!holds_alternative<string>(val)) return false;
+		if(!holds_alternative<string>(val)) return false ? 1.0 : 0.0 ;
 		string getspace = get<string>(val);
-		if(getspace.empty()) return false;
+		if(getspace.empty()) return false ? 1.0 : 0.0 ;
 		for(unsigned char ch : getspace) {
-			if(!isspace(ch)) return false;
+			if(!isspace(ch)) return false ? 1.0 : 0.0 ;
 		}
-		return true;
+		return false ? 1.0 : 0.0 ;
 	}
 	else if(node->KEY == ST_ISNUM) {
 		Value val = evaluate(node->left_index.get());
 		if(holds_alternative<ErrorValue>(val)) return val;
 		if(holds_alternative<string>(val)) {
 			string str = get<string>(val);
-			if(str.empty()) return false;
+			if(str.empty()) return false ? 1.0 : 0.0;
 			for(unsigned char ch : str) {
-				if(!isdigit(ch)) return false;
+				if(!isdigit(ch)) return false ? 1.0 : 0.0;
 			}
-			return true;
+			return true ? 1.0 : 0.0;
 		}
-		if(holds_alternative<double>(val)) return true;
-		return false;
+		if(holds_alternative<double>(val)) return true ? 1.0 : 0.0;
+		return false ? 1.0 : 0.0;
  	}
  	else if(node->KEY == ST_RETURN) {
 	    Value val = evaluate(node->right_index.get());
@@ -180,23 +221,30 @@ Value interpreter::evaluate(Node* node) {
 	    return AcceptValue{};
 	}
 	else if(node->KEY == ST_FUNC) {
-	    vector<string>childs;
+		vector<string>childs;
+		vector<shared_ptr<Node>>def;
 	    for(const auto& child : node->children) {
 	        if(child->KEY == ST_VARIABLE) {
 	            childs.push_back(child->VAL);
+	            if(child->right_index != nullptr) {
+	            	def.push_back(shared_ptr<Node>(move(child->right_index)));
+	            }else {
+	            	def.push_back(nullptr);
+	            }
 	        }
 	    }
-	    shared_ptr<Node>body = move(node->right_index);
+	    shared_ptr<Node>body = shared_ptr<Node>(move(node->right_index));
 	    vars.back()[node->VAL] = ForFunction { 
-	        childs,
-	        move(body),
+			childs,
+	        body,
+			def,
 	        is_sys
 	    };
 	    return AcceptValue{};
 	}
 	else if(node->KEY == ST_CALL) {
 	    const string name = node->VAL;
-	    vector<Value> ev_args;
+	    vector<Value>ev_args;
 	    for(const auto& child : node->children) {
 	        Value ev_arg = evaluate(child.get());
 	        if(holds_alternative<ErrorValue>(ev_arg)) { return ev_arg; }
@@ -225,32 +273,41 @@ Value interpreter::evaluate(Node* node) {
 	        execute_error("not found function",node);
 	        return ErrorValue{};
 	    }
-	    vector<Value>evaluated_args;
-	    for(const auto& child : node->children) {
-	        Value val = evaluate(child.get());
-	        if(holds_alternative<ErrorValue>(val)) { return val; }
-	        evaluated_args.push_back(move(val));
-	    }
-	    if(evaluated_args.size() != func_ref->par_names.size()) {
-	        execute_error("evaluated_args.size() != func.par_names.size()",node);
-	        return ErrorValue{};
-	        
-	    }
-	    vars.push_back({});
-	    for(size_t i = 0; i < func_ref->par_names.size(); ++i) {
-	        vars.back()[func_ref->par_names[i]] = move(evaluated_args[i]);
-	    }
+	    ForFunction func_c = *func_ref;
+	    if(ev_args.size() > func_c.par_names.size()) {  
+	    	execute_error("too many args in func",node);
+	    	return ErrorValue{};  
+		}
+		unordered_map<string,Value>local;
+		for(size_t i=0;i<ev_args.size();++i) {
+			local[func_c.par_names[i]] = ev_args[i];
+		}
+		vars.push_back(move(local));
+		if(ev_args.size() < func_c.par_names.size()) {
+			for(size_t i = ev_args.size(); i < func_c.par_names.size();++i) {
+				const string& parn = func_c.par_names[i];
+				auto param = func_c.paramet[i];
+				if(param != nullptr) {
+					Value ev_d = evaluate(param.get());
+					vars.back()[parn] = ev_d;
+				}else {
+					vars.pop_back();
+					execute_error("missing argument '" + parn + "'",node);
+					return ErrorValue{};
+				}
+			}
+		}
 	    bool old_sys = is_sys;
-	    if(func_ref->is_system) {
+	    if(func_c.is_system) {
     	    is_sys = true;
     	}
-	    Value result = evaluate(func_ref->body.get());
+    	Value res = evaluate(func_c.body.get());
 	    is_sys = old_sys;
 	    vars.pop_back();
-	    if(auto* ret = get_if<shared_ptr<ReturnFunc>>(&result)) {
+	    if(auto* ret = get_if<shared_ptr<ReturnFunc>>(&res)) {
 	        return move((*ret)->value);
 	    }
-	    return result;
+	    return res;
 	}
 	else if(node->KEY == ST_INCLUDE) {
         string filename = node->VAL;
@@ -689,6 +746,10 @@ Value interpreter::evaluate(Node* node) {
 		if(holds_alternative<double>(left_val) && holds_alternative<double>(right_val)) {
 	        double left = get<double>(left_val);
 	        double right = get<double>(right_val);
+	        if(left >= pow(10,309) || right >= pow(10,309)) { 
+	        	execute_error("left or right number out of range",node); 
+	        	return ErrorValue{}; 
+        	}
 			if(op == "+") {
         		double mo = left + right; return mo; 
 			}

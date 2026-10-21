@@ -109,28 +109,37 @@ optional<Value>builtin_system(const string& name,const vector<Value>& ev_args,No
    		#endif
     }
     if(name == "__builtin_exec") {
-  	        if(ev_args.size() == 1) {
-  	            if(!holds_alternative<string>(ev_args[0])) { 
-                  	execute_error("current type != STRING",node);
-  	                return ErrorValue{};
-  	            } 
-  	            string cmd = get<string>(ev_args[0]);
-  	            int code = system(cmd.c_str());
-  	            return (double)code;
-  	        }else {
-  	            execute_error("expected exactly one argument",node);
-  	        	return ErrorValue{};
-  	        }
-  	    }
-  	    if(name == "__builtin_getcwd") {
-  	        try {
-  	            return filesystem::current_path().string();
-  	        }
-  	        catch(...) {
-  	            execute_error("failed to get current directory",node);
-  	            return ErrorValue{};
-  	        }
-  	    }
+        if(ev_args.size() == 1) {
+            if(!holds_alternative<string>(ev_args[0])) { 
+               	execute_error("current type != STRING",node);
+                return ErrorValue{};
+            } 
+            string cmd = get<string>(ev_args[0]);
+            int code = system(cmd.c_str());
+            return (double)code;
+        }else {
+            execute_error("expected exactly one argument",node);
+        	return ErrorValue{};
+        }
+    }
+    if(name == "__builtin_getcwd") {
+        try {
+            return filesystem::current_path().string();
+        }
+        catch(...) {
+            execute_error("failed to get current directory",node);
+            return ErrorValue{};
+        }
+    }
+    if(name == "__builtin_gethome") {
+    	if(ev_args.size() == 0) {
+    		const char* homedir = std::getenv("HOME");
+    		if(homedir) {
+    			return (string)homedir;
+    		}
+    	}
+    	return AcceptValue{};
+    }
     if(name == "__builtin_read") {
         if(ev_args.size() == 1) {
             if(!holds_alternative<string>(ev_args[0])) { 

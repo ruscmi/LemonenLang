@@ -111,6 +111,8 @@ system - see manual for system lib
 time - see manual for time lib
 math - see manual for math lib
 file - see manual for file lib
+sorry,this manual not updates,
+read documentation
 for load libs or file use:
     lmport(lib)
 or for file:

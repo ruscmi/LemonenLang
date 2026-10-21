@@ -1,0 +1,126 @@
+/- 
+	GAME ONLY FOR UNIX-STYLE SYSTEMS!!!
+-/
+lmport(lmngui);
+lmport(file);
+lmport(string);
+lmport(system);
+lmport(math);
+if(sys_getos() != "windows") {
+	settopen = false;
+	stopclicked = false;
+	perfstats = false;
+	openshop = false;
+	screenx = 500;
+	screeny = 500;
+	timer = 0;
+	saved = 100;
+	mult = 0;
+	color = 0;
+	lgui_initwindow(screenx,screeny,"win");
+	lgui_setfps(60);
+	filedir = sys_gethome() + "/LemonenLang/examples_code/examplesgui/lmngui5/file.log";
+	if(file_isopen(filedir)) {
+		saved = file_read(filedir);
+	};
+	while(lgui_windowshutdown()) {
+		lgui_begdrawing();
+		lgui_bgdrawing(200,200,200);
+		lgui_textdrawing(lmtos(saved),10,10,20,0,0,0,255);
+		clicked = false;
+		if(stopclicked == false) {
+			clicked = lgui_drawbuttonlmn(200,200,100,"quad","CLICK",20,color,0)
+		}
+		if(clicked) {
+			saved = lmtod(saved) + mult + 1
+			file_write(sys_gethome() + "/LemonenLang/examples_code/examplesgui/lmngui5/file.log",lmtos(saved))
+		}
+		if(lgui_drawbuttonlmn(360,340,[60,40],"quad","SHOP",15,0,0)) {
+			if(openshop == false) {
+				openshop = true;
+				stopclicked = true;
+			}else {
+				openshop = false;
+				stopclicked = false;
+			}
+		}
+		if(lgui_drawbuttonlmn(340,400,[100,40],"quad","SETTINGS",15,0,0)) {
+			if(settopen == false) {
+				settopen = true;
+				stopclicked = true;
+			}else {
+				settopen = false;
+				stopclicked = false;
+			}
+		}
+		if(openshop) {
+			lgui_draw_quad(150,100,200,300,0.4,100,150,150,150,255);
+			lgui_draw_quadline(150,100,200,300,0.4,50,4,100,100,100,255);
+			lgui_draw_quad(180,110,75,100,0.2,50,120,120,120,255);
+			lgui_draw_quadline(180,110,75,100,0.2,50,3,90,90,90,255);
+			lgui_draw_quad(188,115,60,60,0.2,20,255,0,0,255);
+			if(lgui_drawbuttonlmn(195,180,[40,20],"quad","BUY",15,0,0)) {
+				if(saved == 100) {
+					mult = 1;
+					saved = saved - 100
+					color = [255,0,0];
+				}
+			}
+		}
+		if(settopen == true) {
+			lgui_draw_quad(150,100,200,300,0.4,100,150,150,150,255);
+			lgui_draw_quadline(150,100,200,300,0.4,50,4,100,100,100,255);
+			lgui_textdrawing("Clicked: " + lmtos(saved),170,170,20,0,0,0,255);
+			lgui_textdrawing("Size window: ",170,250,20,0,0,0,255);
+			getstr = lgui_drawtextbox(170,270,80,30,"",10,true);
+			if(getstr != "") {
+				splited = str_split(getstr);
+				if(lmlen(splited) == 2) {
+					screenx = lmtod(splited[0]);
+					screeny = lmtod(splited[1]);
+					getxt = screenx.isnum@
+					getyt = screeny.isnum@
+					if(getxt&&getyt) {
+						lgui_setwindowsize(screenx,screeny);
+					}else {
+						lmuck("[LMNCLICK]: need a weight and height NUM values")
+					}
+				}
+			}
+			lgui_textdrawing("Current size: W: " + lmtos(screenx) + " H: " + lmtos(screeny),170,300,11,0,0,0,255);
+			if(lgui_drawbuttonlmn(258,272,[25,25],"quad","R",15,0,0)) { 
+				screenx,screeny = 500,500; lgui_setwindowsize(screenx,screeny);
+			};
+			if(lgui_drawbuttonlmn(167,330,[100,25],"quad","Perfomance Stats",11,0,0)) {
+				if(perfstats == true){
+					perfstats = false;
+				}else {
+					perfstats = true;
+				}
+			}
+			if(lgui_drawbuttonlmn(167,200,[140,30],"quad","Delete all progress?",14,0,0)) {
+				saved = 0;
+				file_write(sys_gethome() + "/LemonenLang/examples_code/examplesgui/lmngui5/file.log",lmtos(saved));
+				timer = 60;
+			}
+		}
+		if(timer > 0) {
+			lgui_draw_quad(0,0,500,500,0,200,0,0,0,100);
+			lgui_textdrawing("SUCCESFUL",130,230,50,0,255,0,255);
+			timer = timer - 1;
+		}
+		if(perfstats == true) {
+			lgui_textdrawing("FPS: " + lmtos(lgui_getfps()),400,10,20,0,0,0,255);
+			x = lgui_getmousex();
+			y = lgui_getmousey();
+			mousexy = "cursor > " + lmtos(x) + " : " + lmtos(y);
+			lgui_textdrawing(mousexy,320,40,20,0,0,0,255);
+		}
+		lgui_enddrawing();
+	};
+	lgui_closewindow();
+}else {
+	lmuck("FUCK MICROSLOP FUCK WINDOWS FUCK BILL GATES FUCK MICROSOFT .NET")
+	lmuck("prank")
+	sys_sleep()
+}
