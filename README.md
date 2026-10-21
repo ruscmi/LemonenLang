@@ -1,4 +1,4 @@
-# ⚠️ The project is under development,version v0.3
+# ⚠️ The project is under development,version v0.4
 
 == **Russian [README.ru](README.ru.md)** ==
 
@@ -34,6 +34,9 @@ or see [manual](src/manual.cpp)
 The language is updated daily and I try to work on it alone.
 
 **Installation and compilation.**
+
+== **FOR ANY SYSTEMS** ==
+need a raylib for lmngui library and cmake for build
 
 == **FOR LINUX** ==
 Termux(Android) is also supported
